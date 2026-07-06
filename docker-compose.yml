@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mysql:9.0.0
+    container_name: axionis-db
+    restart: unless-stopped
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: axionis-taller
+    volumes:
+      - axionis_db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.1
+    container_name: axionis-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - '8080:80'
+
+volumes:
+  axionis_db_data:
