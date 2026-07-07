@@ -4,8 +4,7 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Nunito } from 'next/font/google';
-import { API_BASE_URL } from '../lib/api';
-import { setToken, setUser } from '../lib/auth';
+import { login, setToken, setUser } from '../lib/auth';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -25,23 +24,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) {
-        setError('Usuario o contraseña incorrectos.');
-        return;
-      }
-
-      const data = await response.json();
+      const data = await login(username, password);
+      // Drop the legacy localStorage token from before the cookie-based
+      // session migration — nothing reads it anymore, but leaving a stale
+      // JWT sitting in localStorage indefinitely is an avoidable exposure.
+      localStorage.removeItem('access_token');
       setToken(data.access_token);
       setUser(data.user);
       router.push('/home');
-    } catch {
-      setError('No se pudo conectar con el servidor.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo conectar con el servidor.');
     } finally {
       setLoading(false);
     }

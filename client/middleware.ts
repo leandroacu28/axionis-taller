@@ -30,10 +30,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/home/:path*',
-    '/usuarios/:path*',
-    '/configuraciones-generales/:path*',
-    '/login',
-  ],
+  matcher: [...PROTECTED.map((prefix) => `${prefix}/:path*`), '/login'],
 };
