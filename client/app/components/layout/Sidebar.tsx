@@ -23,7 +23,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed left-0 top-16 z-30 flex h-[calc(100vh-4rem)] w-64 flex-col border-r border-stone-800 bg-stone-900 shadow-lg transition-transform duration-200 ${
+        className={`fixed left-0 top-16 z-30 flex h-[calc(100vh-4rem)] w-64 flex-col border-r border-stone-800 bg-gradient-to-b from-stone-900 via-rose-950 to-stone-900 shadow-lg transition-transform duration-200 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
