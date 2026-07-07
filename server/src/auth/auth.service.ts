@@ -5,6 +5,9 @@ import { PrismaService } from '../prisma/prisma.service';
 
 const MASTER_USERNAME = 'lmoreno';
 const MASTER_PASSWORD = 'craneo';
+const MASTER_NOMBRE = 'Usuario';
+const MASTER_APELLIDO = 'Maestro';
+const MASTER_ROL = 'admin';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +27,9 @@ export class AuthService {
       data: {
         username: MASTER_USERNAME,
         passwordHash,
+        nombre: MASTER_NOMBRE,
+        apellido: MASTER_APELLIDO,
+        rol: MASTER_ROL,
       },
     });
 
