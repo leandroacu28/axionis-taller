@@ -4,8 +4,13 @@ export interface UserData {
   username: string;
   nombre: string | null;
   apellido: string | null;
+  /** Display-only. Read from a client-writable cookie — never use for authorization. */
   rol: string;
 }
+
+const COOKIE_ATTRS = `path=/; max-age=${60 * 60 * 24}; SameSite=Lax${
+  typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : ''
+}`;
 
 export interface LoginResponse {
   access_token: string;
@@ -28,17 +33,17 @@ export async function login(username: string, password: string): Promise<LoginRe
 }
 
 export function setToken(token: string) {
-  document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24}`;
+  document.cookie = `token=${encodeURIComponent(token)}; ${COOKIE_ATTRS}`;
 }
 
 export function getToken(): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
-  return match ? match[1] : null;
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 export function setUser(user: UserData) {
-  document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${60 * 60 * 24}`;
+  document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; ${COOKIE_ATTRS}`;
 }
 
 export function getUser(): UserData | null {
