@@ -2,13 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { UserData } from '../../lib/auth';
 import { navigation } from '../../lib/navigation';
 
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  user: UserData | null;
 }
 
 export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {

@@ -10,21 +10,20 @@ interface HeaderProps {
   onLogout: () => void;
 }
 
-function getInitials(user: UserData | null): string {
-  if (!user) return '';
+function resolveDisplayIdentity(user: UserData | null): { initials: string; displayName: string } {
+  if (!user) return { initials: '', displayName: '' };
   if (user.nombre && user.apellido) {
-    return `${user.nombre[0]}${user.apellido[0]}`.toUpperCase();
+    return {
+      initials: `${user.nombre[0]}${user.apellido[0]}`.toUpperCase(),
+      displayName: `${user.nombre} ${user.apellido}`,
+    };
   }
-  return user.username.slice(0, 2).toUpperCase();
-}
-
-function getDisplayName(user: UserData | null): string {
-  if (!user) return '';
-  if (user.nombre && user.apellido) return `${user.nombre} ${user.apellido}`;
-  return user.username;
+  return { initials: user.username.slice(0, 2).toUpperCase(), displayName: user.username };
 }
 
 export function Header({ sidebarOpen, setSidebarOpen, user, onLogout }: HeaderProps) {
+  const { initials, displayName } = resolveDisplayIdentity(user);
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900 md:px-6">
       <button
@@ -51,11 +50,11 @@ export function Header({ sidebarOpen, setSidebarOpen, user, onLogout }: HeaderPr
 
       <div className="flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-gray-800">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-500 text-sm font-semibold text-white">
-          {getInitials(user)}
+          {initials}
         </div>
         <div className="hidden flex-col sm:flex">
           <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-            {getDisplayName(user)}
+            {displayName}
           </span>
           {user?.rol && (
             <span className="w-fit rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">

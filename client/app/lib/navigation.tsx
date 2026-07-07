@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 /**
  * Extensible v1 shape. `children` is reserved for future nested/grouped
  * navigation and is unused today — kept optional so adding it later does not
- * break existing consumers (Header/Sidebar).
+ * break the existing consumer (Sidebar).
  */
 export type NavigationItem = {
   name: string;
