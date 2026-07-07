@@ -54,15 +54,15 @@ Chain strategy: pending
 
 ## Phase 5: Frontend Routing (`session-routing`)
 
-- [ ] 5.1 Create `client/middleware.ts`: protect `/home`, `/usuarios`, `/configuraciones-generales`; unauth → `/login`; auth-on-`/login` → `/home`; set `config.matcher`.
-- [ ] 5.2 Update `client/app/page.tsx` to unconditionally `redirect('/login')`.
-- [ ] 5.3 Update `client/app/login/page.tsx`: call `setToken`/`setUser` on success, remove `localStorage['access_token']` write, `router.push('/home')`.
+- [x] 5.1 Create `client/middleware.ts`: protect `/home`, `/usuarios`, `/configuraciones-generales`; unauth → `/login`; auth-on-`/login` → `/home`; set `config.matcher`.
+- [x] 5.2 Update `client/app/page.tsx` to unconditionally `redirect('/login')`.
+- [x] 5.3 Update `client/app/login/page.tsx`: call `setToken`/`setUser` on success, remove `localStorage['access_token']` write, `router.push('/home')`.
 
 ## Phase 6: Placeholder Pages
 
-- [ ] 6.1 Create `client/app/(dashboard)/home/page.tsx` (heading + short placeholder note).
-- [ ] 6.2 Create `client/app/(dashboard)/usuarios/page.tsx` (heading + short placeholder note).
-- [ ] 6.3 Create `client/app/(dashboard)/configuraciones-generales/page.tsx` (heading + short placeholder note).
+- [x] 6.1 Create `client/app/(dashboard)/home/page.tsx` (heading + short placeholder note).
+- [x] 6.2 Create `client/app/(dashboard)/usuarios/page.tsx` (heading + short placeholder note).
+- [x] 6.3 Create `client/app/(dashboard)/configuraciones-generales/page.tsx` (heading + short placeholder note).
 
 ## Phase 7: Manual Verification (Success Criteria)
 
