@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Nunito } from 'next/font/google';
 import { API_BASE_URL } from '../lib/api';
+import { setToken, setUser } from '../lib/auth';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -36,8 +37,9 @@ export default function LoginPage() {
       }
 
       const data = await response.json();
-      localStorage.setItem('access_token', data.access_token);
-      router.push('/');
+      setToken(data.access_token);
+      setUser(data.user);
+      router.push('/home');
     } catch {
       setError('No se pudo conectar con el servidor.');
     } finally {
