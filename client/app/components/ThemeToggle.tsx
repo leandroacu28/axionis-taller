@@ -12,11 +12,14 @@ export function ThemeToggle({ className }: { className?: string }) {
     setMounted(true);
   }, []);
 
+  const colorClasses =
+    className ?? 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200';
+
   if (!mounted) {
     return (
       <button
         disabled
-        className={`rounded-full p-2 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 opacity-50 cursor-not-allowed ${className ?? ''}`}
+        className={`rounded-full p-2 opacity-50 cursor-not-allowed ${colorClasses}`}
         aria-label="Toggle theme"
       >
         <span className="sr-only">Toggle theme</span>
@@ -28,7 +31,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   return (
     <button
       onClick={toggleTheme}
-      className={`rounded-full p-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 transition-colors ${className ?? ''}`}
+      className={`rounded-full p-2 transition-colors ${colorClasses}`}
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       <span className="sr-only">Switch to {theme === 'light' ? 'dark' : 'light'} mode</span>
