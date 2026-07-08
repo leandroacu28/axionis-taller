@@ -72,13 +72,13 @@ export default function InitPage() {
         </button>
 
         {status === 'conflict' && (
-          <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+          <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
             {message} Redirigiendo al login...
           </div>
         )}
 
         {status === 'error' && (
-          <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <div className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {message}
           </div>
         )}
