@@ -1,9 +1,14 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SALT_ROUNDS } from './user.constants';
 
+// select (whitelist) rather than destructuring passwordHash off the result
+// (auth.service.ts's approach) — a whitelist can't accidentally leak a new
+// sensitive column added to User later, a blacklist can.
 const USER_SELECT = {
   id: true,
   username: true,
@@ -13,6 +18,12 @@ const USER_SELECT = {
   createdAt: true,
   updatedAt: true,
 };
+
+const DUPLICATE_USERNAME_ERROR = 'El nombre de usuario ya existe.';
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
 
 @Injectable()
 export class UsersService {
@@ -25,21 +36,32 @@ export class UsersService {
   async create(dto: CreateUserDto) {
     const existing = await this.prisma.user.findUnique({ where: { username: dto.username } });
     if (existing) {
-      throw new ConflictException('El nombre de usuario ya existe.');
+      throw new ConflictException(DUPLICATE_USERNAME_ERROR);
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
 
-    return this.prisma.user.create({
-      data: {
-        username: dto.username,
-        passwordHash,
-        nombre: dto.nombre,
-        apellido: dto.apellido,
-        rol: dto.rol,
-      },
-      select: USER_SELECT,
-    });
+    try {
+      return await this.prisma.user.create({
+        data: {
+          username: dto.username,
+          passwordHash,
+          nombre: dto.nombre,
+          apellido: dto.apellido,
+          rol: dto.rol,
+        },
+        select: USER_SELECT,
+      });
+    } catch (error) {
+      // The findUnique check above isn't atomic with this create — two
+      // concurrent requests for the same username can both pass it. The DB's
+      // unique constraint is the real backstop; translate its violation into
+      // the same 409 the pre-check produces, instead of an unhandled 500.
+      if (isUniqueConstraintError(error)) {
+        throw new ConflictException(DUPLICATE_USERNAME_ERROR);
+      }
+      throw error;
+    }
   }
 
   async update(id: number, dto: UpdateUserDto) {
@@ -60,7 +82,7 @@ export class UsersService {
     };
 
     if (dto.password) {
-      data.passwordHash = await bcrypt.hash(dto.password, 10);
+      data.passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
     }
 
     return this.prisma.user.update({

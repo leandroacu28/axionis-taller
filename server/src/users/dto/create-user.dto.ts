@@ -1,4 +1,5 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { USER_ROLES, UserRol } from '../user.constants';
 
 export class CreateUserDto {
   @IsString()
@@ -6,7 +7,7 @@ export class CreateUserDto {
   username: string;
 
   @IsString()
-  @IsNotEmpty()
+  @MinLength(8)
   password: string;
 
   @IsOptional()
@@ -17,6 +18,6 @@ export class CreateUserDto {
   @IsString()
   apellido?: string;
 
-  @IsIn(['admin', 'empleado'])
-  rol: string;
+  @IsIn(USER_ROLES)
+  rol: UserRol;
 }
