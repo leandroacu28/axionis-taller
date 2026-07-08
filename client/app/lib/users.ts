@@ -1,6 +1,8 @@
 import { API_BASE_URL } from './api';
 import { getAuthHeader, type UserData } from './auth';
 
+// Duplicated from server/src/users/user.constants.ts (no shared package
+// between server/client) — if you change one, change the other.
 export const USER_ROLES = ['maestro', 'administrador', 'empleado', 'mecanico'] as const;
 export type UserRol = (typeof USER_ROLES)[number];
 

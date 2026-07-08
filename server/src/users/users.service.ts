@@ -1,6 +1,7 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { MASTER_USERNAME } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -68,10 +69,27 @@ export class UsersService {
     }
   }
 
-  async update(id: number, dto: UpdateUserDto) {
+  async update(id: number, dto: UpdateUserDto, callerId: number) {
     const existing = await this.prisma.user.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException('Usuario no encontrado.');
+    }
+
+    // No role/permission system exists yet (deferred to a future "Permisos"
+    // feature — see openspec/changes/user-status-creator-roles/proposal.md),
+    // so any authenticated user can otherwise edit any other user. `activo`
+    // is different: it's a lockout switch, not just a data field. These two
+    // guards are deliberately narrow (not a general authz system) — they
+    // only prevent the two ways this specific field could take down the
+    // whole system: a user locking themselves out, or anyone locking out
+    // the master account.
+    if (dto.activo === false) {
+      if (id === callerId) {
+        throw new ForbiddenException('No podés desactivar tu propia cuenta.');
+      }
+      if (existing.username === MASTER_USERNAME) {
+        throw new ForbiddenException('No se puede desactivar al usuario maestro.');
+      }
     }
 
     const data: {

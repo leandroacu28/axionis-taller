@@ -360,7 +360,7 @@ export default function UsuariosPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-stone-600">
-                    {user.creadoPor?.username ?? '—'}
+                    {user.creadoPor?.username || '—'}
                   </td>
                   <td className="px-4 py-3 text-sm text-stone-600">
                     {new Date(user.updatedAt).toLocaleDateString('es-AR')}
