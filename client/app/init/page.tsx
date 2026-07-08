@@ -45,13 +45,13 @@ export default function InitPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border border-slate-700/50 bg-slate-900/80 p-8 shadow-2xl shadow-black/40 backdrop-blur">
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-stone-900 via-rose-950 to-stone-900 px-4 py-12">
+      <div className="w-full max-w-md rounded-2xl border border-stone-800/50 bg-stone-900/80 p-8 shadow-2xl shadow-black/40 backdrop-blur">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            Axionis <span className="text-amber-500">Taller Mecánico</span>
+            Axionis <span className="text-rose-400">Taller Mecánico</span>
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">
+          <p className="mt-3 text-sm leading-relaxed text-stone-400">
             Creá el usuario maestro para poder acceder al sistema por
             primera vez.
           </p>
@@ -60,11 +60,11 @@ export default function InitPage() {
         <button
           onClick={handleInit}
           disabled={status === 'loading'}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:bg-amber-500/50 disabled:text-slate-900/60"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-900 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {status === 'loading' && (
             <span
-              className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/40 border-t-slate-950"
+              className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
               aria-hidden="true"
             />
           )}
