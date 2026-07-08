@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Next.js statically parses `config.matcher` at build time — it must be a
 // literal array (no spread/map/computed expressions), so it cannot be
 // derived from PROTECTED. When adding a section, update BOTH arrays below.
-const PROTECTED = ['/home', '/usuarios', '/configuraciones-generales'];
+const PROTECTED = ['/home', '/usuarios'];
 
 /**
  * Edge route protection based on the `token` cookie.
@@ -33,10 +33,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/home/:path*',
-    '/usuarios/:path*',
-    '/configuraciones-generales/:path*',
-    '/login',
-  ],
+  matcher: ['/home/:path*', '/usuarios/:path*', '/login'],
 };
