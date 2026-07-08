@@ -25,7 +25,7 @@ export function Header({ sidebarOpen, setSidebarOpen, user, onLogout }: HeaderPr
   const { initials, displayName } = resolveDisplayIdentity(user);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-stone-800 bg-gradient-to-r from-stone-900 via-rose-950 to-stone-900 px-4 shadow-sm md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-slate-800 bg-slate-900 px-4 shadow-sm md:px-6">
       <button
         type="button"
         onClick={() => setSidebarOpen(!sidebarOpen)}
