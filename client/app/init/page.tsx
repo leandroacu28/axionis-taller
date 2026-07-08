@@ -45,13 +45,13 @@ export default function InitPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-stone-900 via-rose-950 to-stone-900 px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border border-stone-800/50 bg-stone-900/80 p-8 shadow-2xl shadow-black/40 backdrop-blur">
+    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+      <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-xl">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            Axionis <span className="text-rose-400">Taller Mecánico</span>
+          <h1 className="text-2xl font-bold tracking-tight text-stone-800">
+            Axionis <span className="text-rose-500">Taller Mecánico</span>
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-stone-400">
+          <p className="mt-3 text-sm leading-relaxed text-stone-500">
             Creá el usuario maestro para poder acceder al sistema por
             primera vez.
           </p>
@@ -60,7 +60,7 @@ export default function InitPage() {
         <button
           onClick={handleInit}
           disabled={status === 'loading'}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-900 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           {status === 'loading' && (
             <span
