@@ -4,10 +4,12 @@ import { FormEvent, useEffect, useState } from 'react';
 import {
   createUser,
   listUsers,
+  toUserRol,
   updateUser,
   type CreateUserPayload,
   type UpdateUserPayload,
   type UserListItem,
+  type UserRol,
 } from '../../lib/users';
 
 interface FormState {
@@ -15,7 +17,7 @@ interface FormState {
   password: string;
   nombre: string;
   apellido: string;
-  rol: 'admin' | 'empleado';
+  rol: UserRol;
 }
 
 const EMPTY_FORM: FormState = {
@@ -57,6 +59,7 @@ export default function UsuariosPage() {
   }, []);
 
   const openCreateForm = () => {
+    if (submitting) return;
     setEditingUser(null);
     setForm(EMPTY_FORM);
     setFormError('');
@@ -64,16 +67,21 @@ export default function UsuariosPage() {
   };
 
   const openEditForm = (user: UserListItem) => {
+    if (submitting) return;
     setEditingUser(user);
     setForm({
       username: user.username,
       password: '',
       nombre: user.nombre ?? '',
       apellido: user.apellido ?? '',
-      rol: (user.rol as 'admin' | 'empleado') ?? 'empleado',
+      rol: toUserRol(user.rol),
     });
     setFormError('');
     setFormOpen(true);
+  };
+
+  const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const closeForm = () => {
@@ -85,6 +93,7 @@ export default function UsuariosPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting) return;
     setFormError('');
     setSubmitting(true);
 
@@ -136,7 +145,8 @@ export default function UsuariosPage() {
           <button
             type="button"
             onClick={openCreateForm}
-            className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600"
+            disabled={submitting}
+            className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Nuevo usuario
           </button>
@@ -158,7 +168,7 @@ export default function UsuariosPage() {
                 id="username"
                 type="text"
                 value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                onChange={(e) => updateField('username', e.target.value)}
                 disabled={!!editingUser}
                 required
                 className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
@@ -173,7 +183,7 @@ export default function UsuariosPage() {
                 id="password"
                 type="password"
                 value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onChange={(e) => updateField('password', e.target.value)}
                 required={!editingUser}
                 autoComplete="new-password"
                 className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
@@ -188,7 +198,7 @@ export default function UsuariosPage() {
                 id="nombre"
                 type="text"
                 value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                onChange={(e) => updateField('nombre', e.target.value)}
                 className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
               />
             </div>
@@ -201,7 +211,7 @@ export default function UsuariosPage() {
                 id="apellido"
                 type="text"
                 value={form.apellido}
-                onChange={(e) => setForm({ ...form, apellido: e.target.value })}
+                onChange={(e) => updateField('apellido', e.target.value)}
                 className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
               />
             </div>
@@ -213,7 +223,7 @@ export default function UsuariosPage() {
               <select
                 id="rol"
                 value={form.rol}
-                onChange={(e) => setForm({ ...form, rol: e.target.value as 'admin' | 'empleado' })}
+                onChange={(e) => updateField('rol', toUserRol(e.target.value))}
                 className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
               >
                 <option value="admin">admin</option>
@@ -258,8 +268,15 @@ export default function UsuariosPage() {
             Cargando usuarios...
           </div>
         ) : listError ? (
-          <div className="m-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="m-4 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             <span>{listError}</span>
+            <button
+              type="button"
+              onClick={loadUsers}
+              className="shrink-0 font-medium text-red-700 underline hover:text-red-800"
+            >
+              Reintentar
+            </button>
           </div>
         ) : users.length === 0 ? (
           <div className="p-8 text-center text-sm text-stone-500">
@@ -303,7 +320,8 @@ export default function UsuariosPage() {
                     <button
                       type="button"
                       onClick={() => openEditForm(user)}
-                      className="font-medium text-rose-600 hover:text-rose-700"
+                      disabled={submitting}
+                      className="font-medium text-rose-600 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Editar
                     </button>
