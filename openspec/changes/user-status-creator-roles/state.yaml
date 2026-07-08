@@ -1,0 +1,26 @@
+change: user-status-creator-roles
+created: 2026-07-08
+artifact_store: openspec
+execution_mode: interactive
+delivery_strategy: single-pr
+phases:
+  explore:
+    status: done
+    note: Done inline by the orchestrator (already had full context from the prior usuarios-crud change) — folded into proposal.md.
+  proposal:
+    status: done
+  spec:
+    status: skipped
+    reason: Well-understood extension of an already-specced module; design captured directly in proposal.md + the apply prompt.
+  design:
+    status: skipped
+    reason: Same as spec.
+  tasks:
+    status: skipped
+    reason: Single contained PR, no chaining needed.
+  apply:
+    status: done
+  verify:
+    status: done
+  archive:
+    status: not-started

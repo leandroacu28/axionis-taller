@@ -1,8 +1,15 @@
 import { API_BASE_URL } from './api';
 import { getAuthHeader, type UserData } from './auth';
 
-export const USER_ROLES = ['admin', 'empleado'] as const;
+export const USER_ROLES = ['maestro', 'administrador', 'empleado', 'mecanico'] as const;
 export type UserRol = (typeof USER_ROLES)[number];
+
+export const ROLE_LABELS: Record<UserRol, string> = {
+  maestro: 'Maestro',
+  administrador: 'Administrador',
+  empleado: 'Empleado',
+  mecanico: 'Mecánico',
+};
 
 export function toUserRol(value: string): UserRol {
   return (USER_ROLES as readonly string[]).includes(value) ? (value as UserRol) : 'empleado';
@@ -10,6 +17,9 @@ export function toUserRol(value: string): UserRol {
 
 export interface UserListItem extends UserData {
   id: number;
+  activo: boolean;
+  updatedAt: string;
+  creadoPor: { id: number; username: string } | null;
 }
 
 export interface CreateUserPayload {
@@ -18,6 +28,7 @@ export interface CreateUserPayload {
   nombre?: string;
   apellido?: string;
   rol: UserRol;
+  activo?: boolean;
 }
 
 export interface UpdateUserPayload {
@@ -25,6 +36,7 @@ export interface UpdateUserPayload {
   apellido?: string;
   rol?: UserRol;
   password?: string;
+  activo?: boolean;
 }
 
 async function handleJsonResponse<T>(res: Response, fallbackMessage: string): Promise<T> {

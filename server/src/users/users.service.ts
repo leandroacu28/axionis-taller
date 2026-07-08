@@ -15,8 +15,10 @@ const USER_SELECT = {
   nombre: true,
   apellido: true,
   rol: true,
+  activo: true,
   createdAt: true,
   updatedAt: true,
+  creadoPor: { select: { id: true, username: true } },
 };
 
 const DUPLICATE_USERNAME_ERROR = 'El nombre de usuario ya existe.';
@@ -33,7 +35,7 @@ export class UsersService {
     return this.prisma.user.findMany({ select: USER_SELECT });
   }
 
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto, creadoPorId: number) {
     const existing = await this.prisma.user.findUnique({ where: { username: dto.username } });
     if (existing) {
       throw new ConflictException(DUPLICATE_USERNAME_ERROR);
@@ -49,6 +51,8 @@ export class UsersService {
           nombre: dto.nombre,
           apellido: dto.apellido,
           rol: dto.rol,
+          activo: dto.activo,
+          creadoPorId,
         },
         select: USER_SELECT,
       });
@@ -74,11 +78,13 @@ export class UsersService {
       nombre?: string;
       apellido?: string;
       rol?: string;
+      activo?: boolean;
       passwordHash?: string;
     } = {
       nombre: dto.nombre,
       apellido: dto.apellido,
       rol: dto.rol,
+      activo: dto.activo,
     };
 
     if (dto.password) {
