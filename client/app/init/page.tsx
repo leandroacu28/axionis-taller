@@ -46,7 +46,7 @@ export default function InitPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-2xl shadow-gray-300/50">
+      <div className="w-full max-w-md rounded-2xl border-2 border-gray-300 bg-white p-8 shadow-2xl shadow-gray-400/60">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-stone-800">
             Axionis <span className="text-rose-500">Taller Mecánico</span>
