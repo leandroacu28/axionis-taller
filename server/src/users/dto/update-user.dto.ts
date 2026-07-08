@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
 import { USER_ROLES, UserRol } from '../user.constants';
 
 // NOTE: no `username` field here, deliberately — this is how username
@@ -22,4 +22,8 @@ export class UpdateUserDto {
   @IsString()
   @MinLength(8)
   password?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  activo?: boolean;
 }

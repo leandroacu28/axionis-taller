@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { USER_ROLES, UserRol } from '../user.constants';
 
 export class CreateUserDto {
@@ -20,4 +20,8 @@ export class CreateUserDto {
 
   @IsIn(USER_ROLES)
   rol: UserRol;
+
+  @IsOptional()
+  @IsBoolean()
+  activo?: boolean;
 }

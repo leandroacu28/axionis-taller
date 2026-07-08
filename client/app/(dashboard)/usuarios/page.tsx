@@ -4,8 +4,10 @@ import { FormEvent, useEffect, useState } from 'react';
 import {
   createUser,
   listUsers,
+  ROLE_LABELS,
   toUserRol,
   updateUser,
+  USER_ROLES,
   type CreateUserPayload,
   type UpdateUserPayload,
   type UserListItem,
@@ -18,6 +20,7 @@ interface FormState {
   nombre: string;
   apellido: string;
   rol: UserRol;
+  activo: boolean;
 }
 
 const EMPTY_FORM: FormState = {
@@ -26,6 +29,7 @@ const EMPTY_FORM: FormState = {
   nombre: '',
   apellido: '',
   rol: 'empleado',
+  activo: true,
 };
 
 export default function UsuariosPage() {
@@ -75,6 +79,7 @@ export default function UsuariosPage() {
       nombre: user.nombre ?? '',
       apellido: user.apellido ?? '',
       rol: toUserRol(user.rol),
+      activo: user.activo,
     });
     setFormError('');
     setFormOpen(true);
@@ -103,6 +108,7 @@ export default function UsuariosPage() {
           nombre: form.nombre,
           apellido: form.apellido,
           rol: form.rol,
+          activo: form.activo,
         };
         if (form.password) {
           payload.password = form.password;
@@ -116,6 +122,7 @@ export default function UsuariosPage() {
           nombre: form.nombre,
           apellido: form.apellido,
           rol: form.rol,
+          activo: form.activo,
         };
         const created = await createUser(payload);
         setUsers((prev) => [...prev, created]);
@@ -226,9 +233,25 @@ export default function UsuariosPage() {
                 onChange={(e) => updateField('rol', toUserRol(e.target.value))}
                 className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
               >
-                <option value="admin">admin</option>
-                <option value="empleado">empleado</option>
+                {USER_ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </option>
+                ))}
               </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="activo"
+                type="checkbox"
+                checked={form.activo}
+                onChange={(e) => updateField('activo', e.target.checked)}
+                className="h-4 w-4 rounded border-stone-300 text-rose-500 focus:ring-rose-400"
+              />
+              <label htmlFor="activo" className="text-sm font-medium text-stone-700">
+                Usuario activo
+              </label>
             </div>
 
             {formError && (
@@ -298,6 +321,15 @@ export default function UsuariosPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Rol
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Estado
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Creado por
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Actualizado
+                </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Acciones
                 </th>
@@ -313,8 +345,25 @@ export default function UsuariosPage() {
                   <td className="px-4 py-3 text-sm text-stone-600">{user.apellido || '—'}</td>
                   <td className="px-4 py-3 text-sm text-stone-600">
                     <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-700">
-                      {user.rol}
+                      {ROLE_LABELS[toUserRol(user.rol)] ?? user.rol}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-stone-600">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        user.activo
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-rose-100 text-rose-700'
+                      }`}
+                    >
+                      {user.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-stone-600">
+                    {user.creadoPor?.username ?? '—'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-stone-600">
+                    {new Date(user.updatedAt).toLocaleDateString('es-AR')}
                   </td>
                   <td className="px-4 py-3 text-right text-sm">
                     <button

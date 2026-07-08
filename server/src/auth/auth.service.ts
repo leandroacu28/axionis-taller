@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,7 +7,7 @@ const MASTER_USERNAME = 'lmoreno';
 const MASTER_PASSWORD = 'craneo';
 const MASTER_NOMBRE = 'Usuario';
 const MASTER_APELLIDO = 'Maestro';
-const MASTER_ROL = 'admin';
+const MASTER_ROL = 'maestro';
 
 @Injectable()
 export class AuthService {
@@ -45,6 +45,10 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       return null;
+    }
+
+    if (!user.activo) {
+      throw new UnauthorizedException('Usuario inactivo. Contactá a un administrador.');
     }
 
     const { passwordHash: _passwordHash, ...result } = user;
