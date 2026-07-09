@@ -18,6 +18,24 @@ model User {
   creadoPorId  Int?
   creadoPor    User?    @relation("UserCreatedBy", fields: [creadoPorId], references: [id], onDelete: SetNull)
   creados      User[]   @relation("UserCreatedBy")
+  clientesCreados Cliente[] @relation("ClienteCreadoPor")
+  clientesActualizados Cliente[] @relation("ClienteActualizadoPor")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Cliente {
+  id                 Int      @id @default(autoincrement())
+  razonSocial        String
+  tipoIdentificacion String
+  identificacion     String   @unique
+  telefono           String
+  domicilio          String
+  activo             Boolean  @default(true)
+  creadoPorId        Int?
+  creadoPor          User?    @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId   Int?
+  actualizadoPor     User?    @relation("ClienteActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
