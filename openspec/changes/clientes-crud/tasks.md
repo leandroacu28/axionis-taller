@@ -81,32 +81,32 @@ This is a **new module + new pages**, so almost all of it is net-new code, not a
 
 ## Phase 7: Frontend Create Page
 
-- [ ] 7.1 Create `client/app/(dashboard)/clientes/nuevo/page.tsx`: `FormState` + generic `updateField`, `tipoIdentificacion` `<select>` over `ID_TYPES`/`ID_TYPE_LABELS`, `EMPTY_FORM` defaults `tipoIdentificacion: 'dni'`
-- [ ] 7.2 Wire required-field validation (`razonSocial`, `tipoIdentificacion`, `identificacion`, `telefono`, `domicilio`) before submit, `createCustomer(payload)` call, `showSuccess` + `router.push('/clientes')` on success, `showError` on 409/failure with entered data intact
+- [x] 7.1 Create `client/app/(dashboard)/clientes/nuevo/page.tsx`: `FormState` + generic `updateField`, `tipoIdentificacion` `<select>` over `ID_TYPES`/`ID_TYPE_LABELS`, `EMPTY_FORM` defaults `tipoIdentificacion: 'dni'`
+- [x] 7.2 Wire required-field validation (`razonSocial`, `tipoIdentificacion`, `identificacion`, `telefono`, `domicilio`) before submit, `createCustomer(payload)` call, `showSuccess` + `router.push('/clientes')` on success, `showError` on 409/failure with entered data intact
 
 ## Phase 8: Frontend Edit Page
 
-- [ ] 8.1 Create `client/app/(dashboard)/clientes/editar/[id]/page.tsx`: `useEffect` load via `getCustomer(id)` with a `cancelled` unmount guard, loading/error states, pre-fill `FormState`
-- [ ] 8.2 Wire required-field validation, `updateCustomer(id, payload)` on submit, `showSuccess` + `router.push('/clientes')` on success, `showError` on failure
-- [ ] 8.3 Implement dirty-state tracking: `initialFormRef` (`useRef<FormState | null>`) set on successful load and reset on successful save (before the post-save redirect); `isFormDirty(form, initialFormRef.current)` shallow-comparison helper
-- [ ] 8.4 Implement in-app navigation guard: convert the "Cancelar" `Link` to a `button` with an async `onClick`; when dirty, `await showConfirm({...})` (same shape as usuarios' deactivate confirm, `confirmButtonColor: '#e11d48'`) before `router.push('/clientes')`, early-return on cancel
-- [ ] 8.5 Implement native `beforeunload` guard: `useEffect` listener that calls `e.preventDefault()`/sets `e.returnValue` only when `isDirty`, cleaned up on unmount/dependency change
+- [x] 8.1 Create `client/app/(dashboard)/clientes/editar/[id]/page.tsx`: `useEffect` load via `getCustomer(id)` with a `cancelled` unmount guard, loading/error states, pre-fill `FormState`
+- [x] 8.2 Wire required-field validation, `updateCustomer(id, payload)` on submit, `showSuccess` + `router.push('/clientes')` on success, `showError` on failure
+- [x] 8.3 Implement dirty-state tracking: `initialFormRef` (`useRef<FormState | null>`) set on successful load and reset on successful save (before the post-save redirect); `isFormDirty(form, initialFormRef.current)` shallow-comparison helper
+- [x] 8.4 Implement in-app navigation guard: convert the "Cancelar" `Link` to a `button` with an async `onClick`; when dirty, `await showConfirm({...})` (same shape as usuarios' deactivate confirm, `confirmButtonColor: '#e11d48'`) before `router.push('/clientes')`, early-return on cancel
+- [x] 8.5 Implement native `beforeunload` guard: `useEffect` listener that calls `e.preventDefault()`/sets `e.returnValue` only when `isDirty`, cleaned up on unmount/dependency change
 
 ## Phase 9: Navigation
 
-- [ ] 9.1 Modify `client/app/lib/navigation.tsx`: add a new **top-level** "Clientes" entry (`href: '/clientes'`, sibling of "Inicio" — NOT nested under "Configuraciones"'s `children`)
-- [ ] 9.2 (Optional) Create `client/public/icons/clientes.svg` nav icon; if omitted, reuse an existing icon to avoid a broken image
+- [x] 9.1 Modify `client/app/lib/navigation.tsx`: add a new **top-level** "Clientes" entry (`href: '/clientes'`, sibling of "Inicio" — NOT nested under "Configuraciones"'s `children`)
+- [x] 9.2 (Optional) Create `client/public/icons/clientes.svg` nav icon; if omitted, reuse an existing icon to avoid a broken image — **substituted**: no new asset created, the nav entry reuses `/icons/usuarios.svg` per the task's own documented fallback
 
 ## Phase 10: Frontend Manual Verification
 
-- [ ] 10.1 Verify `/clientes` loads and shows only `activo: true` clientes by default; search filters by razón social/identificación/teléfono in-memory; status filter reveals inactive clientes; pagination limits visible rows
-- [ ] 10.2 Verify the status toggle calls `PATCH /customers/:id` with the flipped `activo` and the row updates without a full reload
-- [ ] 10.3 Verify `/clientes/nuevo` blocks submission on a missing required field, creates successfully with a valid payload (toast + redirect), and shows an error toast with data intact on a 409 duplicate `identificacion`
-- [ ] 10.4 Verify `/clientes/editar/[id]` pre-fills from `GET /customers/:id`, saves via `PATCH` with toast + redirect, and does not set state if unmounted before the load resolves
-- [ ] 10.5 Verify the unsaved-edit warning end-to-end: edit a field then click Cancelar → `showConfirm` appears; confirm discards and routes to `/clientes`, cancel stays with edits intact; editing a field back to its original value suppresses the prompt (not dirty); after a successful save, the redirect fires with no prompt; with unsaved edits, refresh/close the tab triggers the native `beforeunload` prompt
-- [ ] 10.6 Verify the "Clientes" nav entry is visible for any authenticated `rol`, renders as a top-level item (not nested under "Configuraciones"), and links to `/clientes`
+- [ ] 10.1 Verify `/clientes` loads and shows only `activo: true` clientes by default; search filters by razón social/identificación/teléfono in-memory; status filter reveals inactive clientes; pagination limits visible rows — NOT verified live (no running dev server + reachable DB in this session); route compiles clean (`next build`)
+- [ ] 10.2 Verify the status toggle calls `PATCH /customers/:id` with the flipped `activo` and the row updates without a full reload — NOT verified live (pre-existing from PR2, not re-tested this batch)
+- [ ] 10.3 Verify `/clientes/nuevo` blocks submission on a missing required field, creates successfully with a valid payload (toast + redirect), and shows an error toast with data intact on a 409 duplicate `identificacion` — NOT verified live; route compiles clean (`next build`), `npx tsc --noEmit` passes
+- [ ] 10.4 Verify `/clientes/editar/[id]` pre-fills from `GET /customers/:id`, saves via `PATCH` with toast + redirect, and does not set state if unmounted before the load resolves — NOT verified live; route compiles clean (`next build`), unmount guard (`cancelled` flag) present in code
+- [ ] 10.5 Verify the unsaved-edit warning end-to-end: edit a field then click Cancelar → `showConfirm` appears; confirm discards and routes to `/clientes`, cancel stays with edits intact; editing a field back to its original value suppresses the prompt (not dirty); after a successful save, the redirect fires with no prompt; with unsaved edits, refresh/close the tab triggers the native `beforeunload` prompt — NOT verified live (requires a browser click-through); implemented per design.md exactly (dirty-tracking ref, `showConfirm` guard, `beforeunload` listener)
+- [ ] 10.6 Verify the "Clientes" nav entry is visible for any authenticated `rol`, renders as a top-level item (not nested under "Configuraciones"), and links to `/clientes` — NOT visually verified in a browser; confirmed structurally: entry is a top-level array sibling (not inside `Configuraciones.children`), `href: '/clientes'`, no role filtering added, and `next build` renders it without error
 
 ## Phase 11: Documentation & Final Sign-off
 
-- [ ] 11.1 Walk `proposal.md`'s full Success Criteria checklist end-to-end and confirm each item (401 without token, 409 duplicate `identificacion` create+update, audit stamping correctness, DNI/CUIT/CUIL format validation, frontend list/create/edit behavior, nav entry visibility, migration additive-only)
-- [ ] 11.2 Confirm the Rollback Plan steps in `proposal.md` are accurate and executable as written (migration revert, module removal, back-relation removal, frontend route/nav removal)
+- [ ] 11.1 Walk `proposal.md`'s full Success Criteria checklist end-to-end and confirm each item (401 without token, 409 duplicate `identificacion` create+update, audit stamping correctness, DNI/CUIT/CUIL format validation, frontend list/create/edit behavior, nav entry visibility, migration additive-only) — backend items (401, 409, audit stamping, DNI/CUIT/CUIL, additive migration) already confirmed in Phase 4 (PR1); frontend list/create/edit behavior and nav visibility are code-complete and compile-clean but NOT confirmed via live browser click-through in this session — see Phase 10 notes
+- [x] 11.2 Confirm the Rollback Plan steps in `proposal.md` are accurate and executable as written (migration revert, module removal, back-relation removal, frontend route/nav removal) — confirmed by direct comparison against the actual files created/modified across all three PRs: `server/src/customers/` + `app.module.ts` import, `clientesCreados`/`clientesActualizados` back-relations on `User`, `client/app/(dashboard)/clientes/` (list/nuevo/editar), `client/app/lib/customers.ts`, and the `navigation.tsx` entry all match the plan's described removal steps one-for-one

@@ -33,4 +33,12 @@ export const navigation: NavigationItem[] = [
       },
     ],
   },
+  {
+    name: 'Clientes',
+    href: '/clientes',
+    id: 'clientes',
+    // No dedicated /icons/clientes.svg asset exists yet; reuse the
+    // usuarios icon rather than ship a broken image (see design.md).
+    icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
+  },
 ];
