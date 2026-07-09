@@ -68,16 +68,16 @@ This is a **new module + new pages**, so almost all of it is net-new code, not a
 
 ## Phase 5: Frontend API Client
 
-- [ ] 5.1 Create `client/app/lib/customers.ts`: `ID_TYPES`/`IdType`/`ID_TYPE_LABELS`/`toIdType()` (duplicated from server constants per the no-shared-package convention), `CustomerListItem`, `CreateCustomerPayload`, `UpdateCustomerPayload`
-- [ ] 5.2 Add `listCustomers()` (GET), `getCustomer(id)` (GET `/customers/:id`), `createCustomer(data)` (POST), `updateCustomer(id, data)` (PATCH `/customers/:id`) — shared `handleJsonResponse<T>()`, `getAuthHeader()` on every call, Spanish fallback error messages
+- [x] 5.1 Create `client/app/lib/customers.ts`: `ID_TYPES`/`IdType`/`ID_TYPE_LABELS`/`toIdType()` (duplicated from server constants per the no-shared-package convention), `CustomerListItem`, `CreateCustomerPayload`, `UpdateCustomerPayload`
+- [x] 5.2 Add `listCustomers()` (GET), `getCustomer(id)` (GET `/customers/:id`), `createCustomer(data)` (POST), `updateCustomer(id, data)` (PATCH `/customers/:id`) — shared `handleJsonResponse<T>()`, `getAuthHeader()` on every call, Spanish fallback error messages
 
 ## Phase 6: Frontend List Page
 
-- [ ] 6.1 Create `client/app/(dashboard)/clientes/page.tsx` (`'use client'`) base structure: state (`customers`, `loading`, `listError`, `openMenuId`, `menuPos`, `togglingId`, `search`, `statusFilter` default `'activo'`, `page`, `pageSize`), `useEffect` load via `listCustomers()`
-- [ ] 6.2 Implement in-memory search filter over `[razonSocial, identificacion, telefono]`, status filter (defaults to `activo: true` only), and pagination (`PAGE_SIZE_OPTIONS = [10, 25, 50]`)
-- [ ] 6.3 Implement table columns (Razón Social · Tipo badge via `ID_TYPE_LABELS` · Identificación · Teléfono · Estado · Acciones) with `createPortal`-based row action dropdown (`openUpward` flip, click-outside/scroll/resize close)
-- [ ] 6.4 Implement status toggle action: `showConfirm` on deactivate, `updateCustomer(id, { ...fullPayload, activo: !c.activo })` then reload, `showSuccess`/`showError` — no master/self-lockout guard (unconditional toggle)
-- [ ] 6.5 Implement loading/error/empty/no-results states and "Nuevo cliente" header button linking to `/clientes/nuevo`
+- [x] 6.1 Create `client/app/(dashboard)/clientes/page.tsx` (`'use client'`) base structure: state (`customers`, `loading`, `listError`, `openMenuId`, `menuPos`, `togglingId`, `search`, `statusFilter` default `'activo'`, `page`, `pageSize`), `useEffect` load via `listCustomers()`
+- [x] 6.2 Implement in-memory search filter over `[razonSocial, identificacion, telefono]`, status filter (defaults to `activo: true` only), and pagination (`PAGE_SIZE_OPTIONS = [10, 25, 50]`)
+- [x] 6.3 Implement table columns (Razón Social · Tipo badge via `ID_TYPE_LABELS` · Identificación · Teléfono · Estado · Acciones) with `createPortal`-based row action dropdown (`openUpward` flip, click-outside/scroll/resize close)
+- [x] 6.4 Implement status toggle action: `showConfirm` on deactivate, `updateCustomer(id, { ...fullPayload, activo: !c.activo })` then reload, `showSuccess`/`showError` — no master/self-lockout guard (unconditional toggle)
+- [x] 6.5 Implement loading/error/empty/no-results states and "Nuevo cliente" header button linking to `/clientes/nuevo`
 
 ## Phase 7: Frontend Create Page
 
