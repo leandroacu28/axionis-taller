@@ -42,14 +42,7 @@ export default function NuevoClientePage() {
     event.preventDefault();
     if (submitting) return;
 
-    const requiredFields: Array<[string, string]> = [
-      ['Razón social', form.razonSocial],
-      ['Identificación', form.identificacion],
-      ['Teléfono', form.telefono],
-      ['Domicilio', form.domicilio],
-    ];
-    const hasEmptyField = requiredFields.some(([, value]) => value.trim() === '');
-    if (hasEmptyField) {
+    if (form.razonSocial.trim() === '') {
       showError('Campos incompletos', 'Completá todos los campos obligatorios.');
       return;
     }
@@ -89,11 +82,12 @@ export default function NuevoClientePage() {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1 sm:col-span-2">
             <label htmlFor="razonSocial" className="text-sm font-medium text-stone-700">
-              Razón social <span className="text-rose-500">*</span>
+              Cliente / Razón social <span className="text-rose-500">*</span>
             </label>
             <input
               id="razonSocial"
               type="text"
+              autoFocus
               value={form.razonSocial}
               onChange={(e) => updateField('razonSocial', e.target.value)}
               required
@@ -122,14 +116,13 @@ export default function NuevoClientePage() {
 
           <div className="space-y-1">
             <label htmlFor="identificacion" className="text-sm font-medium text-stone-700">
-              Identificación <span className="text-rose-500">*</span>
+              Identificación
             </label>
             <input
               id="identificacion"
               type="text"
               value={form.identificacion}
               onChange={(e) => updateField('identificacion', e.target.value)}
-              required
               placeholder="Ej: 20123456789"
               className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
             />
@@ -137,14 +130,13 @@ export default function NuevoClientePage() {
 
           <div className="space-y-1">
             <label htmlFor="telefono" className="text-sm font-medium text-stone-700">
-              Teléfono <span className="text-rose-500">*</span>
+              Teléfono
             </label>
             <input
               id="telefono"
               type="text"
               value={form.telefono}
               onChange={(e) => updateField('telefono', e.target.value)}
-              required
               placeholder="Ej: 1145678900"
               className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
             />
@@ -152,14 +144,13 @@ export default function NuevoClientePage() {
 
           <div className="space-y-1">
             <label htmlFor="domicilio" className="text-sm font-medium text-stone-700">
-              Domicilio <span className="text-rose-500">*</span>
+              Domicilio
             </label>
             <input
               id="domicilio"
               type="text"
               value={form.domicilio}
               onChange={(e) => updateField('domicilio', e.target.value)}
-              required
               placeholder="Ej: Av. Siempre Viva 742"
               className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
             />

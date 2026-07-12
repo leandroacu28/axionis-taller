@@ -6,6 +6,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CustomersModule } from './customers/customers.module';
+import { ColorsModule } from './colors/colors.module';
+import { BrandsModule } from './brands/brands.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
 import { ServiceTypesModule } from './service-types/service-types.module';
 
 @Module({
@@ -17,6 +20,9 @@ import { ServiceTypesModule } from './service-types/service-types.module';
     AuthModule,
     UsersModule,
     CustomersModule,
+    ColorsModule,
+    BrandsModule,
+    VehiclesModule,
     ServiceTypesModule,
   ],
   controllers: [AppController],

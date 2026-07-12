@@ -1,0 +1,53 @@
+change: usuarios-alta-page
+created: 2026-07-08
+artifact_store: openspec
+execution_mode: interactive
+delivery_strategy: ask-on-risk
+phases:
+  explore:
+    status: done
+  proposal:
+    status: done
+  spec:
+    status: done
+  design:
+    status: done
+  tasks:
+    status: done
+  apply:
+    status: partial
+    notes: >
+      Backend fully implemented and verified: Prisma schema + migration
+      (dni String? @unique) applied to the reachable MySQL DB via
+      `prisma migrate deploy` (interactive `migrate dev` was not usable in
+      this non-interactive shell; migration.sql was authored manually to
+      match Prisma's expected output, then applied and confirmed clean via
+      `prisma migrate status`); DTOs tightened (dni required, nombre/apellido
+      required, create+update); service updated with DUPLICATE_DNI_ERROR,
+      uniqueTargetIncludes P2002 discrimination, create pre-check, update
+      exclude-self pre-check via findFirst NOT, dni in USER_SELECT. All
+      Phase 4 backend scenarios (4.1-4.5) verified live via curl against the
+      running server and DB. Frontend fully implemented: lib/users.ts types,
+      new client/app/(dashboard)/usuarios/nuevo/page.tsx, and edits to
+      usuarios/page.tsx (create branch removed, Link to /usuarios/nuevo, DNI
+      in edit form + table). `tsc --noEmit` passes on both server and
+      client; both routes return HTTP 200 and correct SSR markup was
+      confirmed via curl. NOT verified: real browser click-through of
+      Phase 8 scenarios (8.1-8.4) — no headless browser tooling is
+      available in this environment/session, so live client-side
+      interactivity (submit flow, confirm-password inline error, DNI table
+      render after hydration, edit pre-fill) was not exercised, only
+      code-reviewed. Recommend a human pass over Phase 8 before archiving.
+  verify:
+    status: done
+    notes: >
+      PASS WITH WARNINGS. 0 CRITICAL. 1 WARNING: Phase 8 browser
+      click-through (8.1-8.4) remains unexercised in a real browser —
+      judged an acceptable residual risk, not blocking, given backend was
+      independently re-verified live and `next build` compiled both routes
+      cleanly. 2 SUGGESTIONS: CreateUserPayload/UpdateUserPayload still
+      type nombre/apellido as optional despite backend now requiring them
+      (type-safety debt, no live bug); stale .next dev-cache 500 seen once,
+      unrelated to this change's code.
+  archive:
+    status: not-started

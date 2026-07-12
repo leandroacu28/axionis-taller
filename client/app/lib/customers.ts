@@ -20,9 +20,9 @@ export interface CustomerListItem {
   id: number;
   razonSocial: string;
   tipoIdentificacion: string;
-  identificacion: string;
-  telefono: string;
-  domicilio: string;
+  identificacion: string | null;
+  telefono: string | null;
+  domicilio: string | null;
   activo: boolean;
   createdAt: string;
   updatedAt: string;
@@ -33,18 +33,18 @@ export interface CustomerListItem {
 export interface CreateCustomerPayload {
   razonSocial: string;
   tipoIdentificacion: IdType;
-  identificacion: string;
-  telefono: string;
-  domicilio: string;
+  identificacion?: string;
+  telefono?: string;
+  domicilio?: string;
   activo?: boolean;
 }
 
 export interface UpdateCustomerPayload {
   razonSocial: string;
   tipoIdentificacion: IdType;
-  identificacion: string;
-  telefono: string;
-  domicilio: string;
+  identificacion?: string;
+  telefono?: string;
+  domicilio?: string;
   activo?: boolean;
 }
 
@@ -59,8 +59,28 @@ async function handleJsonResponse<T>(res: Response, fallbackMessage: string): Pr
   return res.json();
 }
 
-export async function listCustomers(): Promise<CustomerListItem[]> {
-  const res = await fetch(`${API_BASE_URL}/customers`, {
+export interface ListCustomersParams {
+  page: number;
+  pageSize: number;
+  search?: string;
+  status?: 'all' | 'activo' | 'inactivo';
+}
+
+export interface PaginatedCustomers {
+  data: CustomerListItem[];
+  total: number;
+  activeCount: number;
+}
+
+export async function listCustomers(params: ListCustomersParams): Promise<PaginatedCustomers> {
+  const query = new URLSearchParams({
+    page: String(params.page),
+    pageSize: String(params.pageSize),
+  });
+  if (params.search) query.set('search', params.search);
+  if (params.status) query.set('status', params.status);
+
+  const res = await fetch(`${API_BASE_URL}/customers?${query.toString()}`, {
     headers: { ...getAuthHeader() },
   });
   return handleJsonResponse(res, 'No se pudo obtener la lista de clientes');
@@ -92,4 +112,33 @@ export async function updateCustomer(
     body: JSON.stringify(data),
   });
   return handleJsonResponse(res, 'No se pudo actualizar el cliente');
+}
+
+export interface ExportCustomersParams {
+  search?: string;
+  status?: 'all' | 'activo' | 'inactivo';
+}
+
+export async function exportCustomers(params: ExportCustomersParams): Promise<Blob> {
+  const query = new URLSearchParams();
+  if (params.search) query.set('search', params.search);
+  if (params.status) query.set('status', params.status);
+  const qs = query.toString();
+
+  const res = await fetch(`${API_BASE_URL}/customers/export${qs ? `?${qs}` : ''}`, {
+    headers: { ...getAuthHeader() },
+  });
+
+  if (!res.ok) {
+    // Non-JSON success path — but Nest error bodies are still JSON, so read the
+    // message defensively (mirrors handleJsonResponse's error branch) rather
+    // than forcing the whole response through it.
+    const message = await res
+      .json()
+      .then((body) => body?.message)
+      .catch(() => undefined);
+    throw new Error(message || 'No se pudo exportar los clientes');
+  }
+
+  return res.blob();
 }

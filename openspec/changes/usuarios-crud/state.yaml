@@ -1,0 +1,22 @@
+change: usuarios-crud
+created: 2026-07-07
+artifact_store: openspec
+execution_mode: interactive
+delivery_strategy: ask-on-risk
+phases:
+  explore:
+    status: done
+  proposal:
+    status: done
+  spec:
+    status: done
+  design:
+    status: done
+  tasks:
+    status: done
+  apply:
+    status: done
+  verify:
+    status: done
+  archive:
+    status: not-started

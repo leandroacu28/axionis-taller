@@ -15,18 +15,18 @@ export class UpdateCustomerDto {
   tipoIdentificacion: IdType;
 
   @Transform(({ value }) => (typeof value === 'string' ? value.replace(/\D/g, '') : value))
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @IsIdentificacionValida()
-  identificacion: string;
+  identificacion?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  telefono: string;
+  telefono?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  domicilio: string;
+  domicilio?: string;
 
   @IsOptional()
   @IsBoolean()

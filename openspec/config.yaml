@@ -1,0 +1,30 @@
+schema: spec-driven
+
+context: |
+  Tech stack: NestJS 10 + Prisma 5 + MySQL (server/), Next.js 14 App Router + TypeScript + Tailwind v3 (client/, no src/ dir)
+  Architecture: Monorepo (npm workspaces), REST API backend, App Router frontend
+  Testing: No test runner configured (strict_tdd: false)
+  Style: ESLint + Prettier in both packages
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    - Follow existing code patterns
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: "npm run build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas

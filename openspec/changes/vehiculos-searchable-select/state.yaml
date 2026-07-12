@@ -1,0 +1,28 @@
+change: vehiculos-searchable-select
+created: 2026-07-09
+artifact_store: openspec
+execution_mode: interactive
+delivery_strategy: ask-on-risk
+chain_strategy: stacked-to-main
+pr_plan:
+  pr1: shared components (QuickCreateModal, SearchableSelect, referenceSelectConfigs) - tasks phases 1-3
+  pr2: page integration (nuevo, editar) - tasks phases 4-6
+phases:
+  explore:
+    status: done
+  proposal:
+    status: done
+  spec:
+    status: done
+  design:
+    status: done
+  tasks:
+    status: done
+  apply:
+    status: done
+    note: "PR1 done (Phase 1-3: QuickCreateModal, SearchableSelect, referenceSelectConfigs). PR2 done (Phase 4-6: page integration into vehiculos/nuevo and vehiculos/editar/[id]). Phase 6 manual verification is statically verified only (code-path reading, build pass, curl SSR smoke check) - no browser automation available in this environment; a human must click through the six Phase 6 scenarios in a real browser before merge."
+  verify:
+    status: done
+    note: "All 13 spec.md requirements verified PASS via independent code read (SearchableSelect.tsx, QuickCreateModal.tsx, referenceSelectConfigs.tsx, both vehicle pages). Independent npm run build: success, 0 type errors, 0 lint errors. No CRITICAL or WARNING findings; 2 SUGGESTIONs (tasks.md 3.4 wording stale vs correct implementation; required-asterisk hardcoded not prop-driven, YAGNI-deferred). Reproduced and recovered from the documented dev-server/next-build cache-corruption gotcha; dev server confirmed responsive (200) on both vehicle pages post-recovery. Phase 6 browser-only manual verification remains an accepted, known gap (no test runner, no browser-automation tool available) - flagged as a required human follow-up before merge, not a blocking CRITICAL. See verify-report.md."
+  archive:
+    status: not-started

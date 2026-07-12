@@ -1,18 +1,34 @@
-import { IsBoolean, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 import { USER_ROLES, UserRol } from '../user.constants';
 
-// NOTE: no `username` field here, deliberately — this is how username
-// immutability is enforced. The global ValidationPipe({ whitelist: true })
-// in main.ts silently strips any `username` sent in a PATCH body. Do not
-// add one back without updating the users-management spec.
 export class UpdateUserDto {
-  @IsOptional()
   @IsString()
-  nombre?: string;
+  @IsNotEmpty()
+  username: string;
+
+  @IsString()
+  @IsNotEmpty()
+  dni: string;
 
   @IsOptional()
+  @IsEmail()
+  email?: string;
+
   @IsString()
-  apellido?: string;
+  @IsNotEmpty()
+  nombre: string;
+
+  @IsString()
+  @IsNotEmpty()
+  apellido: string;
 
   @IsOptional()
   @IsIn(USER_ROLES)
@@ -20,7 +36,7 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  @MinLength(8)
+  @MinLength(4)
   password?: string;
 
   @IsOptional()

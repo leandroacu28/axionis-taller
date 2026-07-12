@@ -44,9 +44,19 @@ export default function LoginPage() {
       className={`${nunito.className} flex min-h-screen w-full overflow-hidden bg-white`}
     >
       {/* Panel izquierdo: Branding (visible en desktop) */}
-      <div className="relative hidden items-center justify-center overflow-hidden bg-stone-900 lg:flex lg:w-1/2">
+      <div className="relative hidden items-start justify-center overflow-hidden bg-stone-900 lg:flex lg:w-1/2">
+        {/* Imagen de fondo */}
+        <Image
+          src="/images/login.webp"
+          alt=""
+          fill
+          priority
+          aria-hidden="true"
+          className="object-cover"
+        />
+
         {/* Fondo con efectos */}
-        <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-rose-950 to-stone-900 opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-rose-950 to-stone-900 opacity-60" />
         <div className="absolute inset-0 bg-grid-pattern opacity-10" />
 
         {/* Círculos decorativos */}
@@ -94,9 +104,11 @@ export default function LoginPage() {
         </div>
 
         {/* Footer copyright */}
-        <div className="absolute bottom-6 z-10 w-full text-center text-xs text-stone-500">
-          &copy; {new Date().getFullYear()} Axionis Taller Mecánico. Todos los
-          derechos reservados.
+        <div className="absolute bottom-6 z-10 w-full text-center text-xs">
+          <span className="inline-block rounded-full bg-black/40 px-4 py-1.5 text-stone-300 backdrop-blur-sm">
+            &copy; {new Date().getFullYear()} Axionis Taller Mecánico. Todos los
+            derechos reservados.
+          </span>
         </div>
       </div>
 

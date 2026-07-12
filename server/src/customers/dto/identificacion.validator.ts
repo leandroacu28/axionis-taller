@@ -10,6 +10,9 @@ import { ID_TYPE_PATTERNS, IdType } from '../customer.constants';
 @ValidatorConstraint({ name: 'identificacionValida', async: false })
 export class IdentificacionValidaConstraint implements ValidatorConstraintInterface {
   validate(value: unknown, args: ValidationArguments): boolean {
+    // identificacion is optional — an absent value is valid regardless of
+    // tipoIdentificacion; only a provided value must match the pattern.
+    if (value === undefined || value === null || value === '') return true;
     const tipo = (args.object as { tipoIdentificacion?: string }).tipoIdentificacion as IdType;
     const pattern = ID_TYPE_PATTERNS[tipo];
     if (!pattern) return false; // unknown/absent tipo — @IsIn already reports it separately

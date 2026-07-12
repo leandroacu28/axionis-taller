@@ -11,6 +11,8 @@ model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
   passwordHash String
+  dni          String?  @unique
+  email        String?
   nombre       String?
   apellido     String?
   rol          String   @default("empleado")
@@ -20,6 +22,9 @@ model User {
   creados      User[]   @relation("UserCreatedBy")
   clientesCreados Cliente[] @relation("ClienteCreadoPor")
   clientesActualizados Cliente[] @relation("ClienteActualizadoPor")
+  coloresCreados Color[] @relation("ColorCreadoPor")
+  marcasCreadas Marca[] @relation("MarcaCreadoPor")
+  vehiculosCreados Vehiculo[] @relation("VehiculoCreadoPor")
   tiposServicioCreados      TipoServicio[] @relation("TipoServicioCreadoPor")
   tiposServicioActualizados TipoServicio[] @relation("TipoServicioActualizadoPor")
   createdAt    DateTime @default(now())
@@ -28,18 +33,61 @@ model User {
 
 model Cliente {
   id                 Int      @id @default(autoincrement())
-  razonSocial        String
+  razonSocial        String   @unique
   tipoIdentificacion String
-  identificacion     String   @unique
-  telefono           String
-  domicilio          String
+  identificacion     String?  @unique
+  telefono           String?
+  domicilio          String?
   activo             Boolean  @default(true)
   creadoPorId        Int?
   creadoPor          User?    @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId   Int?
   actualizadoPor     User?    @relation("ClienteActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  vehiculos          Vehiculo[]
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model Color {
+  id          Int      @id @default(autoincrement())
+  descripcion String   @unique
+  activo      Boolean  @default(true)
+  creadoPorId Int?
+  creadoPor   User?    @relation("ColorCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  vehiculos   Vehiculo[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Marca {
+  id          Int      @id @default(autoincrement())
+  marca       String
+  modelo      String
+  activo      Boolean  @default(true)
+  creadoPorId Int?
+  creadoPor   User?    @relation("MarcaCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  vehiculos   Vehiculo[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([marca, modelo])
+}
+
+model Vehiculo {
+  id           Int      @id @default(autoincrement())
+  marcaId      Int
+  marca        Marca    @relation(fields: [marcaId], references: [id])
+  colorId      Int
+  color        Color    @relation(fields: [colorId], references: [id])
+  anio         Int
+  kilometraje  Int
+  clienteId    Int
+  cliente      Cliente  @relation(fields: [clienteId], references: [id])
+  activo       Boolean  @default(true)
+  creadoPorId  Int?
+  creadoPor    User?    @relation("VehiculoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model TipoServicio {

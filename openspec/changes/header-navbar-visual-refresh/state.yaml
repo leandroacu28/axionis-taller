@@ -1,0 +1,25 @@
+change: header-navbar-visual-refresh
+created: 2026-07-07
+artifact_store: openspec
+execution_mode: interactive
+delivery_strategy: single-pr
+phases:
+  explore:
+    status: done
+  proposal:
+    status: approved
+  spec:
+    status: skipped
+    reason: Purely additive Tailwind class edits to existing components; no new capability, no behavior change — spec/design ceremony would be process overhead disproportionate to scope.
+  design:
+    status: skipped
+    reason: Same as spec.
+  tasks:
+    status: skipped
+    reason: Single small PR, no chaining needed.
+  apply:
+    status: done
+  verify:
+    status: done
+  archive:
+    status: not-started

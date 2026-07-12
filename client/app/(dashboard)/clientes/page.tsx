@@ -7,6 +7,7 @@ import {
   listCustomers,
   toIdType,
   updateCustomer,
+  exportCustomers,
   ID_TYPE_LABELS,
   type CustomerListItem,
 } from '../../lib/customers';
@@ -50,6 +51,18 @@ function SearchIcon() {
   );
 }
 
+// Document with a folded corner plus a table grid inside — reads as "Excel
+// spreadsheet file" without depending on a brand logo asset.
+function ExcelFileIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 3v4.5a1.5 1.5 0 001.5 1.5h4.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3h7.5l6 6v11.25a1.5 1.5 0 01-1.5 1.5H6.75a1.5 1.5 0 01-1.5-1.5V4.5a1.5 1.5 0 011.5-1.5z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 12.75h7.5M8.25 15.75h7.5M8.25 18.75h7.5M12 12.75v6" />
+    </svg>
+  );
+}
+
 type StatusFilter = 'all' | 'activo' | 'inactivo';
 
 const DEFAULT_STATUS_FILTER: StatusFilter = 'activo';
@@ -64,41 +77,46 @@ export default function ClientesPage() {
     null,
   );
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(DEFAULT_STATUS_FILTER);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
+  const [total, setTotal] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const hasActiveFilters = search.trim() !== '' || statusFilter !== DEFAULT_STATUS_FILTER;
+  const hasActiveFilters = searchInput.trim() !== '' || statusFilter !== DEFAULT_STATUS_FILTER;
   const clearFilters = () => {
+    setSearchInput('');
     setSearch('');
     setStatusFilter(DEFAULT_STATUS_FILTER);
+    setPage(1);
   };
 
-  const normalizedSearch = search.trim().toLowerCase();
-  const filteredCustomers = customers.filter((customer) => {
-    if (statusFilter === 'activo' && !customer.activo) return false;
-    if (statusFilter === 'inactivo' && customer.activo) return false;
-    if (!normalizedSearch) return true;
-    const haystack = [customer.razonSocial, customer.identificacion, customer.telefono]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-    return haystack.includes(normalizedSearch);
-  });
-  const visibleActiveCount = filteredCustomers.filter((customer) => customer.activo).length;
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
-  const paginatedCustomers = filteredCustomers.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
+  // Debounce: the input updates `searchInput` instantly for responsive
+  // typing, but the value actually sent to the backend (`search`) only
+  // updates 350ms after the user stops typing. Resetting `page` here too
+  // (instead of a separate effect keyed on `search`) keeps both state
+  // changes in one render, avoiding a wasted double-fetch.
   useEffect(() => {
-    setPage(1);
-  }, [search, statusFilter, pageSize]);
+    const handle = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
+  // Defensive: if the result set shrinks (e.g. deactivating the only item
+  // on the last page) and the current page is now past the end, snap back
+  // to the last valid page.
+  useEffect(() => {
+    if (page > 1 && page > totalPages) setPage(totalPages);
+  }, [totalPages]);
 
   const closeMenu = () => {
     setOpenMenuId(null);
@@ -124,8 +142,15 @@ export default function ClientesPage() {
     setLoading(true);
     setListError('');
     try {
-      const data = await listCustomers();
-      setCustomers(data);
+      const result = await listCustomers({
+        page,
+        pageSize,
+        search: search || undefined,
+        status: statusFilter,
+      });
+      setCustomers(result.data);
+      setTotal(result.total);
+      setActiveCount(result.activeCount);
     } catch (err) {
       setListError(
         err instanceof Error ? err.message : 'No se pudo conectar con el servidor.',
@@ -137,7 +162,8 @@ export default function ClientesPage() {
 
   useEffect(() => {
     loadCustomers();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize, search, statusFilter]);
 
   const handleToggleActivo = async (customer: CustomerListItem) => {
     closeMenu();
@@ -158,9 +184,9 @@ export default function ClientesPage() {
       await updateCustomer(customer.id, {
         razonSocial: customer.razonSocial,
         tipoIdentificacion: toIdType(customer.tipoIdentificacion),
-        identificacion: customer.identificacion,
-        telefono: customer.telefono,
-        domicilio: customer.domicilio,
+        identificacion: customer.identificacion ?? undefined,
+        telefono: customer.telefono ?? undefined,
+        domicilio: customer.domicilio ?? undefined,
         activo: activating,
       });
       showSuccess(
@@ -175,6 +201,34 @@ export default function ClientesPage() {
       );
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      // Use the APPLIED filters (`search`, `statusFilter`) — not
+      // `searchInput` — so the Excel file matches exactly the set the list is
+      // currently showing.
+      const blob = await exportCustomers({
+        search: search || undefined,
+        status: statusFilter,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'clientes.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showError(
+        'No se pudo exportar',
+        err instanceof Error ? err.message : 'No se pudo conectar con el servidor.',
+      );
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -216,19 +270,37 @@ export default function ClientesPage() {
             Gestioná los clientes del sistema.
           </p>
         </div>
-        <Link
-          href="/clientes/nuevo"
-          className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600"
-        >
-          Nuevo cliente
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-green-600/30 transition-all hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {exporting ? (
+              <span
+                className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                aria-hidden="true"
+              />
+            ) : (
+              <ExcelFileIcon />
+            )}
+            {exporting ? 'Exportando...' : 'Exportar'}
+          </button>
+          <Link
+            href="/clientes/nuevo"
+            className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600"
+          >
+            Nuevo cliente
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
-            {visibleActiveCount} cliente{visibleActiveCount === 1 ? '' : 's'} activo
-            {visibleActiveCount === 1 ? '' : 's'} visible{visibleActiveCount === 1 ? '' : 's'}
+            {activeCount} cliente{activeCount === 1 ? '' : 's'} activo
+            {activeCount === 1 ? '' : 's'} visible{activeCount === 1 ? '' : 's'}
           </span>
         </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
@@ -244,8 +316,8 @@ export default function ClientesPage() {
                 <input
                   id="search"
                   type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Razón social, identificación o teléfono..."
                   className="w-full rounded-lg border border-stone-200 bg-white py-2 pl-9 pr-3 text-sm text-stone-900 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
                 />
@@ -259,7 +331,10 @@ export default function ClientesPage() {
               <select
                 id="statusFilter"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as StatusFilter);
+                  setPage(1);
+                }}
                 className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
               >
                 <option value="all">Todos</option>
@@ -275,7 +350,10 @@ export default function ClientesPage() {
               <select
                 id="pageSize"
                 value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
                 className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
               >
                 {PAGE_SIZE_OPTIONS.map((size) => (
@@ -319,11 +397,11 @@ export default function ClientesPage() {
               Reintentar
             </button>
           </div>
-        ) : customers.length === 0 ? (
+        ) : customers.length === 0 && total === 0 && !hasActiveFilters ? (
           <div className="p-8 text-center text-sm text-stone-500">
             No hay clientes registrados todavía.
           </div>
-        ) : filteredCustomers.length === 0 ? (
+        ) : customers.length === 0 && total === 0 ? (
           <div className="flex flex-col items-center gap-2 p-8 text-center text-sm text-stone-500">
             <span>No se encontraron clientes con esos filtros.</span>
             <button
@@ -338,40 +416,46 @@ export default function ClientesPage() {
           <table className="min-w-full divide-y divide-stone-200">
             <thead className="bg-stone-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Razón Social
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  #
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Cliente / Razón Social
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Tipo
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Identificación
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Teléfono
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Estado
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-stone-500">
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Acciones
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {paginatedCustomers.map((customer) => (
+              {customers.map((customer, index) => (
                 <tr key={customer.id} className="hover:bg-stone-50/60">
-                  <td className="px-4 py-3 text-sm font-medium text-stone-800">
+                  <td className="px-4 py-3 text-center text-sm text-stone-500">
+                    {(page - 1) * pageSize + index + 1}
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm font-medium text-stone-800">
                     {customer.razonSocial}
                   </td>
-                  <td className="px-4 py-3 text-sm text-stone-600">
+                  <td className="px-4 py-3 text-center text-sm text-stone-600">
                     <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-700">
                       {ID_TYPE_LABELS[toIdType(customer.tipoIdentificacion)]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-stone-600">{customer.identificacion}</td>
-                  <td className="px-4 py-3 text-sm text-stone-600">{customer.telefono}</td>
-                  <td className="px-4 py-3 text-sm text-stone-600">
+                  <td className="px-4 py-3 text-center text-sm text-stone-600">{customer.identificacion || '—'}</td>
+                  <td className="px-4 py-3 text-center text-sm text-stone-600">{customer.telefono || '—'}</td>
+                  <td className="px-4 py-3 text-center text-sm text-stone-600">
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                         customer.activo
@@ -382,7 +466,7 @@ export default function ClientesPage() {
                       {customer.activo ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right text-sm">
+                  <td className="px-4 py-3 text-center text-sm">
                     <div
                       className="relative inline-block text-left"
                       ref={openMenuId === customer.id ? triggerRef : null}
@@ -450,29 +534,28 @@ export default function ClientesPage() {
             </tbody>
           </table>
         )}
-        {!loading && !listError && filteredCustomers.length > 0 && (
+        {!loading && !listError && customers.length > 0 && (
           <div className="flex flex-col items-center justify-between gap-3 border-t border-stone-200 px-4 py-3 text-sm text-stone-500 sm:flex-row">
             <span>
-              Mostrando {(currentPage - 1) * pageSize + 1}–
-              {Math.min(currentPage * pageSize, filteredCustomers.length)} de{' '}
-              {filteredCustomers.length} clientes
+              Mostrando {(page - 1) * pageSize + 1}–
+              {Math.min(page * pageSize, total)} de {total} clientes
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
+                disabled={page === 1}
                 className="rounded-lg border border-stone-200 px-3 py-1.5 font-medium text-stone-600 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Anterior
               </button>
               <span className="text-stone-600">
-                Página {currentPage} de {totalPages}
+                Página {page} de {totalPages}
               </span>
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
+                disabled={page === totalPages}
                 className="rounded-lg border border-stone-200 px-3 py-1.5 font-medium text-stone-600 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Siguiente

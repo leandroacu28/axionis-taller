@@ -19,6 +19,8 @@ export function toUserRol(value: string): UserRol {
 
 export interface UserListItem extends UserData {
   id: number;
+  dni: string | null;
+  email: string | null;
   activo: boolean;
   updatedAt: string;
   creadoPor: { id: number; username: string } | null;
@@ -27,6 +29,8 @@ export interface UserListItem extends UserData {
 export interface CreateUserPayload {
   username: string;
   password: string;
+  dni: string;
+  email?: string;
   nombre?: string;
   apellido?: string;
   rol: UserRol;
@@ -34,6 +38,9 @@ export interface CreateUserPayload {
 }
 
 export interface UpdateUserPayload {
+  username: string;
+  dni: string;
+  email?: string;
   nombre?: string;
   apellido?: string;
   rol?: UserRol;
@@ -57,6 +64,13 @@ export async function listUsers(): Promise<UserListItem[]> {
     headers: { ...getAuthHeader() },
   });
   return handleJsonResponse(res, 'No se pudo obtener la lista de usuarios');
+}
+
+export async function getUser(id: number): Promise<UserListItem> {
+  const res = await fetch(`${API_BASE_URL}/users/${id}`, {
+    headers: { ...getAuthHeader() },
+  });
+  return handleJsonResponse(res, 'No se pudo obtener el usuario');
 }
 
 export async function createUser(data: CreateUserPayload): Promise<UserListItem> {

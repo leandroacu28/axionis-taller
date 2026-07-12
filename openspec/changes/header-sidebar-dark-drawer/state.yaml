@@ -1,0 +1,26 @@
+change: header-sidebar-dark-drawer
+created: 2026-07-07
+artifact_store: openspec
+execution_mode: interactive
+delivery_strategy: single-pr
+phases:
+  explore:
+    status: done
+    note: Done inline by re-reading template-spa's actual layout.tsx/Header.tsx/Sidebar.tsx (not a separate sdd-explore delegation) — folded into proposal.md.
+  proposal:
+    status: done
+  spec:
+    status: skipped
+    reason: Contained visual/structural change to 3 existing components; spec/design ceremony disproportionate to scope.
+  design:
+    status: skipped
+    reason: Same as spec.
+  tasks:
+    status: skipped
+    reason: Single small PR, no chaining needed.
+  apply:
+    status: done
+  verify:
+    status: done
+  archive:
+    status: not-started
