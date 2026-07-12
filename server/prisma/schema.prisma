@@ -20,6 +20,8 @@ model User {
   creados      User[]   @relation("UserCreatedBy")
   clientesCreados Cliente[] @relation("ClienteCreadoPor")
   clientesActualizados Cliente[] @relation("ClienteActualizadoPor")
+  tiposServicioCreados      TipoServicio[] @relation("TipoServicioCreadoPor")
+  tiposServicioActualizados TipoServicio[] @relation("TipoServicioActualizadoPor")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -36,6 +38,18 @@ model Cliente {
   creadoPor          User?    @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId   Int?
   actualizadoPor     User?    @relation("ClienteActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model TipoServicio {
+  id                 Int      @id @default(autoincrement())
+  descripcion        String   @unique
+  activo             Boolean  @default(true)
+  creadoPorId        Int?
+  creadoPor          User?    @relation("TipoServicioCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId   Int?
+  actualizadoPor     User?    @relation("TipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
