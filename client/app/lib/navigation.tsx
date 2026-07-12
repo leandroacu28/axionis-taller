@@ -41,4 +41,12 @@ export const navigation: NavigationItem[] = [
     // usuarios icon rather than ship a broken image (see design.md).
     icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
+  {
+    name: 'Tipos de Servicio',
+    href: '/tipos-servicio',
+    id: 'tipos-servicio',
+    // No dedicated /icons/tipos-servicio.svg asset exists yet; reuse the
+    // usuarios icon rather than ship a broken image (see design.md).
+    icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
+  },
 ];
