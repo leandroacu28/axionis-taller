@@ -426,6 +426,9 @@ export default function TiposServicioPage() {
                   Creación
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Última actualización
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Estado
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
@@ -449,6 +452,18 @@ export default function TiposServicioPage() {
                       : '—'}
                     <span className="block text-xs text-stone-400">
                       {new Date(serviceType.createdAt).toLocaleString('es-AR', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm text-stone-600">
+                    {serviceType.actualizadoPor
+                      ? [serviceType.actualizadoPor.nombre, serviceType.actualizadoPor.apellido].filter(Boolean).join(' ') ||
+                        serviceType.actualizadoPor.username
+                      : '—'}
+                    <span className="block text-xs text-stone-400">
+                      {new Date(serviceType.updatedAt).toLocaleString('es-AR', {
                         dateStyle: 'short',
                         timeStyle: 'short',
                       })}

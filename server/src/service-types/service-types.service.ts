@@ -57,14 +57,16 @@ type ServiceTypeRow = {
   descripcion: string;
   activo: boolean;
   createdAt: Date;
+  updatedAt: Date;
   creadoPor: { id: number; username: string; nombre: string | null; apellido: string | null } | null;
+  actualizadoPor: { id: number; username: string; nombre: string | null; apellido: string | null } | null;
 };
 
 // Same name-fallback logic as the list table: nombre + apellido, falling
-// back to username, or empty string when there's no creator.
-function creadoPorLabel(creadoPor: ServiceTypeRow['creadoPor']): string {
-  if (!creadoPor) return '';
-  return [creadoPor.nombre, creadoPor.apellido].filter(Boolean).join(' ') || creadoPor.username;
+// back to username, or empty string when there's no creator/updater.
+function userLabel(user: ServiceTypeRow['creadoPor']): string {
+  if (!user) return '';
+  return [user.nombre, user.apellido].filter(Boolean).join(' ') || user.username;
 }
 
 async function buildServiceTypesExcel(rows: ServiceTypeRow[]): Promise<Buffer> {
@@ -74,6 +76,8 @@ async function buildServiceTypesExcel(rows: ServiceTypeRow[]): Promise<Buffer> {
     { header: 'Descripción', key: 'descripcion', width: 32 },
     { header: 'Creado por', key: 'creadoPor', width: 24 },
     { header: 'Fecha de creación', key: 'fechaCreacion', width: 22 },
+    { header: 'Actualizado por', key: 'actualizadoPor', width: 24 },
+    { header: 'Fecha de actualización', key: 'fechaActualizacion', width: 22 },
     { header: 'Estado', key: 'estado', width: 12 },
   ];
   // Brand rose (matches the app's primary button color) with white bold text
@@ -85,8 +89,13 @@ async function buildServiceTypesExcel(rows: ServiceTypeRow[]): Promise<Buffer> {
   for (const r of rows) {
     sheet.addRow({
       descripcion: r.descripcion,
-      creadoPor: creadoPorLabel(r.creadoPor),
+      creadoPor: userLabel(r.creadoPor),
       fechaCreacion: r.createdAt.toLocaleString('es-AR', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      }),
+      actualizadoPor: userLabel(r.actualizadoPor),
+      fechaActualizacion: r.updatedAt.toLocaleString('es-AR', {
         dateStyle: 'short',
         timeStyle: 'short',
       }),
