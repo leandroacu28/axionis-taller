@@ -10,6 +10,7 @@ import { ColorsModule } from './colors/colors.module';
 import { BrandsModule } from './brands/brands.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { ServiceTypesModule } from './service-types/service-types.module';
+import { UnidadesMedidaModule } from './unidades-medida/unidades-medida.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ServiceTypesModule } from './service-types/service-types.module';
     BrandsModule,
     VehiclesModule,
     ServiceTypesModule,
+    UnidadesMedidaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

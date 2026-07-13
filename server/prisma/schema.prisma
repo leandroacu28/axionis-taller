@@ -30,6 +30,8 @@ model User {
   vehiculosActualizados Vehiculo[] @relation("VehiculoActualizadoPor")
   tiposServicioCreados      TipoServicio[] @relation("TipoServicioCreadoPor")
   tiposServicioActualizados TipoServicio[] @relation("TipoServicioActualizadoPor")
+  unidadesMedidaCreadas      UnidadMedida[] @relation("UnidadMedidaCreadoPor")
+  unidadesMedidaActualizadas UnidadMedida[] @relation("UnidadMedidaActualizadoPor")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -107,6 +109,18 @@ model TipoServicio {
   creadoPor          User?    @relation("TipoServicioCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId   Int?
   actualizadoPor     User?    @relation("TipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model UnidadMedida {
+  id                 Int      @id @default(autoincrement())
+  descripcion        String   @unique
+  activo             Boolean  @default(true)
+  creadoPorId        Int?
+  creadoPor          User?    @relation("UnidadMedidaCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId   Int?
+  actualizadoPor     User?    @relation("UnidadMedidaActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
