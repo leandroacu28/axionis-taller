@@ -74,13 +74,13 @@ Additive-only. Rollback is mechanical and **must respect FK ordering** because `
 - **Nav icon**: reuse a placeholder icon (existing convention) or request a dedicated `productos.svg`; non-blocking, swappable later.
 
 ## Success Criteria
-- [ ] `GET /productos`, `GET /:id`, `POST /`, `PATCH /:id` require a valid Bearer token (401 otherwise); no `DELETE`, no `/export`.
-- [ ] `precioVenta` is never read from client input; it is recomputed from `precioCompra` + `porcentajeGanancia` on every create and update (D1).
-- [ ] `alicuotaIva` accepts only `21` or `10.5`; any other value is rejected (D4).
-- [ ] `alertaStock` (Boolean) and `cantidadMinima` (numeric) persist independently (D2); `cantidadInicial` is editable via `PATCH` (D3).
-- [ ] `Producto` requires a valid existing `unidadMedidaId`; a missing/invalid reference is rejected; the referenced `UnidadMedida` cannot be deleted while referenced.
-- [ ] Duplicate `descripcion` returns 409 on create and update (A3, pending confirmation).
-- [ ] `POST` stamps `creadoPorId` + `actualizadoPorId`; `PATCH` updates `actualizadoPorId` from the JWT caller, never client input; both audit FKs `onDelete: SetNull`.
-- [ ] `/productos` page lists (paginated + filtered) and opens a shared modal for create/edit; `activo` only in edit; `precioVenta` shown read-only; Unidad de Medida chosen via searchable select; unsaved-close prompts confirm.
-- [ ] One flat "Productos" nav entry visible to any authenticated user.
-- [ ] Migration is additive-only and reversible per the Rollback Plan (FK ordering respected).
+- [x] `GET /productos`, `GET /:id`, `POST /`, `PATCH /:id` require a valid Bearer token (401 otherwise); no `DELETE`, no `/export`.
+- [x] `precioVenta` is never read from client input; it is recomputed from `precioCompra` + `porcentajeGanancia` on every create and update (D1).
+- [x] `alicuotaIva` accepts only `21` or `10.5`; any other value is rejected (D4).
+- [x] `alertaStock` (Boolean) and `cantidadMinima` (numeric) persist independently (D2); `cantidadInicial` is editable via `PATCH` (D3).
+- [x] `Producto` requires a valid existing `unidadMedidaId`; a missing/invalid reference is rejected; the referenced `UnidadMedida` cannot be deleted while referenced.
+- [x] Duplicate `descripcion` returns 409 on create and update (A3, pending confirmation).
+- [x] `POST` stamps `creadoPorId` + `actualizadoPorId`; `PATCH` updates `actualizadoPorId` from the JWT caller, never client input; both audit FKs `onDelete: SetNull`.
+- [x] `/productos` page lists (paginated + filtered) and opens a shared modal for create/edit; `activo` only in edit; `precioVenta` shown read-only; Unidad de Medida chosen via searchable select; unsaved-close prompts confirm.
+- [x] One flat "Productos" nav entry visible to any authenticated user.
+- [x] Migration is additive-only and reversible per the Rollback Plan (FK ordering respected).

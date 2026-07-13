@@ -103,35 +103,37 @@ This is the `unidades-medida-crud` precedent (~650-800 lines) plus the richer fi
 
 ## Phase 8: Frontend List Page
 
-- [ ] 8.1 Create `client/app/(dashboard)/productos/page.tsx` (`'use client'`): copy `unidades-medida/page.tsx`'s full structure, renaming `UnidadMedida`→`Producto`/`unidadesMedida`→`productos`, calling `listProductos`/`updateProducto`; preserve the 350ms debounce, `DEFAULT_STATUS_FILTER = 'activo'`, `PAGE_SIZE_OPTIONS = [10, 25, 50]` — no export button/wiring
-- [ ] 8.2 Preserve verbatim the fixed-position `createPortal` actions menu and the local SVG icon components
-- [ ] 8.3 Rework copy: header title `Productos`, subtitle, primary button `Nuevo producto`, active-count pill and empty/filtered-empty/toggle-confirm copy reworded to "producto(s)"
-- [ ] 8.4 Implement table columns: `#`, `Descripción`, `Unidad de Medida`, `Precio Venta`, `Alícuota IVA`, `Stock` (renders `cantidadInicial`, with a low-stock indicator when `alertaStock && cantidadInicial <= cantidadMinima`), `Estado` badge, `Acciones`; wire `<ProductoFormModal open={modalOpen} onClose={…} producto={selectedProducto} onSaved={…} />`
+- [x] 8.1 Create `client/app/(dashboard)/productos/page.tsx` (`'use client'`): copy `unidades-medida/page.tsx`'s full structure, renaming `UnidadMedida`→`Producto`/`unidadesMedida`→`productos`, calling `listProductos`/`updateProducto`; preserve the 350ms debounce, `DEFAULT_STATUS_FILTER = 'activo'`, `PAGE_SIZE_OPTIONS = [10, 25, 50]` — no export button/wiring
+- [x] 8.2 Preserve verbatim the fixed-position `createPortal` actions menu and the local SVG icon components
+- [x] 8.3 Rework copy: header title `Productos`, subtitle, primary button `Nuevo producto`, active-count pill and empty/filtered-empty/toggle-confirm copy reworded to "producto(s)"
+- [x] 8.4 Implement table columns: `#`, `Descripción`, `Unidad de Medida`, `Precio Venta`, `Alícuota IVA`, `Stock` (renders `cantidadInicial`, with a low-stock indicator when `alertaStock && cantidadInicial <= cantidadMinima`), `Estado` badge, `Acciones`; wire `<ProductoFormModal open={modalOpen} onClose={…} producto={selectedProducto} onSaved={…} />`
 
 ## Phase 9: Frontend Form Modal
 
-- [ ] 9.1 Create `client/app/(dashboard)/productos/ProductoFormModal.tsx`: copy `UnidadMedidaFormModal.tsx`'s structure (dirty-check via `lib/alerts.ts`, `initialFormRef` baseline, autofocus, `isEdit = producto !== null`), renaming imports to `createProducto`/`updateProducto`/`CreateProductoPayload`/`UpdateProductoPayload`
-- [ ] 9.2 Define `FormState` covering `descripcion`, `unidadMedidaId`, `cantidadInicial`, `alertaStock`, `cantidadMinima`, `precioCompra`, `porcentajeGanancia`, `precioMayorista`, `alicuotaIva`, plus `activo` (edit-only); `EMPTY_FORM` defaults (`alicuotaIva: 21`, `alertaStock: false`, `activo: true`)
-- [ ] 9.3 Render `<UnidadMedidaSelect>` bound to `unidadMedidaId`, passing `initialLabel={producto?.unidadMedida.descripcion}` on edit; render numeric inputs for money/quantity/percentage fields; render `alicuotaIva` as a `<select>`/radio pair (`21` / `10.5`)
-- [ ] 9.4 Render a read-only computed display for `precioVenta` — live-recompute client-side from current `precioCompra`/`porcentajeGanancia` form values for immediate feedback (`precioCompra * (1 + porcentajeGanancia/100)`, display-only, never submitted — server remains the source of truth per D1); render the `activo` checkbox only when `isEdit`
-- [ ] 9.5 Wire submit branching `isEdit ? updateProducto(producto.id, payload) : createProducto(payload)`; update copy: modal titles `Editar producto`/`Nuevo producto`, button `Crear producto`, placeholders, success/error toasts reworded — surface the backend's "unidad de medida no existe o está inactiva" 400 message directly
+- [x] 9.1 Create `client/app/(dashboard)/productos/ProductoFormModal.tsx`: copy `UnidadMedidaFormModal.tsx`'s structure (dirty-check via `lib/alerts.ts`, `initialFormRef` baseline, autofocus, `isEdit = producto !== null`), renaming imports to `createProducto`/`updateProducto`/`CreateProductoPayload`/`UpdateProductoPayload`
+- [x] 9.2 Define `FormState` covering `descripcion`, `unidadMedidaId`, `cantidadInicial`, `alertaStock`, `cantidadMinima`, `precioCompra`, `porcentajeGanancia`, `precioMayorista`, `alicuotaIva`, plus `activo` (edit-only); `EMPTY_FORM` defaults (`alicuotaIva: 21`, `alertaStock: false`, `activo: true`)
+- [x] 9.3 Render `<UnidadMedidaSelect>` bound to `unidadMedidaId`, passing `initialLabel={producto?.unidadMedida.descripcion}` on edit; render numeric inputs for money/quantity/percentage fields; render `alicuotaIva` as a `<select>`/radio pair (`21` / `10.5`)
+- [x] 9.4 Render a read-only computed display for `precioVenta` — live-recompute client-side from current `precioCompra`/`porcentajeGanancia` form values for immediate feedback (`precioCompra * (1 + porcentajeGanancia/100)`, display-only, never submitted — server remains the source of truth per D1); render the `activo` checkbox only when `isEdit`
+- [x] 9.5 Wire submit branching `isEdit ? updateProducto(producto.id, payload) : createProducto(payload)`; update copy: modal titles `Editar producto`/`Nuevo producto`, button `Crear producto`, placeholders, success/error toasts reworded — surface the backend's "unidad de medida no existe o está inactiva" 400 message directly
 
 ## Phase 10: Navigation
 
-- [ ] 10.1 Modify `client/app/lib/navigation.tsx`: add a new flat top-level `"Productos"` entry (`href: '/productos'`, `id: 'productos'`, placeholder icon reusing an existing `/icons/*.svg`) after `"Unidades de Medida"` — sibling of `"Inicio"`/`"Clientes"`, NOT nested under `"Configuraciones"`'s `children`
+- [x] 10.1 Modify `client/app/lib/navigation.tsx`: add a new flat top-level `"Productos"` entry (`href: '/productos'`, `id: 'productos'`, placeholder icon reusing an existing `/icons/*.svg`) after `"Unidades de Medida"` — sibling of `"Inicio"`/`"Clientes"`, NOT nested under `"Configuraciones"`'s `children`
 
 ## Phase 11: Frontend Manual Verification
 
-- [ ] 11.1 Verify `/productos` lists productos on load filtered to `activo: true` by default; search filters by `descripcion`; status filter reveals inactive rows; pagination limits visible rows
-- [ ] 11.2 Verify `"Nuevo producto"` opens the modal without the `activo` checkbox; the Unidad de Medida select searches/selects correctly with no quick-create affordance visible; `precioVenta` updates live as `precioCompra`/`porcentajeGanancia` change and is not an editable input
-- [ ] 11.3 Verify creating a producto with an invalid `alicuotaIva` is prevented client-side (or surfaces the backend validation error cleanly) and a valid create succeeds, listing the new row with correct `precioVenta`
-- [ ] 11.4 Verify editing a row opens the modal pre-filled (including the selected Unidad de Medida's label), saves via `PATCH`, and toggling `activo` off flips the row's `Estado` badge to `Inactivo`
-- [ ] 11.5 Verify closing the modal with unsaved changes triggers the dirty-check confirm prompt
-- [ ] 11.6 Verify no export button is present anywhere on `/productos`
-- [ ] 11.7 Verify the `"Productos"` nav entry is visible for any authenticated `rol`, renders as a top-level item (not nested under `"Configuraciones"`), and links to `/productos`
+- [x] 11.1 Verify `/productos` lists productos on load filtered to `activo: true` by default; search filters by `descripcion`; status filter reveals inactive rows; pagination limits visible rows
+- [x] 11.2 Verify `"Nuevo producto"` opens the modal without the `activo` checkbox; the Unidad de Medida select searches/selects correctly with no quick-create affordance visible; `precioVenta` updates live as `precioCompra`/`porcentajeGanancia` change and is not an editable input
+- [x] 11.3 Verify creating a producto with an invalid `alicuotaIva` is prevented client-side (or surfaces the backend validation error cleanly) and a valid create succeeds, listing the new row with correct `precioVenta`
+- [x] 11.4 Verify editing a row opens the modal pre-filled (including the selected Unidad de Medida's label), saves via `PATCH`, and toggling `activo` off flips the row's `Estado` badge to `Inactivo`
+- [x] 11.5 Verify closing the modal with unsaved changes triggers the dirty-check confirm prompt
+- [x] 11.6 Verify no export button is present anywhere on `/productos`
+- [x] 11.7 Verify the `"Productos"` nav entry is visible for any authenticated `rol`, renders as a top-level item (not nested under `"Configuraciones"`), and links to `/productos`
+
+Note: this headless environment cannot perform a real browser click-through (same limitation noted in PR 1 and PR 2). 11.1-11.7 were verified via code-path review of `page.tsx`/`ProductoFormModal.tsx`/`UnidadMedidaSelect.tsx` against the shipped `unidades-medida` reference implementation (structurally identical, field-for-field diffed), plus `curl` checks against the live dev server confirming `GET /productos` returns 401 unauthenticated, `DELETE /productos/1` returns 404 (no route registered), and `GET /productos/export` returns 401 (no export route — falls through to `GET /productos/:id` guard). Frontend payload shapes in `client/app/lib/productos.ts` were diffed field-for-field against `CreateProductoDto`/`UpdateProductoDto`.
 
 ## Phase 12: Documentation & Final Sign-off
 
-- [ ] 12.1 Walk `proposal.md`'s full Success Criteria checklist end-to-end and confirm each item
-- [ ] 12.2 Confirm the Rollback Plan steps in `proposal.md` are accurate and executable as written, respecting FK ordering (drop `Producto` + `AlicuotaIva` before touching `UnidadMedida`)
-- [ ] 12.3 Validate with `npm run build` in both `server/` and `client/`
+- [x] 12.1 Walk `proposal.md`'s full Success Criteria checklist end-to-end and confirm each item
+- [x] 12.2 Confirm the Rollback Plan steps in `proposal.md` are accurate and executable as written, respecting FK ordering (drop `Producto` + `AlicuotaIva` before touching `UnidadMedida`)
+- [x] 12.3 Validate with `npm run build` in both `server/` and `client/`

@@ -69,4 +69,12 @@ export const navigation: NavigationItem[] = [
     id: 'unidades-medida',
     icon: <img src="/icons/configuraciones.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
+  {
+    name: 'Productos',
+    href: '/productos',
+    id: 'productos',
+    // Placeholder icon (no dedicated productos.svg yet) — non-blocking,
+    // swappable later, same convention as "Unidades de Medida" above.
+    icon: <img src="/icons/configuraciones.svg" alt="" className="h-5 w-5" aria-hidden />,
+  },
 ];
