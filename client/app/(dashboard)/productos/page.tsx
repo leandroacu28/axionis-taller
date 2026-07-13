@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -8,7 +9,6 @@ import {
   type ProductoListItem,
 } from '../../lib/productos';
 import { showConfirm, showError, showSuccess } from '../../lib/alerts';
-import ProductoFormModal from './ProductoFormModal';
 
 // Keep in sync with the menu's `w-40` class below.
 const MENU_WIDTH = 160;
@@ -81,8 +81,6 @@ export default function ProductosPage() {
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
   const [total, setTotal] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedProducto, setSelectedProducto] = useState<ProductoListItem | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -245,16 +243,12 @@ export default function ProductosPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedProducto(null);
-              setModalOpen(true);
-            }}
+          <Link
+            href="/productos/nuevo"
             className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600"
           >
             Nuevo producto
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -473,18 +467,14 @@ export default function ProductosPage() {
                             }}
                             className="z-50 rounded-lg border border-stone-200 bg-white py-1 shadow-lg"
                           >
-                            <button
-                              type="button"
-                              onClick={() => {
-                                closeMenu();
-                                setSelectedProducto(producto);
-                                setModalOpen(true);
-                              }}
+                            <Link
+                              href={`/productos/editar/${producto.id}`}
+                              onClick={closeMenu}
                               className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-stone-700 hover:bg-stone-50"
                             >
                               <PencilIcon />
                               Editar
-                            </button>
+                            </Link>
                             <button
                               type="button"
                               onClick={() => handleToggleActivo(producto)}
@@ -547,16 +537,6 @@ export default function ProductosPage() {
           </div>
         )}
       </div>
-
-      <ProductoFormModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        producto={selectedProducto}
-        onSaved={() => {
-          setModalOpen(false);
-          loadProductos();
-        }}
-      />
     </div>
   );
 }
