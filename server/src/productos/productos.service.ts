@@ -13,6 +13,7 @@ import { ListProductosQueryDto, ProductoStatusFilter } from './dto/list-producto
 const PRODUCTO_SELECT = {
   id: true,
   descripcion: true,
+  codigo: true,
   activo: true,
   cantidadInicial: true,
   alertaStock: true,
@@ -52,7 +53,11 @@ function buildProductoWhere(filter: ProductoFilter): {
   const term = filter.search?.trim();
   const status = filter.status ?? 'all';
 
-  const searchWhere: Prisma.ProductoWhereInput = term ? { descripcion: { contains: term } } : {};
+  // `codigo` is manually entered and not unique, but users will often look
+  // products up by their code, so search matches either field.
+  const searchWhere: Prisma.ProductoWhereInput = term
+    ? { OR: [{ descripcion: { contains: term } }, { codigo: { contains: term } }] }
+    : {};
 
   const where: Prisma.ProductoWhereInput = {
     ...searchWhere,
@@ -164,6 +169,7 @@ export class ProductosService {
       const producto = await this.prisma.producto.create({
         data: {
           descripcion: dto.descripcion,
+          codigo: dto.codigo,
           unidadMedidaId: dto.unidadMedidaId,
           cantidadInicial: new Prisma.Decimal(dto.cantidadInicial),
           alertaStock: dto.alertaStock,
@@ -216,6 +222,7 @@ export class ProductosService {
         where: { id },
         data: {
           descripcion: dto.descripcion,
+          codigo: dto.codigo,
           unidadMedidaId: dto.unidadMedidaId,
           cantidadInicial: new Prisma.Decimal(dto.cantidadInicial),
           alertaStock: dto.alertaStock,

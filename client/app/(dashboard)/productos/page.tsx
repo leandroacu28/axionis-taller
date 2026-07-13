@@ -179,6 +179,7 @@ export default function ProductosPage() {
     try {
       await updateProducto(producto.id, {
         descripcion: producto.descripcion,
+        codigo: producto.codigo,
         unidadMedidaId: producto.unidadMedidaId,
         cantidadInicial: Number(producto.cantidadInicial),
         alertaStock: producto.alertaStock,
@@ -274,7 +275,7 @@ export default function ProductosPage() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Descripción..."
+                  placeholder="Descripción o código..."
                   className="w-full rounded-lg border border-stone-200 bg-white py-2 pl-9 pr-3 text-sm text-stone-900 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
                 />
               </div>
@@ -379,6 +380,9 @@ export default function ProductosPage() {
                   Descripción
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Código
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Unidad de Medida
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
@@ -406,6 +410,9 @@ export default function ProductosPage() {
                   </td>
                   <td className="px-4 py-3 text-center text-sm font-medium text-stone-800">
                     {producto.descripcion}
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm text-stone-600">
+                    {producto.codigo || '—'}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
                     {producto.unidadMedida.descripcion}

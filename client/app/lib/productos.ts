@@ -5,6 +5,7 @@ import { listUnidadesMedida } from './unidades-medida';
 export interface ProductoListItem {
   id: number;
   descripcion: string;
+  codigo: string | null;
   activo: boolean;
   cantidadInicial: string;
   alertaStock: boolean;
@@ -24,6 +25,7 @@ export interface ProductoListItem {
 
 export interface CreateProductoPayload {
   descripcion: string;
+  codigo: string | null;
   unidadMedidaId: number;
   cantidadInicial: number;
   alertaStock: boolean;

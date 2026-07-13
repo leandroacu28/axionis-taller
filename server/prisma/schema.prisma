@@ -136,6 +136,7 @@ enum AlicuotaIva {
 model Producto {
   id                 Int          @id @default(autoincrement())
   descripcion        String       @unique
+  codigo             String?
   unidadMedidaId     Int
   unidadMedida       UnidadMedida @relation(fields: [unidadMedidaId], references: [id])
   activo             Boolean      @default(true)

@@ -14,6 +14,7 @@ import UnidadMedidaSelect from '../../UnidadMedidaSelect';
 
 interface FormState {
   descripcion: string;
+  codigo: string;
   unidadMedidaId: number | '';
   cantidadInicial: number | '';
   alertaStock: boolean;
@@ -27,6 +28,7 @@ interface FormState {
 
 const EMPTY_FORM: FormState = {
   descripcion: '',
+  codigo: '',
   unidadMedidaId: '',
   cantidadInicial: '',
   alertaStock: false,
@@ -89,6 +91,7 @@ export default function EditarProductoPage({ params }: { params: { id: string } 
         if (cancelled) return;
         const loaded: FormState = {
           descripcion: loadedProducto.descripcion,
+          codigo: loadedProducto.codigo ?? '',
           unidadMedidaId: loadedProducto.unidadMedidaId,
           cantidadInicial: Number(loadedProducto.cantidadInicial),
           alertaStock: loadedProducto.alertaStock,
@@ -166,8 +169,10 @@ export default function EditarProductoPage({ params }: { params: { id: string } 
 
     setSubmitting(true);
     try {
+      const trimmedCodigo = form.codigo.trim();
       const payload: UpdateProductoPayload = {
         descripcion: form.descripcion.trim(),
+        codigo: trimmedCodigo || null,
         unidadMedidaId: Number(form.unidadMedidaId),
         cantidadInicial: Number(form.cantidadInicial),
         alertaStock: form.alertaStock,
@@ -238,6 +243,20 @@ export default function EditarProductoPage({ params }: { params: { id: string } 
                 onChange={(e) => updateField('descripcion', e.target.value)}
                 required
                 placeholder="Ej: Aceite 10W40"
+                className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="codigo" className="text-sm font-medium text-stone-700">
+                Código
+              </label>
+              <input
+                id="codigo"
+                type="text"
+                value={form.codigo}
+                onChange={(e) => updateField('codigo', e.target.value)}
+                placeholder="Ej: A-1023"
                 className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
               />
             </div>

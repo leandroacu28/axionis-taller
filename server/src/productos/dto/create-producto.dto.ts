@@ -1,10 +1,26 @@
-import { IsBoolean, IsIn, IsInt, IsNotEmpty, IsNumber, IsString, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class CreateProductoDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(191)
   descripcion: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(191)
+  codigo?: string | null;
 
   @IsInt()
   unidadMedidaId: number;

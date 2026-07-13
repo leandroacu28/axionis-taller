@@ -20,6 +20,15 @@ export class UpdateProductoDto {
   @MaxLength(191)
   descripcion: string;
 
+  // Nullable (not just optional) so the client can send `codigo: null` to
+  // explicitly clear a previously-set value — omitting the field entirely
+  // would otherwise be indistinguishable from "leave unchanged". IsOptional
+  // treats both undefined and null as "missing" and skips IsString/MaxLength.
+  @IsOptional()
+  @IsString()
+  @MaxLength(191)
+  codigo?: string | null;
+
   @IsInt()
   unidadMedidaId: number;
 
