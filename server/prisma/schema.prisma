@@ -8,119 +8,149 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  username     String   @unique
-  passwordHash String
-  dni          String?  @unique
-  email        String?
-  nombre       String?
-  apellido     String?
-  rol          String   @default("empleado")
-  activo       Boolean  @default(true)
-  creadoPorId  Int?
-  creadoPor    User?    @relation("UserCreatedBy", fields: [creadoPorId], references: [id], onDelete: SetNull)
-  creados      User[]   @relation("UserCreatedBy")
-  clientesCreados Cliente[] @relation("ClienteCreadoPor")
-  clientesActualizados Cliente[] @relation("ClienteActualizadoPor")
-  coloresCreados Color[] @relation("ColorCreadoPor")
-  coloresActualizados Color[] @relation("ColorActualizadoPor")
-  marcasCreadas Marca[] @relation("MarcaCreadoPor")
-  marcasActualizadas Marca[] @relation("MarcaActualizadoPor")
-  vehiculosCreados Vehiculo[] @relation("VehiculoCreadoPor")
-  vehiculosActualizados Vehiculo[] @relation("VehiculoActualizadoPor")
-  tiposServicioCreados      TipoServicio[] @relation("TipoServicioCreadoPor")
-  tiposServicioActualizados TipoServicio[] @relation("TipoServicioActualizadoPor")
+  id                         Int            @id @default(autoincrement())
+  username                   String         @unique
+  passwordHash               String
+  dni                        String?        @unique
+  email                      String?
+  nombre                     String?
+  apellido                   String?
+  rol                        String         @default("empleado")
+  activo                     Boolean        @default(true)
+  creadoPorId                Int?
+  creadoPor                  User?          @relation("UserCreatedBy", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creados                    User[]         @relation("UserCreatedBy")
+  clientesCreados            Cliente[]      @relation("ClienteCreadoPor")
+  clientesActualizados       Cliente[]      @relation("ClienteActualizadoPor")
+  coloresCreados             Color[]        @relation("ColorCreadoPor")
+  coloresActualizados        Color[]        @relation("ColorActualizadoPor")
+  marcasCreadas              Marca[]        @relation("MarcaCreadoPor")
+  marcasActualizadas         Marca[]        @relation("MarcaActualizadoPor")
+  vehiculosCreados           Vehiculo[]     @relation("VehiculoCreadoPor")
+  vehiculosActualizados      Vehiculo[]     @relation("VehiculoActualizadoPor")
+  tiposServicioCreados       TipoServicio[] @relation("TipoServicioCreadoPor")
+  tiposServicioActualizados  TipoServicio[] @relation("TipoServicioActualizadoPor")
   unidadesMedidaCreadas      UnidadMedida[] @relation("UnidadMedidaCreadoPor")
   unidadesMedidaActualizadas UnidadMedida[] @relation("UnidadMedidaActualizadoPor")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  productosCreados           Producto[]     @relation("ProductoCreadoPor")
+  productosActualizados      Producto[]     @relation("ProductoActualizadoPor")
+  createdAt                  DateTime       @default(now())
+  updatedAt                  DateTime       @updatedAt
 }
 
 model Cliente {
-  id                 Int      @id @default(autoincrement())
-  razonSocial        String   @unique
+  id                 Int        @id @default(autoincrement())
+  razonSocial        String     @unique
   tipoIdentificacion String
-  identificacion     String?  @unique
+  identificacion     String?    @unique
   telefono           String?
   domicilio          String?
-  activo             Boolean  @default(true)
+  activo             Boolean    @default(true)
   creadoPorId        Int?
-  creadoPor          User?    @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creadoPor          User?      @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId   Int?
-  actualizadoPor     User?    @relation("ClienteActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPor     User?      @relation("ClienteActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   vehiculos          Vehiculo[]
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 }
 
 model Color {
-  id          Int      @id @default(autoincrement())
-  descripcion String   @unique
-  activo      Boolean  @default(true)
-  creadoPorId Int?
-  creadoPor   User?    @relation("ColorCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  id               Int        @id @default(autoincrement())
+  descripcion      String     @unique
+  activo           Boolean    @default(true)
+  creadoPorId      Int?
+  creadoPor        User?      @relation("ColorCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId Int?
-  actualizadoPor   User?    @relation("ColorActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  vehiculos   Vehiculo[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  actualizadoPor   User?      @relation("ColorActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  vehiculos        Vehiculo[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 }
 
 model Marca {
-  id          Int      @id @default(autoincrement())
-  marca       String
-  modelo      String
-  activo      Boolean  @default(true)
-  creadoPorId Int?
-  creadoPor   User?    @relation("MarcaCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  id               Int        @id @default(autoincrement())
+  marca            String
+  modelo           String
+  activo           Boolean    @default(true)
+  creadoPorId      Int?
+  creadoPor        User?      @relation("MarcaCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId Int?
-  actualizadoPor   User?    @relation("MarcaActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  vehiculos   Vehiculo[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  actualizadoPor   User?      @relation("MarcaActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  vehiculos        Vehiculo[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   @@unique([marca, modelo])
 }
 
 model Vehiculo {
-  id           Int      @id @default(autoincrement())
-  marcaId      Int
-  marca        Marca    @relation(fields: [marcaId], references: [id])
-  colorId      Int
-  color        Color    @relation(fields: [colorId], references: [id])
-  anio         Int
-  kilometraje  Int
-  clienteId    Int
-  cliente      Cliente  @relation(fields: [clienteId], references: [id])
-  activo       Boolean  @default(true)
-  creadoPorId  Int?
-  creadoPor    User?    @relation("VehiculoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  id               Int      @id @default(autoincrement())
+  marcaId          Int
+  marca            Marca    @relation(fields: [marcaId], references: [id])
+  colorId          Int
+  color            Color    @relation(fields: [colorId], references: [id])
+  anio             Int
+  kilometraje      Int
+  clienteId        Int
+  cliente          Cliente  @relation(fields: [clienteId], references: [id])
+  activo           Boolean  @default(true)
+  creadoPorId      Int?
+  creadoPor        User?    @relation("VehiculoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId Int?
   actualizadoPor   User?    @relation("VehiculoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model TipoServicio {
-  id                 Int      @id @default(autoincrement())
-  descripcion        String   @unique
-  activo             Boolean  @default(true)
-  creadoPorId        Int?
-  creadoPor          User?    @relation("TipoServicioCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
-  actualizadoPorId   Int?
-  actualizadoPor     User?    @relation("TipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  descripcion      String   @unique
+  activo           Boolean  @default(true)
+  creadoPorId      Int?
+  creadoPor        User?    @relation("TipoServicioCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId Int?
+  actualizadoPor   User?    @relation("TipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model UnidadMedida {
-  id                 Int      @id @default(autoincrement())
-  descripcion        String   @unique
-  activo             Boolean  @default(true)
+  id               Int        @id @default(autoincrement())
+  descripcion      String     @unique
+  activo           Boolean    @default(true)
+  creadoPorId      Int?
+  creadoPor        User?      @relation("UnidadMedidaCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId Int?
+  actualizadoPor   User?      @relation("UnidadMedidaActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  productos        Producto[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+enum AlicuotaIva {
+  IVA_21   @map("21")
+  IVA_10_5 @map("10.5")
+}
+
+model Producto {
+  id                 Int          @id @default(autoincrement())
+  descripcion        String       @unique
+  unidadMedidaId     Int
+  unidadMedida       UnidadMedida @relation(fields: [unidadMedidaId], references: [id])
+  activo             Boolean      @default(true)
+  cantidadInicial    Decimal      @db.Decimal(10, 2)
+  alertaStock        Boolean      @default(false)
+  cantidadMinima     Decimal      @db.Decimal(10, 2)
+  precioCompra       Decimal      @db.Decimal(10, 2)
+  porcentajeGanancia Decimal      @db.Decimal(5, 2)
+  precioVenta        Decimal      @db.Decimal(10, 2)
+  precioMayorista    Decimal      @db.Decimal(10, 2)
+  alicuotaIva        AlicuotaIva
   creadoPorId        Int?
-  creadoPor          User?    @relation("UnidadMedidaCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creadoPor          User?        @relation("ProductoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId   Int?
-  actualizadoPor     User?    @relation("UnidadMedidaActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  actualizadoPor     User?        @relation("ProductoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 }
