@@ -14,6 +14,7 @@ const MARCA_SELECT = {
   createdAt: true,
   updatedAt: true,
   creadoPor: { select: { id: true, username: true } },
+  actualizadoPor: { select: { id: true, username: true } },
 };
 
 const DUPLICATE_MARCA_MODELO_ERROR = 'Ya existe una marca con esa combinación de marca y modelo.';
@@ -176,10 +177,9 @@ export class BrandsService {
     }
   }
 
-  // Unlike Cliente, Marca has no actualizadoPor relation (the user only
-  // asked for a creator, not an updater) — so update() doesn't need the
-  // acting user's id at all.
-  async update(id: number, dto: UpdateBrandDto) {
+  // Like Cliente and TipoServicio, Marca has an actualizadoPor relation —
+  // update() takes the acting user's id and stamps actualizadoPorId.
+  async update(id: number, dto: UpdateBrandDto, actualizadoPorId: number) {
     const existing = await this.prisma.marca.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException('Marca no encontrada.');
@@ -201,6 +201,7 @@ export class BrandsService {
           marca: dto.marca,
           modelo: dto.modelo,
           activo: dto.activo,
+          actualizadoPorId,
         },
         select: MARCA_SELECT,
       });

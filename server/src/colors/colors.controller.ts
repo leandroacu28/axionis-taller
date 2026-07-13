@@ -62,7 +62,11 @@ export class ColorsController {
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateColorDto) {
-    return this.colorsService.update(id, dto);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateColorDto,
+    @Request() req: { user: { userId: number; username: string } },
+  ) {
+    return this.colorsService.update(id, dto, req.user.userId);
   }
 }

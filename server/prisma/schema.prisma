@@ -23,8 +23,11 @@ model User {
   clientesCreados Cliente[] @relation("ClienteCreadoPor")
   clientesActualizados Cliente[] @relation("ClienteActualizadoPor")
   coloresCreados Color[] @relation("ColorCreadoPor")
+  coloresActualizados Color[] @relation("ColorActualizadoPor")
   marcasCreadas Marca[] @relation("MarcaCreadoPor")
+  marcasActualizadas Marca[] @relation("MarcaActualizadoPor")
   vehiculosCreados Vehiculo[] @relation("VehiculoCreadoPor")
+  vehiculosActualizados Vehiculo[] @relation("VehiculoActualizadoPor")
   tiposServicioCreados      TipoServicio[] @relation("TipoServicioCreadoPor")
   tiposServicioActualizados TipoServicio[] @relation("TipoServicioActualizadoPor")
   createdAt    DateTime @default(now())
@@ -54,6 +57,8 @@ model Color {
   activo      Boolean  @default(true)
   creadoPorId Int?
   creadoPor   User?    @relation("ColorCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId Int?
+  actualizadoPor   User?    @relation("ColorActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   vehiculos   Vehiculo[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -66,6 +71,8 @@ model Marca {
   activo      Boolean  @default(true)
   creadoPorId Int?
   creadoPor   User?    @relation("MarcaCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId Int?
+  actualizadoPor   User?    @relation("MarcaActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   vehiculos   Vehiculo[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -86,6 +93,8 @@ model Vehiculo {
   activo       Boolean  @default(true)
   creadoPorId  Int?
   creadoPor    User?    @relation("VehiculoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId Int?
+  actualizadoPor   User?    @relation("VehiculoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

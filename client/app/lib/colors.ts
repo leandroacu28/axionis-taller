@@ -8,6 +8,7 @@ export interface ColorListItem {
   createdAt: string;
   updatedAt: string;
   creadoPor: { id: number; username: string; nombre: string | null; apellido: string | null } | null;
+  actualizadoPor: { id: number; username: string; nombre: string | null; apellido: string | null } | null;
 }
 
 export interface CreateColorPayload {

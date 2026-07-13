@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export type ServiceTypeStatusFilter = 'all' | 'activo' | 'inactivo';
 
@@ -14,6 +14,7 @@ export class ListServiceTypesQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   pageSize?: number = 10;
 
   @IsOptional()

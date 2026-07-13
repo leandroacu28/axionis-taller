@@ -12,6 +12,7 @@ export interface VehicleListItem {
   color: { id: number; descripcion: string };
   cliente: { id: number; razonSocial: string };
   creadoPor: { id: number; username: string } | null;
+  actualizadoPor: { id: number; username: string } | null;
 }
 
 export interface CreateVehiclePayload {

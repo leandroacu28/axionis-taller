@@ -13,6 +13,7 @@ const COLOR_SELECT = {
   createdAt: true,
   updatedAt: true,
   creadoPor: { select: { id: true, username: true, nombre: true, apellido: true } },
+  actualizadoPor: { select: { id: true, username: true, nombre: true, apellido: true } },
 };
 
 const DUPLICATE_DESCRIPCION_ERROR = 'Ya existe un color con esa descripción.';
@@ -181,10 +182,9 @@ export class ColorsService {
     }
   }
 
-  // Unlike Cliente, Color has no actualizadoPor relation (the user only
-  // asked for a creator, not an updater) — so update() doesn't need the
-  // acting user's id at all.
-  async update(id: number, dto: UpdateColorDto) {
+  // Like Cliente and TipoServicio, Color has an actualizadoPor relation —
+  // update() takes the acting user's id and stamps actualizadoPorId.
+  async update(id: number, dto: UpdateColorDto, actualizadoPorId: number) {
     const existing = await this.prisma.color.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException('Color no encontrado.');
@@ -205,6 +205,7 @@ export class ColorsService {
         data: {
           descripcion: dto.descripcion,
           activo: dto.activo,
+          actualizadoPorId,
         },
         select: COLOR_SELECT,
       });

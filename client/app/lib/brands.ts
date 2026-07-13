@@ -9,6 +9,7 @@ export interface BrandListItem {
   createdAt: string;
   updatedAt: string;
   creadoPor: { id: number; username: string } | null;
+  actualizadoPor: { id: number; username: string } | null;
 }
 
 export interface CreateBrandPayload {

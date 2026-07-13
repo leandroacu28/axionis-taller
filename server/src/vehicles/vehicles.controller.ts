@@ -62,7 +62,11 @@ export class VehiclesController {
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateVehicleDto) {
-    return this.vehiclesService.update(id, dto);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateVehicleDto,
+    @Request() req: { user: { userId: number; username: string } },
+  ) {
+    return this.vehiclesService.update(id, dto, req.user.userId);
   }
 }

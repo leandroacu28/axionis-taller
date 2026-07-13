@@ -37,40 +37,30 @@ export const navigation: NavigationItem[] = [
     name: 'Clientes',
     href: '/clientes',
     id: 'clientes',
-    // No dedicated /icons/clientes.svg asset exists yet; reuse the
-    // usuarios icon rather than ship a broken image (see design.md).
-    icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
+    icon: <img src="/icons/clientes.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
   {
     name: 'Colores',
     href: '/colores',
     id: 'colores',
-    // No dedicated /icons/colores.svg asset exists yet; reuse the
-    // usuarios icon rather than ship a broken image, same as Clientes above.
-    icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
+    icon: <img src="/icons/colores.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
   {
     name: 'Marcas',
     href: '/marcas',
     id: 'marcas',
-    // No dedicated /icons/marcas.svg asset exists yet; reuse the
-    // usuarios icon rather than ship a broken image, same as Colores above.
-    icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
+    icon: <img src="/icons/marcas.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
   {
     name: 'Vehículos',
     href: '/vehiculos',
     id: 'vehiculos',
-    // No dedicated /icons/vehiculos.svg asset exists yet; reuse the
-    // usuarios icon rather than ship a broken image, same as Marcas above.
-    icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
+    icon: <img src="/icons/vehiculos.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
   {
     name: 'Tipos de Servicio',
     href: '/tipos-servicio',
     id: 'tipos-servicio',
-    // No dedicated /icons/tipos-servicio.svg asset exists yet; reuse the
-    // usuarios icon rather than ship a broken image, same as Vehículos above.
-    icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
+    icon: <img src="/icons/tipos-servicio.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
 ];

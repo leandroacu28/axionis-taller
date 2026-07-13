@@ -17,6 +17,7 @@ const VEHICLE_SELECT = {
   color: { select: { id: true, descripcion: true } },
   cliente: { select: { id: true, razonSocial: true } },
   creadoPor: { select: { id: true, username: true } },
+  actualizadoPor: { select: { id: true, username: true } },
 };
 
 export type VehicleFilter = { search?: string; status?: VehicleStatusFilter };
@@ -187,10 +188,9 @@ export class VehiclesService {
     });
   }
 
-  // Unlike Cliente, Vehiculo has no actualizadoPor relation (the user only
-  // asked for a creator, not an updater) — so update() doesn't need the
-  // acting user's id at all.
-  async update(id: number, dto: UpdateVehicleDto) {
+  // Like Cliente and TipoServicio, Vehiculo has an actualizadoPor relation —
+  // update() takes the acting user's id and stamps actualizadoPorId.
+  async update(id: number, dto: UpdateVehicleDto, actualizadoPorId: number) {
     const existing = await this.prisma.vehiculo.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException('Vehículo no encontrado.');
@@ -207,6 +207,7 @@ export class VehiclesService {
         kilometraje: dto.kilometraje,
         clienteId: dto.clienteId,
         activo: dto.activo,
+        actualizadoPorId,
       },
       select: VEHICLE_SELECT,
     });

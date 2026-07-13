@@ -62,7 +62,11 @@ export class BrandsController {
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBrandDto) {
-    return this.brandsService.update(id, dto);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateBrandDto,
+    @Request() req: { user: { userId: number; username: string } },
+  ) {
+    return this.brandsService.update(id, dto, req.user.userId);
   }
 }
