@@ -11,18 +11,18 @@
 - THEN it iterates the typed list to render links without type errors
 
 ### Requirement: Top-Level Navigation Sections
-The navigation list MUST contain exactly four entries, in this order: `Inicio` (leaf, `href: '/home'`), `Configuraciones` (group, no `href`, `children: [Usuarios (href: '/usuarios')]`), `Clientes` (leaf, `href: '/clientes'`), and `Unidades de Medida` (leaf, `href: '/unidades-medida'`). `Clientes` and `Unidades de Medida` MUST be top-level siblings of `Inicio` and `Configuraciones` — they MUST NOT be nested under `Configuraciones`'s `children`.
+The top-level navigation list MUST contain a new flat entry, `Productos` (leaf, `href: '/productos'`), as a top-level sibling of `Inicio`, `Configuraciones`, `Clientes`, and `Unidades de Medida`. `Productos` MUST NOT be nested under `Configuraciones`'s `children`. The complete list MUST include: `Inicio` (leaf, `href: '/home'`), `Configuraciones` (group, no `href`, `children: [Usuarios (href: '/usuarios')]`), `Clientes` (leaf, `href: '/clientes'`), `Unidades de Medida` (leaf, `href: '/unidades-medida'`), and `Productos` (leaf, `href: '/productos'`). All MUST be top-level siblings — none nested under `Configuraciones`'s `children` except `Usuarios`.
 
-#### Scenario: Sidebar renders the four top-level sections
+#### Scenario: Sidebar renders the top-level sections
 - GIVEN the default navigation configuration
 - WHEN `Sidebar` renders for any authenticated user
-- THEN exactly four top-level entries appear: "Inicio" (linking to `/home`), "Configuraciones" (a collapsible group containing "Usuarios" linking to `/usuarios`), "Clientes" (linking to `/clientes`), and "Unidades de Medida" (linking to `/unidades-medida`)
+- THEN the top-level entries appear: "Inicio" (linking to `/home`), "Configuraciones" (a collapsible group containing "Usuarios" linking to `/usuarios`), "Clientes" (linking to `/clientes`), "Unidades de Medida" (linking to `/unidades-medida`), and "Productos" (linking to `/productos`)
 
-#### Scenario: Clientes and Unidades de Medida are not nested under Configuraciones
+#### Scenario: Leaf entries are not nested under Configuraciones
 - GIVEN the default navigation configuration
 - WHEN the `navigation` array is inspected
-- THEN the `Clientes` and `Unidades de Medida` entries are top-level array items with their own `href` values (`'/clientes'` and `'/unidades-medida'` respectively)
-- AND neither appears inside `Configuraciones`'s `children` array
+- THEN the `Clientes`, `Unidades de Medida`, and `Productos` entries are top-level array items with their own `href` values (`'/clientes'`, `'/unidades-medida'`, and `'/productos'` respectively)
+- AND none of them appear inside `Configuraciones`'s `children` array
 
 ### Requirement: No Role Filtering in V1
 Navigation rendering MUST NOT filter items by user role or permission in v1 — all top-level items and nested `children` render for any authenticated user.
@@ -30,7 +30,7 @@ Navigation rendering MUST NOT filter items by user role or permission in v1 — 
 #### Scenario: All items visible regardless of rol
 - GIVEN an authenticated user with any `rol` value
 - WHEN the navigation renders
-- THEN "Inicio", "Configuraciones" (with its "Usuarios" child), "Clientes", and "Unidades de Medida" are all visible; no item is hidden based on `rol`
+- THEN "Inicio", "Configuraciones" (with its "Usuarios" child), "Clientes", "Unidades de Medida", and "Productos" are all visible; no item is hidden based on `rol`
 
 ### Requirement: Extensible Item Shape for Future Filtering
 The `NavigationItem` type MUST remain structurally extensible so that future role-based filtering or additional nested `children` groups can be added without breaking existing consumers. `children` is already in use (the `Configuraciones` group nests `Usuarios`) and MUST remain optional so leaf items are unaffected.
