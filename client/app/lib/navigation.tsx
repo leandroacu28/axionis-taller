@@ -63,4 +63,10 @@ export const navigation: NavigationItem[] = [
     id: 'tipos-servicio',
     icon: <img src="/icons/tipos-servicio.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
+  {
+    name: 'Unidades de Medida',
+    href: '/unidades-medida',
+    id: 'unidades-medida',
+    icon: <img src="/icons/configuraciones.svg" alt="" className="h-5 w-5" aria-hidden />,
+  },
 ];
