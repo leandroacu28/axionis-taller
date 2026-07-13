@@ -91,15 +91,15 @@ This is the `unidades-medida-crud` precedent (~650-800 lines) plus the richer fi
 
 ## Phase 6: Frontend API Client
 
-- [ ] 6.1 Create `client/app/lib/productos.ts`: `ProductoListItem` type (all scalar fields; Decimal fields typed as `string`; `alicuotaIva: 21 | 10.5`; nested `unidadMedida: { id, descripcion }`; `creadoPor`/`actualizadoPor: { id, username } | null`), `CreateProductoPayload`, `UpdateProductoPayload` (mirroring the DTOs, no `precioVenta`), copy `handleJsonResponse<T>` verbatim from `lib/unidades-medida.ts`
-- [ ] 6.2 Add `ListProductosParams`, `PaginatedProductos` (`{ data, total, activeCount }`), and `listProductos(params)` (GET `/productos?…`)
-- [ ] 6.3 Add `getProducto(id)` (GET `/productos/:id`), `createProducto(data)` (POST), `updateProducto(id, data)` (PATCH `/productos/:id`) — each spreading `getAuthHeader()` (+ `Content-Type` on mutations), Spanish error messages reworded to "producto(s)"
-- [ ] 6.4 Add `searchUnidadesMedida(term)` helper (GET `/unidades-medida?search=…&status=activo&pageSize=…`, mapped to `{ id, label: descripcion }[]`) for `UnidadMedidaSelect`'s `search` prop — reuse `listUnidadesMedida` from `lib/unidades-medida.ts` rather than duplicating the fetch
+- [x] 6.1 Create `client/app/lib/productos.ts`: `ProductoListItem` type (all scalar fields; Decimal fields typed as `string`; `alicuotaIva: 21 | 10.5`; nested `unidadMedida: { id, descripcion }`; `creadoPor`/`actualizadoPor: { id, username } | null`), `CreateProductoPayload`, `UpdateProductoPayload` (mirroring the DTOs, no `precioVenta`), copy `handleJsonResponse<T>` verbatim from `lib/unidades-medida.ts`
+- [x] 6.2 Add `ListProductosParams`, `PaginatedProductos` (`{ data, total, activeCount }`), and `listProductos(params)` (GET `/productos?…`)
+- [x] 6.3 Add `getProducto(id)` (GET `/productos/:id`), `createProducto(data)` (POST), `updateProducto(id, data)` (PATCH `/productos/:id`) — each spreading `getAuthHeader()` (+ `Content-Type` on mutations), Spanish error messages reworded to "producto(s)"
+- [x] 6.4 Add `searchUnidadesMedida(term)` helper (GET `/unidades-medida?search=…&status=activo&pageSize=…`, mapped to `{ id, label: descripcion }[]`) for `UnidadMedidaSelect`'s `search` prop — reuse `listUnidadesMedida` from `lib/unidades-medida.ts` rather than duplicating the fetch
 
 ## Phase 7: Frontend Unidad de Medida Searchable Select
 
-- [ ] 7.1 Create `client/app/(dashboard)/productos/UnidadMedidaSelect.tsx`: copy `vehiculos/SearchableSelect.tsx`, strip the `create`/`quickCreate` props, `QuickCreateModal` import/usage, `openQuickCreate`/`handleQuickCreateSubmit`, and the "+ Crear …" footer button entirely — keep the debounce, keyboard nav, `createPortal` panel positioning, and dismiss handling unchanged
-- [ ] 7.2 Wire its `search` prop to `searchUnidadesMedida` from `client/app/lib/productos.ts`; label `"Unidad de Medida"`, placeholder `"Seleccionar unidad de medida"`
+- [x] 7.1 Create `client/app/(dashboard)/productos/UnidadMedidaSelect.tsx`: copy `vehiculos/SearchableSelect.tsx`, strip the `create`/`quickCreate` props, `QuickCreateModal` import/usage, `openQuickCreate`/`handleQuickCreateSubmit`, and the "+ Crear …" footer button entirely — keep the debounce, keyboard nav, `createPortal` panel positioning, and dismiss handling unchanged
+- [x] 7.2 Wire its `search` prop to `searchUnidadesMedida` from `client/app/lib/productos.ts`; label `"Unidad de Medida"`, placeholder `"Seleccionar unidad de medida"`
 
 ## Phase 8: Frontend List Page
 
