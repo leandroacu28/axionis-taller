@@ -118,40 +118,108 @@ export default function NuevoProductoPage() {
 
       <div className="mt-6 rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
-          <div className="space-y-1">
-            <label htmlFor="descripcion" className="text-sm font-medium text-stone-700">
-              Descripción <span className="text-rose-500">*</span>
-            </label>
-            <input
-              id="descripcion"
-              type="text"
-              autoFocus
-              value={form.descripcion}
-              onChange={(e) => updateField('descripcion', e.target.value)}
-              required
-              placeholder="Ej: Aceite 10W40"
-              className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-500 border-b border-stone-200 pb-2">
+            Datos básicos
+          </h2>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <label htmlFor="descripcion" className="text-sm font-medium text-stone-700">
+                Descripción <span className="text-rose-500">*</span>
+              </label>
+              <input
+                id="descripcion"
+                type="text"
+                autoFocus
+                value={form.descripcion}
+                onChange={(e) => updateField('descripcion', e.target.value)}
+                required
+                placeholder="Ej: Aceite 10W40"
+                className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+              />
+            </div>
+
+            <UnidadMedidaSelect
+              value={form.unidadMedidaId}
+              onChange={(id) => updateField('unidadMedidaId', id)}
             />
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="codigo" className="text-sm font-medium text-stone-700">
-              Código
-            </label>
-            <input
-              id="codigo"
-              type="text"
-              value={form.codigo}
-              onChange={(e) => updateField('codigo', e.target.value)}
-              placeholder="Ej: A-1023"
-              className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
-            />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <label htmlFor="codigo" className="text-sm font-medium text-stone-700">
+                Código
+              </label>
+              <input
+                id="codigo"
+                type="text"
+                value={form.codigo}
+                onChange={(e) => updateField('codigo', e.target.value)}
+                placeholder="Ej: A-1023"
+                className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+              />
+            </div>
+            <div aria-hidden="true" />
           </div>
 
-          <UnidadMedidaSelect
-            value={form.unidadMedidaId}
-            onChange={(id) => updateField('unidadMedidaId', id)}
-          />
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-500 border-b border-stone-200 pb-2">
+            Cantidades y Stock
+          </h2>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="space-y-1">
+              <label htmlFor="cantidadInicial" className="text-sm font-medium text-stone-700">
+                Cantidad Actual <span className="text-rose-500">*</span>
+              </label>
+              <input
+                id="cantidadInicial"
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.cantidadInicial}
+                onChange={(e) =>
+                  updateField('cantidadInicial', e.target.value ? Number(e.target.value) : '')
+                }
+                required
+                placeholder="Ej: 10"
+                className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="alertaStock" className="text-sm font-medium text-stone-700">
+                Alerta de Stock
+              </label>
+              <select
+                id="alertaStock"
+                value={form.alertaStock ? 'si' : 'no'}
+                onChange={(e) => updateField('alertaStock', e.target.value === 'si')}
+                className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+              >
+                <option value="no">No</option>
+                <option value="si">Sí</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="cantidadMinima" className="text-sm font-medium text-stone-700">
+                Cantidad Mínima <span className="text-rose-500">*</span>
+              </label>
+              <input
+                id="cantidadMinima"
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.cantidadMinima}
+                onChange={(e) =>
+                  updateField('cantidadMinima', e.target.value ? Number(e.target.value) : '')
+                }
+                required
+                placeholder="Ej: 2"
+                className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+              />
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1">
@@ -238,59 +306,6 @@ export default function NuevoProductoPage() {
                 <option value={10.5}>10,5%</option>
               </select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1">
-              <label htmlFor="cantidadInicial" className="text-sm font-medium text-stone-700">
-                Cantidad Actual <span className="text-rose-500">*</span>
-              </label>
-              <input
-                id="cantidadInicial"
-                type="number"
-                min={0}
-                step="0.01"
-                value={form.cantidadInicial}
-                onChange={(e) =>
-                  updateField('cantidadInicial', e.target.value ? Number(e.target.value) : '')
-                }
-                required
-                placeholder="Ej: 10"
-                className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="cantidadMinima" className="text-sm font-medium text-stone-700">
-                Cantidad Mínima <span className="text-rose-500">*</span>
-              </label>
-              <input
-                id="cantidadMinima"
-                type="number"
-                min={0}
-                step="0.01"
-                value={form.cantidadMinima}
-                onChange={(e) =>
-                  updateField('cantidadMinima', e.target.value ? Number(e.target.value) : '')
-                }
-                required
-                placeholder="Ej: 2"
-                className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              id="alertaStock"
-              type="checkbox"
-              checked={form.alertaStock}
-              onChange={(e) => updateField('alertaStock', e.target.checked)}
-              className="h-4 w-4 rounded border-stone-300 text-rose-500 focus:ring-rose-400"
-            />
-            <label htmlFor="alertaStock" className="text-sm font-medium text-stone-700">
-              Avisar cuando el stock esté por debajo de la cantidad mínima
-            </label>
           </div>
 
           <div className="flex gap-3">
