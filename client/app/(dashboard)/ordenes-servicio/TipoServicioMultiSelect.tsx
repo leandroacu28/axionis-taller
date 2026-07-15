@@ -2,42 +2,26 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import QuickCreateModal, { type QuickCreateField } from './QuickCreateModal';
-import { showSuccess } from '../../lib/alerts';
+import { searchTiposServicio } from '../../lib/ordenes-servicio';
 
 export interface Option {
   id: number;
   label: string;
 }
 
-export interface SearchableSelectProps {
-  label: string;
-  placeholder: string;
-  value: number | ''; // controlled id (parity with current <select>)
-  initialLabel?: string; // collapsed-state label for a pre-selected id (edit load)
-  onChange: (id: number) => void; // wired to parent updateField(fieldKey, id)
-  search: (term: string) => Promise<Option[]>;
-  // `create`/`quickCreate` are a pair: both optional, both present or both
-  // absent. When omitted, the "+ Crear" footer and `QuickCreateModal` are
-  // not rendered at all (design.md DD3) — used by pickers where inline
-  // creation doesn't make sense (e.g. mecánico, vehículo).
-  create?: (values: Record<string, string>) => Promise<Option>;
-  quickCreate?: {
-    title: string;
-    entityLabel: string;
-    fields: QuickCreateField[];
-    prefillField?: string;
-    successTitle: string;
-    successText: string;
-  };
+export interface TipoServicioMultiSelectProps {
+  value: number[]; // controlled ids, kept in sync with `selected`
+  selected: Option[]; // selected options with labels — the parent owns this list
+  onChange: (selected: Option[]) => void;
   disabled?: boolean;
-  autoFocus?: boolean;
 }
 
-// Rough height of the results panel (search input + a handful of rows +
-// footer action) — used only to decide whether it should flip upward, not to
-// size it. Mirrors MENU_HEIGHT_ESTIMATE in vehiculos/page.tsx.
-const PANEL_HEIGHT_ESTIMATE = 320;
+const PLACEHOLDER = 'Buscar tipos de servicio...';
+
+// Rough height of the results panel (search input + a handful of rows) —
+// used only to decide whether it should flip upward, not to size it.
+// Mirrors PANEL_HEIGHT_ESTIMATE in UnidadMedidaSelect.tsx.
+const PANEL_HEIGHT_ESTIMATE = 280;
 const SEARCH_DEBOUNCE_MS = 350;
 
 interface PanelPosition {
@@ -62,18 +46,36 @@ function ChevronIcon() {
   );
 }
 
-export default function SearchableSelect({
-  label,
-  placeholder,
+function RemoveIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      className="h-3 w-3"
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
+/**
+ * Searchable multi-select for Tipos de Servicio — copy of
+ * `productos/EtiquetasMultiSelect.tsx` with `searchEtiquetas` swapped for
+ * `searchTiposServicio`. Selecting a result here does not close the panel
+ * (so the user can keep adding tipos) and the trigger renders removable
+ * chips for each selected option instead of a single collapsed label. Only
+ * ACTIVE tipos de servicio are offered, enforced by `searchTiposServicio`
+ * (`status: 'activo'`).
+ */
+export default function TipoServicioMultiSelect({
   value,
-  initialLabel,
+  selected,
   onChange,
-  search,
-  create,
-  quickCreate,
   disabled,
-  autoFocus,
-}: SearchableSelectProps) {
+}: TipoServicioMultiSelectProps) {
   const id = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -88,26 +90,14 @@ export default function SearchableSelect({
   const [results, setResults] = useState<Option[]>([]);
   const [error, setError] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
-  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
 
-  const displayText = selectedLabel ?? initialLabel ?? '';
-
-  // If the parent externally resets the controlled value (e.g. discarding
-  // the form), fall back to the placeholder instead of keeping a stale label.
-  useEffect(() => {
-    if (value === '') setSelectedLabel(null);
-  }, [value]);
-
-  useEffect(() => {
-    if (autoFocus) triggerRef.current?.focus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Results already selected are excluded — search finds remaining tipos to
+  // add, not ones already attached to the orden de servicio.
+  const selectableResults = results.filter((option) => !value.includes(option.id));
 
   const closePanel = () => {
     setOpen(false);
     setPanelPos(null);
-    setQuickCreateOpen(false);
   };
 
   const openPanel = () => {
@@ -136,7 +126,7 @@ export default function SearchableSelect({
   };
 
   // Instant `searchInput` -> debounced `searchTerm`, same two-state pattern
-  // as vehiculos/page.tsx's list search.
+  // as UnidadMedidaSelect.tsx.
   useEffect(() => {
     if (!open) return;
     const handle = setTimeout(() => {
@@ -153,7 +143,7 @@ export default function SearchableSelect({
     let cancelled = false;
     setLoading(true);
     setError('');
-    search(searchTerm)
+    searchTiposServicio(searchTerm)
       .then((data) => {
         if (cancelled) return;
         setResults(data);
@@ -169,13 +159,12 @@ export default function SearchableSelect({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, open]);
 
   // Keep the highlight in range when the result set shrinks.
   useEffect(() => {
-    setHighlightedIndex((prev) => Math.min(prev, Math.max(results.length - 1, 0)));
-  }, [results]);
+    setHighlightedIndex((prev) => Math.min(prev, Math.max(selectableResults.length - 1, 0)));
+  }, [selectableResults.length]);
 
   // Scroll the highlighted row into view — a no-op when it's already visible
   // (mouse hover), so only keyboard navigation past the fold actually scrolls.
@@ -184,21 +173,16 @@ export default function SearchableSelect({
   }, [highlightedIndex]);
 
   // Dismiss handling: click outside, resize, and (non-capture) page scroll.
-  // While the quick-create modal is open on top, none of these should close
-  // the panel — Modal.tsx already freezes body scroll, and clicks inside the
-  // modal are legitimately "outside" the panel/trigger refs.
   useEffect(() => {
     if (!open) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (quickCreateOpen) return;
       const target = event.target as Node;
       const insideTrigger = triggerRef.current?.contains(target) ?? false;
       const insidePanel = panelRef.current?.contains(target) ?? false;
       if (!insideTrigger && !insidePanel) closePanel();
     };
     const handleReposition = () => {
-      if (quickCreateOpen) return;
       closePanel();
     };
 
@@ -214,57 +198,42 @@ export default function SearchableSelect({
       window.removeEventListener('resize', handleReposition);
       window.removeEventListener('scroll', handleReposition);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, quickCreateOpen]);
+  }, [open]);
 
+  // Selecting a result appends it and keeps the panel open (unlike
+  // UnidadMedidaSelect, where selecting closes it) so the user can keep
+  // adding tipos in one flow.
   const selectOption = (option: Option) => {
-    onChange(option.id);
-    setSelectedLabel(option.label);
-    closePanel();
-    triggerRef.current?.focus();
+    onChange([...selected, option]);
+    setSearchInput('');
+    setSearchTerm('');
+    searchInputRef.current?.focus();
+  };
+
+  const removeOption = (optionId: number) => {
+    onChange(selected.filter((option) => option.id !== optionId));
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setHighlightedIndex((prev) => Math.min(prev + 1, Math.max(results.length - 1, 0)));
+      setHighlightedIndex((prev) => Math.min(prev + 1, Math.max(selectableResults.length - 1, 0)));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       setHighlightedIndex((prev) => Math.max(prev - 1, 0));
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      const option = results[highlightedIndex];
+      const option = selectableResults[highlightedIndex];
       if (option) selectOption(option);
     } else if (event.key === 'Escape') {
-      // Nested-Escape guard: when the quick-create modal is open, Modal.tsx's
-      // own document-level listener owns this keypress. Leaving this branch
-      // untouched keeps the panel open and lets a second Escape close it.
-      if (quickCreateOpen) return;
       event.preventDefault();
       closePanel();
       triggerRef.current?.focus();
     }
   };
 
-  const openQuickCreate = () => {
-    setQuickCreateOpen(true);
-  };
-
-  const handleQuickCreateSubmit = async (values: Record<string, string>) => {
-    if (!create || !quickCreate) return;
-    const created = await create(values);
-    onChange(created.id);
-    setSelectedLabel(created.label);
-    setQuickCreateOpen(false);
-    closePanel();
-    showSuccess(quickCreate.successTitle, quickCreate.successText);
-  };
-
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="text-sm font-medium text-stone-700">
-        {label} <span className="text-rose-500">*</span>
-      </label>
       <button
         id={id}
         ref={triggerRef}
@@ -273,9 +242,32 @@ export default function SearchableSelect({
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex w-full items-center justify-between rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-left text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label="Tipos de servicio"
+        className="flex w-full flex-wrap items-center gap-1.5 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-left text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <span className={displayText ? '' : 'text-stone-400'}>{displayText || placeholder}</span>
+        {selected.map((option) => (
+          <span
+            key={option.id}
+            className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700"
+          >
+            {option.label}
+            <span
+              role="button"
+              tabIndex={-1}
+              onClick={(e) => {
+                e.stopPropagation();
+                removeOption(option.id);
+              }}
+              className="rounded-full text-rose-500 hover:text-rose-700"
+              aria-label={`Quitar ${option.label}`}
+            >
+              <RemoveIcon />
+            </span>
+          </span>
+        ))}
+        <span className={`flex-1 ${selected.length === 0 ? 'text-stone-400' : ''}`}>
+          {selected.length === 0 ? PLACEHOLDER : ''}
+        </span>
         <ChevronIcon />
       </button>
 
@@ -317,10 +309,10 @@ export default function SearchableSelect({
                 </div>
               ) : error ? (
                 <div className="p-4 text-sm text-red-600">{error}</div>
-              ) : results.length === 0 ? (
+              ) : selectableResults.length === 0 ? (
                 <div className="p-4 text-sm text-stone-500">Sin resultados.</div>
               ) : (
-                results.map((option, index) => (
+                selectableResults.map((option, index) => (
                   <div
                     key={option.id}
                     ref={(el) => {
@@ -337,34 +329,9 @@ export default function SearchableSelect({
                 ))
               )}
             </div>
-            {quickCreate && (
-              <button
-                type="button"
-                onClick={openQuickCreate}
-                className="border-t border-stone-200 px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
-              >
-                + Crear {quickCreate.entityLabel}
-              </button>
-            )}
           </div>,
           document.body,
         )}
-
-      {quickCreate && (
-        <QuickCreateModal
-          open={quickCreateOpen}
-          title={quickCreate.title}
-          entityLabel={quickCreate.entityLabel}
-          fields={quickCreate.fields}
-          prefillField={quickCreate.prefillField}
-          prefillValue={searchInput}
-          onSubmit={handleQuickCreateSubmit}
-          onClose={() => {
-            setQuickCreateOpen(false);
-            searchInputRef.current?.focus();
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -1,13 +1,14 @@
 import { listBrands, createBrand } from '../../lib/brands';
 import { listColors, createColor } from '../../lib/colors';
 import { listCustomers, createCustomer, ID_TYPES, ID_TYPE_LABELS, toIdType } from '../../lib/customers';
+import { searchUsers } from '../../lib/users';
 import type { Option } from './SearchableSelect';
 import type { QuickCreateField } from './QuickCreateModal';
 
 interface ReferenceSelectConfig {
   search: (term: string) => Promise<Option[]>;
-  create: (values: Record<string, string>) => Promise<Option>;
-  quickCreate: {
+  create?: (values: Record<string, string>) => Promise<Option>;
+  quickCreate?: {
     title: string;
     entityLabel: string;
     fields: QuickCreateField[];
@@ -133,4 +134,11 @@ export const clienteSelectConfig: ReferenceSelectConfig = {
     successTitle: 'Cliente creado',
     successText: 'El cliente ha sido creado correctamente.',
   },
+};
+
+// Search-only — no `create`/`quickCreate` (a mecánico is just any active
+// User, D6). Backed by `searchUsers`, which already restricts results to
+// active users, mirroring the other configs' active-only search.
+export const mecanicoSelectConfig: ReferenceSelectConfig = {
+  search: async (term) => searchUsers(term),
 };
