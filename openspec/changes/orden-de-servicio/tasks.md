@@ -66,13 +66,13 @@ This is a **new module + new top-level route**, so most of it is net-new code. E
 
 ## Phase 3: Backend — Shared Endpoint Extensions
 
-- [ ] 3.1 Modify `server/src/vehicles/dto/list-vehicles-query.dto.ts`: add optional `clienteId` (`@IsOptional() @Type(() => Number) @IsInt()`) per design.md § `GET /vehicles?clienteId=`
-- [ ] 3.2 Modify `server/src/vehicles/vehicles.service.ts`: add `clienteId?: number` to `VehicleFilter`, fold it into `buildVehicleWhere`'s `searchWhere` so it scopes both the list `where` and `activeCount`, per design.md § `GET /vehicles?clienteId=`
-- [ ] 3.3 Modify `client/app/lib/vehicles.ts`: add `clienteId?` to `ListVehiclesParams`, thread it into `listVehicles`'s query string
-- [ ] 3.4 Create `server/src/users/dto/list-users-query.dto.ts`: `search?` + `status?: 'all' | 'activo' | 'inactivo'`, mirroring `ListEtiquetasQueryDto` minus pagination, per design.md § `GET /users?search=&status=`
-- [ ] 3.5 Modify `server/src/users/users.controller.ts`: `findAll` gains `@Query() query: ListUsersQueryDto`
-- [ ] 3.6 Modify `server/src/users/users.service.ts`: `findAll(query?)` builds `where` from `search` (`OR`/`contains` on `username`/`nombre`/`apellido`) + `status`; still returns a plain array via `findMany({ where, select: USER_SELECT })`
-- [ ] 3.7 Modify `client/app/lib/users.ts`: add `searchUsers(term)` helper returning `Option[]` (`label` = `nombre apellido` → `username` fallback)
+- [x] 3.1 Modify `server/src/vehicles/dto/list-vehicles-query.dto.ts`: add optional `clienteId` (`@IsOptional() @Type(() => Number) @IsInt()`) per design.md § `GET /vehicles?clienteId=`
+- [x] 3.2 Modify `server/src/vehicles/vehicles.service.ts`: add `clienteId?: number` to `VehicleFilter`, fold it into `buildVehicleWhere`'s `searchWhere` so it scopes both the list `where` and `activeCount`, per design.md § `GET /vehicles?clienteId=`
+- [x] 3.3 Modify `client/app/lib/vehicles.ts`: add `clienteId?` to `ListVehiclesParams`, thread it into `listVehicles`'s query string
+- [x] 3.4 Create `server/src/users/dto/list-users-query.dto.ts`: `search?` + `status?: 'all' | 'activo' | 'inactivo'`, mirroring `ListEtiquetasQueryDto` minus pagination, per design.md § `GET /users?search=&status=`
+- [x] 3.5 Modify `server/src/users/users.controller.ts`: `findAll` gains `@Query() query: ListUsersQueryDto`
+- [x] 3.6 Modify `server/src/users/users.service.ts`: `findAll(query?)` builds `where` from `search` (`OR`/`contains` on `username`/`nombre`/`apellido`) + `status`; still returns a plain array via `findMany({ where, select: USER_SELECT })`
+- [x] 3.7 Modify `client/app/lib/users.ts`: add `searchUsers(term)` helper returning `Option[]` (`label` = `nombre apellido` → `username` fallback)
 
 ## Phase 4: Frontend — API Client, Shared Form & Pickers
 
