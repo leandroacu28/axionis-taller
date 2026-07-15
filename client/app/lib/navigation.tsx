@@ -81,4 +81,13 @@ export const navigation: NavigationItem[] = [
     id: 'productos',
     icon: <img src="/icons/productos.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
+  {
+    name: 'Órdenes de Servicio',
+    href: '/ordenes-servicio',
+    id: 'ordenes-servicio',
+    // No dedicated /icons/ordenes-servicio.svg exists yet (design.md Open
+    // Questions — cosmetic, not blocking); reuses the "Tipos de Servicio"
+    // wrench icon as a neutral placeholder until one is added.
+    icon: <img src="/icons/tipos-servicio.svg" alt="" className="h-5 w-5" aria-hidden />,
+  },
 ];
