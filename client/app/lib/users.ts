@@ -59,8 +59,18 @@ async function handleJsonResponse<T>(res: Response, fallbackMessage: string): Pr
   return res.json();
 }
 
-export async function listUsers(): Promise<UserListItem[]> {
-  const res = await fetch(`${API_BASE_URL}/users`, {
+export interface ListUsersParams {
+  search?: string;
+  status?: 'all' | 'activo' | 'inactivo';
+}
+
+export async function listUsers(params?: ListUsersParams): Promise<UserListItem[]> {
+  const query = new URLSearchParams();
+  if (params?.search) query.set('search', params.search);
+  if (params?.status) query.set('status', params.status);
+  const qs = query.toString();
+
+  const res = await fetch(`${API_BASE_URL}/users${qs ? `?${qs}` : ''}`, {
     headers: { ...getAuthHeader() },
   });
   return handleJsonResponse(res, 'No se pudo obtener la lista de usuarios');
@@ -89,4 +99,19 @@ export async function updateUser(id: number, data: UpdateUserPayload): Promise<U
     body: JSON.stringify(data),
   });
   return handleJsonResponse(res, 'No se pudo actualizar el usuario');
+}
+
+/**
+ * Search helper for a mecánico/user picker's `search` prop (mirrors
+ * `searchEtiquetas`/`searchUnidadesMedida` in `lib/productos.ts`). Reuses
+ * `listUsers` rather than duplicating the fetch, and restricts results to
+ * active users — a picker shouldn't offer a deactivated user. `label` falls
+ * back to `username` when both `nombre` and `apellido` are empty.
+ */
+export async function searchUsers(term: string): Promise<{ id: number; label: string }[]> {
+  const result = await listUsers({ search: term || undefined, status: 'activo' });
+  return result.map((user) => {
+    const fullName = `${user.nombre ?? ''} ${user.apellido ?? ''}`.trim();
+    return { id: user.id, label: fullName || user.username };
+  });
 }

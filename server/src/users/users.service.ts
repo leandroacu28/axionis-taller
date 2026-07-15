@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { MASTER_USERNAME } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ListUsersQueryDto, UserStatusFilter } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { SALT_ROUNDS } from './user.constants';
 
@@ -27,6 +28,31 @@ const USER_SELECT = {
 const DUPLICATE_USERNAME_ERROR = 'El nombre de usuario ya existe.';
 const DUPLICATE_DNI_ERROR = 'El DNI ya está registrado.';
 
+export type UserFilter = { search?: string; status?: UserStatusFilter };
+
+// Mirrors etiquetas.service.ts's buildEtiquetaWhere — no separate
+// activeCount here (this endpoint is a plain array, not a paginated list),
+// so a single `where` is enough.
+function buildUserWhere(filter: UserFilter): Prisma.UserWhereInput {
+  const term = filter.search?.trim();
+  const status = filter.status ?? 'all';
+
+  const searchWhere: Prisma.UserWhereInput = term
+    ? {
+        OR: [
+          { username: { contains: term } },
+          { nombre: { contains: term } },
+          { apellido: { contains: term } },
+        ],
+      }
+    : {};
+
+  return {
+    ...searchWhere,
+    ...(status === 'activo' ? { activo: true } : status === 'inactivo' ? { activo: false } : {}),
+  };
+}
+
 // The generic isUniqueConstraintError check collapses every P2002 into one
 // meaning — with two unique columns (username, dni) that would mislabel a
 // DNI collision as a username collision. This target-aware version reads
@@ -46,8 +72,12 @@ function uniqueTargetIncludes(error: unknown, field: string): boolean {
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.user.findMany({ select: USER_SELECT });
+  // query is optional (and every field on it is optional) so the existing
+  // no-param callers keep getting the exact same full array — `where`
+  // collapses to `{}` (status 'all', no search) when nothing is passed.
+  async findAll(query?: ListUsersQueryDto) {
+    const where = buildUserWhere(query ?? {});
+    return this.prisma.user.findMany({ where, select: USER_SELECT });
   }
 
   async findOne(id: number) {
