@@ -1,41 +1,26 @@
 'use client';
 
-import {
-  forwardRef,
-  useEffect,
-  useId,
-  useImperativeHandle,
-  useRef,
-  useState,
-  type ForwardedRef,
-} from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { searchUnidadesMedida } from '../../lib/productos';
+import { searchEtiquetas } from '../../lib/productos';
 
 export interface Option {
   id: number;
   label: string;
 }
 
-export interface UnidadMedidaSelectProps {
-  value: number | ''; // controlled id (parity with current <select>)
-  initialLabel?: string; // collapsed-state label for a pre-selected id (edit load)
-  onChange: (id: number) => void; // wired to parent updateField('unidadMedidaId', id)
+export interface EtiquetasMultiSelectProps {
+  value: number[]; // controlled ids, kept in sync with `selected`
+  selected: Option[]; // selected options with labels — the parent owns this list
+  onChange: (selected: Option[]) => void;
   disabled?: boolean;
-  autoFocus?: boolean;
 }
 
-export interface UnidadMedidaSelectHandle {
-  focus: () => void;
-}
-
-const LABEL = 'Unidad de Medida';
-const PLACEHOLDER = 'Seleccionar unidad de medida';
+const PLACEHOLDER = 'Buscar etiquetas...';
 
 // Rough height of the results panel (search input + a handful of rows) —
 // used only to decide whether it should flip upward, not to size it.
-// Mirrors PANEL_HEIGHT_ESTIMATE in vehiculos/SearchableSelect.tsx (no
-// quick-create footer here, so the estimate is a bit smaller).
+// Mirrors PANEL_HEIGHT_ESTIMATE in UnidadMedidaSelect.tsx.
 const PANEL_HEIGHT_ESTIMATE = 280;
 const SEARCH_DEBOUNCE_MS = 350;
 
@@ -61,19 +46,35 @@ function ChevronIcon() {
   );
 }
 
+function RemoveIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      className="h-3 w-3"
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
 /**
- * Searchable select for Unidad de Medida — copied and slimmed from
- * `vehiculos/SearchableSelect.tsx`. Per design.md's "Defer inline
- * Unidad-de-Medida quick-create" decision, this component intentionally
- * has NO `create`/`quickCreate` props, no `QuickCreateModal`, and no
- * "+ Crear ..." footer button. Only ACTIVE units are offered (the backend
- * rejects an inactive `unidadMedidaId` on both create and update), enforced
- * by `searchUnidadesMedida` (`status: 'activo'`).
+ * Searchable multi-select for Etiquetas — adapted from
+ * `UnidadMedidaSelect.tsx`'s single-select pattern. Unlike that component,
+ * selecting a result here does not close the panel (so the user can keep
+ * adding tags) and the trigger renders removable chips for each selected
+ * option instead of a single collapsed label. Only ACTIVE tags are offered,
+ * enforced by `searchEtiquetas` (`status: 'activo'`).
  */
-function UnidadMedidaSelect(
-  { value, initialLabel, onChange, disabled, autoFocus }: UnidadMedidaSelectProps,
-  ref: ForwardedRef<UnidadMedidaSelectHandle>,
-) {
+export default function EtiquetasMultiSelect({
+  value,
+  selected,
+  onChange,
+  disabled,
+}: EtiquetasMultiSelectProps) {
   const id = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -88,26 +89,10 @@ function UnidadMedidaSelect(
   const [results, setResults] = useState<Option[]>([]);
   const [error, setError] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
 
-  const displayText = selectedLabel ?? initialLabel ?? '';
-
-  // If the parent externally resets the controlled value (e.g. discarding
-  // the form), fall back to the placeholder instead of keeping a stale label.
-  useEffect(() => {
-    if (value === '') setSelectedLabel(null);
-  }, [value]);
-
-  useEffect(() => {
-    if (autoFocus) triggerRef.current?.focus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useImperativeHandle(ref, () => ({
-    focus: () => {
-      triggerRef.current?.focus();
-    },
-  }));
+  // Results already selected are excluded — search finds remaining tags to
+  // add, not ones already attached to the producto.
+  const selectableResults = results.filter((option) => !value.includes(option.id));
 
   const closePanel = () => {
     setOpen(false);
@@ -140,7 +125,7 @@ function UnidadMedidaSelect(
   };
 
   // Instant `searchInput` -> debounced `searchTerm`, same two-state pattern
-  // as vehiculos/SearchableSelect.tsx.
+  // as UnidadMedidaSelect.tsx.
   useEffect(() => {
     if (!open) return;
     const handle = setTimeout(() => {
@@ -157,7 +142,7 @@ function UnidadMedidaSelect(
     let cancelled = false;
     setLoading(true);
     setError('');
-    searchUnidadesMedida(searchTerm)
+    searchEtiquetas(searchTerm)
       .then((data) => {
         if (cancelled) return;
         setResults(data);
@@ -177,8 +162,8 @@ function UnidadMedidaSelect(
 
   // Keep the highlight in range when the result set shrinks.
   useEffect(() => {
-    setHighlightedIndex((prev) => Math.min(prev, Math.max(results.length - 1, 0)));
-  }, [results]);
+    setHighlightedIndex((prev) => Math.min(prev, Math.max(selectableResults.length - 1, 0)));
+  }, [selectableResults.length]);
 
   // Scroll the highlighted row into view — a no-op when it's already visible
   // (mouse hover), so only keyboard navigation past the fold actually scrolls.
@@ -214,23 +199,30 @@ function UnidadMedidaSelect(
     };
   }, [open]);
 
+  // Selecting a result appends it and keeps the panel open (unlike
+  // UnidadMedidaSelect, where selecting closes it) so the user can keep
+  // adding tags in one flow.
   const selectOption = (option: Option) => {
-    onChange(option.id);
-    setSelectedLabel(option.label);
-    closePanel();
-    triggerRef.current?.focus();
+    onChange([...selected, option]);
+    setSearchInput('');
+    setSearchTerm('');
+    searchInputRef.current?.focus();
+  };
+
+  const removeOption = (optionId: number) => {
+    onChange(selected.filter((option) => option.id !== optionId));
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setHighlightedIndex((prev) => Math.min(prev + 1, Math.max(results.length - 1, 0)));
+      setHighlightedIndex((prev) => Math.min(prev + 1, Math.max(selectableResults.length - 1, 0)));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       setHighlightedIndex((prev) => Math.max(prev - 1, 0));
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      const option = results[highlightedIndex];
+      const option = selectableResults[highlightedIndex];
       if (option) selectOption(option);
     } else if (event.key === 'Escape') {
       event.preventDefault();
@@ -241,9 +233,6 @@ function UnidadMedidaSelect(
 
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="text-sm font-medium text-stone-700">
-        {LABEL} <span className="text-rose-500">*</span>
-      </label>
       <button
         id={id}
         ref={triggerRef}
@@ -252,9 +241,32 @@ function UnidadMedidaSelect(
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex w-full items-center justify-between rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-left text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label="Etiquetas"
+        className="flex w-full flex-wrap items-center gap-1.5 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-left text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <span className={displayText ? '' : 'text-stone-400'}>{displayText || PLACEHOLDER}</span>
+        {selected.map((option) => (
+          <span
+            key={option.id}
+            className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700"
+          >
+            {option.label}
+            <span
+              role="button"
+              tabIndex={-1}
+              onClick={(e) => {
+                e.stopPropagation();
+                removeOption(option.id);
+              }}
+              className="rounded-full text-rose-500 hover:text-rose-700"
+              aria-label={`Quitar ${option.label}`}
+            >
+              <RemoveIcon />
+            </span>
+          </span>
+        ))}
+        <span className={`flex-1 ${selected.length === 0 ? 'text-stone-400' : ''}`}>
+          {selected.length === 0 ? PLACEHOLDER : ''}
+        </span>
         <ChevronIcon />
       </button>
 
@@ -296,10 +308,10 @@ function UnidadMedidaSelect(
                 </div>
               ) : error ? (
                 <div className="p-4 text-sm text-red-600">{error}</div>
-              ) : results.length === 0 ? (
+              ) : selectableResults.length === 0 ? (
                 <div className="p-4 text-sm text-stone-500">Sin resultados.</div>
               ) : (
-                results.map((option, index) => (
+                selectableResults.map((option, index) => (
                   <div
                     key={option.id}
                     ref={(el) => {
@@ -322,5 +334,3 @@ function UnidadMedidaSelect(
     </div>
   );
 }
-
-export default forwardRef(UnidadMedidaSelect);

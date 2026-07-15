@@ -34,6 +34,8 @@ model User {
   unidadesMedidaActualizadas UnidadMedida[] @relation("UnidadMedidaActualizadoPor")
   productosCreados           Producto[]     @relation("ProductoCreadoPor")
   productosActualizados      Producto[]     @relation("ProductoActualizadoPor")
+  etiquetasCreadas           Etiqueta[]     @relation("EtiquetaCreadoPor")
+  etiquetasActualizadas      Etiqueta[]     @relation("EtiquetaActualizadoPor")
   createdAt                  DateTime       @default(now())
   updatedAt                  DateTime       @updatedAt
 }
@@ -129,8 +131,9 @@ model UnidadMedida {
 }
 
 enum AlicuotaIva {
-  IVA_21   @map("21")
-  IVA_10_5 @map("10.5")
+  IVA_21     @map("21")
+  IVA_10_5   @map("10.5")
+  IVA_EXENTO @map("exento")
 }
 
 model Producto {
@@ -143,15 +146,29 @@ model Producto {
   cantidadInicial    Decimal      @db.Decimal(10, 2)
   alertaStock        Boolean      @default(false)
   cantidadMinima     Decimal      @db.Decimal(10, 2)
-  precioCompra       Decimal      @db.Decimal(10, 2)
-  porcentajeGanancia Decimal      @db.Decimal(5, 2)
-  precioVenta        Decimal      @db.Decimal(10, 2)
-  precioMayorista    Decimal      @db.Decimal(10, 2)
+  precioCompra       Decimal?     @db.Decimal(10, 2)
+  porcentajeGanancia Decimal?     @db.Decimal(5, 2)
+  precioVenta        Decimal?     @db.Decimal(10, 2)
+  precioMayorista    Decimal?     @db.Decimal(10, 2)
   alicuotaIva        AlicuotaIva
   creadoPorId        Int?
   creadoPor          User?        @relation("ProductoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId   Int?
   actualizadoPor     User?        @relation("ProductoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  etiquetas          Etiqueta[]
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
+}
+
+model Etiqueta {
+  id               Int        @id @default(autoincrement())
+  descripcion      String     @unique
+  activo           Boolean    @default(true)
+  creadoPorId      Int?
+  creadoPor        User?      @relation("EtiquetaCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId Int?
+  actualizadoPor   User?      @relation("EtiquetaActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  productos        Producto[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 }

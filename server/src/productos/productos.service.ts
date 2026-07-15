@@ -25,6 +25,7 @@ const PRODUCTO_SELECT = {
   alicuotaIva: true,
   unidadMedidaId: true,
   unidadMedida: { select: { id: true, descripcion: true } },
+  etiquetas: { select: { id: true, descripcion: true } },
   createdAt: true,
   updatedAt: true,
   creadoPor: { select: { id: true, username: true } },
@@ -33,15 +34,18 @@ const PRODUCTO_SELECT = {
 
 const DUPLICATE_DESCRIPCION_ERROR = 'Ya existe un producto con esa descripción.';
 const UNIDAD_MEDIDA_INVALID_ERROR = 'La unidad de medida no existe o está inactiva.';
+const ETIQUETAS_INVALID_ERROR = 'Una o más etiquetas no existen o están inactivas.';
 
 export type ProductoFilter = { search?: string; status?: ProductoStatusFilter };
 
 // Number <-> Prisma enum codec. `10.5` is not a legal Prisma enum
-// identifier, so the DB/enum member names are IVA_21/IVA_10_5 (mapped to
-// the raw '21'/'10.5' values via @map) while the API contract stays a
-// plain number — the client never learns the enum member names.
-const IVA_TO_ENUM = { 21: 'IVA_21', 10.5: 'IVA_10_5' } as const;
-const ENUM_TO_IVA: Record<string, number> = { IVA_21: 21, IVA_10_5: 10.5 };
+// identifier, so the DB/enum member names are IVA_21/IVA_10_5/IVA_EXENTO
+// (mapped to the raw '21'/'10.5'/'exento' values via @map) while the API
+// contract stays a plain number — the client never learns the enum member
+// names. "Exento" (tax-exempt) has no percentage, so it's represented as 0
+// on the API/number side.
+const IVA_TO_ENUM = { 21: 'IVA_21', 10.5: 'IVA_10_5', 0: 'IVA_EXENTO' } as const;
+const ENUM_TO_IVA: Record<string, number> = { IVA_21: 21, IVA_10_5: 10.5, IVA_EXENTO: 0 };
 
 // Mirrors service-types.service.ts / unidades-medida.service.ts's
 // buildXWhere pattern. Returns both `searchWhere` (status-independent, used
@@ -83,15 +87,8 @@ function isDescripcionConflict(error: unknown): boolean {
 export class ProductosService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // precioVenta = precioCompra * (1 + porcentajeGanancia / 100), rounded to
-  // scale 2 with ROUND_HALF_UP. Uses Prisma.Decimal (decimal.js) arithmetic
-  // throughout — never JS floats — since this is the first Decimal
-  // precedent in the codebase and float arithmetic accumulates rounding
-  // error (e.g. 0.1 + 0.2).
-  private computePrecioVenta(precioCompra: number, porcentajeGanancia: number): Prisma.Decimal {
-    const base = new Prisma.Decimal(precioCompra);
-    const factor = new Prisma.Decimal(porcentajeGanancia).div(100).plus(1);
-    return base.mul(factor).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+  private toNullableDecimal(value?: number | null): Prisma.Decimal | null {
+    return value == null ? null : new Prisma.Decimal(value);
   }
 
   // User-confirmed (design.md "Resolved Questions"): a Producto MUST NOT
@@ -110,7 +107,18 @@ export class ProductosService {
     }
   }
 
-  private mapIvaToEnum(alicuotaIva: number): 'IVA_21' | 'IVA_10_5' {
+  // Same active-only enforcement as assertUnidadMedidaActiva, but for a
+  // set of ids rather than a single one: every id sent by the client must
+  // resolve to an existing, active Etiqueta.
+  private async assertEtiquetasActivas(etiquetaIds: number[]): Promise<void> {
+    if (etiquetaIds.length === 0) return;
+    const etiquetas = await this.prisma.etiqueta.findMany({ where: { id: { in: etiquetaIds } } });
+    if (etiquetas.length !== etiquetaIds.length || etiquetas.some((e) => !e.activo)) {
+      throw new BadRequestException(ETIQUETAS_INVALID_ERROR);
+    }
+  }
+
+  private mapIvaToEnum(alicuotaIva: number): 'IVA_21' | 'IVA_10_5' | 'IVA_EXENTO' {
     return IVA_TO_ENUM[alicuotaIva as keyof typeof IVA_TO_ENUM];
   }
 
@@ -155,6 +163,7 @@ export class ProductosService {
 
   async create(dto: CreateProductoDto, creadoPorId: number) {
     await this.assertUnidadMedidaActiva(dto.unidadMedidaId);
+    await this.assertEtiquetasActivas(dto.etiquetaIds ?? []);
 
     const existing = await this.prisma.producto.findUnique({
       where: { descripcion: dto.descripcion },
@@ -163,7 +172,7 @@ export class ProductosService {
       throw new ConflictException(DUPLICATE_DESCRIPCION_ERROR);
     }
 
-    const precioVenta = this.computePrecioVenta(dto.precioCompra, dto.porcentajeGanancia);
+    const precioVenta = new Prisma.Decimal(dto.precioVenta);
 
     try {
       const producto = await this.prisma.producto.create({
@@ -171,16 +180,17 @@ export class ProductosService {
           descripcion: dto.descripcion,
           codigo: dto.codigo,
           unidadMedidaId: dto.unidadMedidaId,
-          cantidadInicial: new Prisma.Decimal(dto.cantidadInicial),
+          cantidadInicial: new Prisma.Decimal(dto.cantidadInicial ?? 0),
           alertaStock: dto.alertaStock,
-          cantidadMinima: new Prisma.Decimal(dto.cantidadMinima),
-          precioCompra: new Prisma.Decimal(dto.precioCompra),
-          porcentajeGanancia: new Prisma.Decimal(dto.porcentajeGanancia),
+          cantidadMinima: new Prisma.Decimal(dto.cantidadMinima ?? 0),
+          precioCompra: this.toNullableDecimal(dto.precioCompra),
+          porcentajeGanancia: this.toNullableDecimal(dto.porcentajeGanancia),
           precioVenta,
-          precioMayorista: new Prisma.Decimal(dto.precioMayorista),
+          precioMayorista: this.toNullableDecimal(dto.precioMayorista),
           alicuotaIva: this.mapIvaToEnum(dto.alicuotaIva),
           creadoPorId,
           actualizadoPorId: creadoPorId,
+          etiquetas: { connect: (dto.etiquetaIds ?? []).map((id) => ({ id })) },
         },
         select: PRODUCTO_SELECT,
       });
@@ -205,6 +215,7 @@ export class ProductosService {
     // Unconditional re-check — re-runs on every update per design.md, even
     // when unidadMedidaId is unchanged (the update DTO always carries it).
     await this.assertUnidadMedidaActiva(dto.unidadMedidaId);
+    await this.assertEtiquetasActivas(dto.etiquetaIds ?? []);
 
     // findUnique can't express NOT — descripcion IS unique, but we must
     // allow the row being edited to keep its own value.
@@ -215,7 +226,7 @@ export class ProductosService {
       throw new ConflictException(DUPLICATE_DESCRIPCION_ERROR);
     }
 
-    const precioVenta = this.computePrecioVenta(dto.precioCompra, dto.porcentajeGanancia);
+    const precioVenta = new Prisma.Decimal(dto.precioVenta);
 
     try {
       const producto = await this.prisma.producto.update({
@@ -224,16 +235,17 @@ export class ProductosService {
           descripcion: dto.descripcion,
           codigo: dto.codigo,
           unidadMedidaId: dto.unidadMedidaId,
-          cantidadInicial: new Prisma.Decimal(dto.cantidadInicial),
+          cantidadInicial: new Prisma.Decimal(dto.cantidadInicial ?? 0),
           alertaStock: dto.alertaStock,
-          cantidadMinima: new Prisma.Decimal(dto.cantidadMinima),
-          precioCompra: new Prisma.Decimal(dto.precioCompra),
-          porcentajeGanancia: new Prisma.Decimal(dto.porcentajeGanancia),
+          cantidadMinima: new Prisma.Decimal(dto.cantidadMinima ?? 0),
+          precioCompra: this.toNullableDecimal(dto.precioCompra),
+          porcentajeGanancia: this.toNullableDecimal(dto.porcentajeGanancia),
           precioVenta,
-          precioMayorista: new Prisma.Decimal(dto.precioMayorista),
+          precioMayorista: this.toNullableDecimal(dto.precioMayorista),
           alicuotaIva: this.mapIvaToEnum(dto.alicuotaIva),
           activo: dto.activo,
           actualizadoPorId,
+          etiquetas: { set: (dto.etiquetaIds ?? []).map((id) => ({ id })) },
         },
         select: PRODUCTO_SELECT,
       });

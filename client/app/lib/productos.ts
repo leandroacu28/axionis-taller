@@ -1,6 +1,7 @@
 import { API_BASE_URL } from './api';
 import { getAuthHeader } from './auth';
 import { listUnidadesMedida } from './unidades-medida';
+import { listEtiquetas } from './etiquetas';
 
 export interface ProductoListItem {
   id: number;
@@ -10,13 +11,14 @@ export interface ProductoListItem {
   cantidadInicial: string;
   alertaStock: boolean;
   cantidadMinima: string;
-  precioCompra: string;
-  porcentajeGanancia: string;
-  precioVenta: string;
-  precioMayorista: string;
-  alicuotaIva: 21 | 10.5;
+  precioCompra: string | null;
+  porcentajeGanancia: string | null;
+  precioVenta: string | null;
+  precioMayorista: string | null;
+  alicuotaIva: 21 | 10.5 | 0;
   unidadMedidaId: number;
   unidadMedida: { id: number; descripcion: string };
+  etiquetas: { id: number; descripcion: string }[];
   createdAt: string;
   updatedAt: string;
   creadoPor: { id: number; username: string } | null;
@@ -30,10 +32,12 @@ export interface CreateProductoPayload {
   cantidadInicial: number;
   alertaStock: boolean;
   cantidadMinima: number;
-  precioCompra: number;
-  porcentajeGanancia: number;
-  precioMayorista: number;
-  alicuotaIva: 21 | 10.5;
+  precioCompra?: number | null;
+  porcentajeGanancia?: number | null;
+  precioVenta: number;
+  precioMayorista?: number | null;
+  alicuotaIva: 21 | 10.5 | 0;
+  etiquetaIds?: number[];
 }
 
 export interface UpdateProductoPayload extends CreateProductoPayload {
@@ -118,4 +122,21 @@ export async function searchUnidadesMedida(term: string): Promise<{ id: number; 
     pageSize: 20,
   });
   return result.data.map((unidad) => ({ id: unidad.id, label: unidad.descripcion }));
+}
+
+/**
+ * Search helper for `EtiquetasMultiSelect`'s `search` prop. Reuses
+ * `listEtiquetas` (from `lib/etiquetas.ts`) rather than duplicating the
+ * fetch, and restricts results to active tags — a `Producto` must not
+ * reference an inactive `Etiqueta` (see `productos.service.ts`'s
+ * `assertEtiquetasActivas`).
+ */
+export async function searchEtiquetas(term: string): Promise<{ id: number; label: string }[]> {
+  const result = await listEtiquetas({
+    search: term || undefined,
+    status: 'activo',
+    page: 1,
+    pageSize: 20,
+  });
+  return result.data.map((etiqueta) => ({ id: etiqueta.id, label: etiqueta.descripcion }));
 }

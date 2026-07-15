@@ -1,14 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  listProductos,
-  updateProducto,
-  type ProductoListItem,
-} from '../../lib/productos';
+import { listEtiquetas, updateEtiqueta, type EtiquetaListItem } from '../../lib/etiquetas';
 import { showConfirm, showError, showSuccess } from '../../lib/alerts';
+import EtiquetaFormModal from './EtiquetaFormModal';
 
 // Keep in sync with the menu's `w-40` class below.
 const MENU_WIDTH = 160;
@@ -48,25 +44,13 @@ function SearchIcon() {
   );
 }
 
-function ExclamationTriangleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-    </svg>
-  );
-}
-
 type StatusFilter = 'all' | 'activo' | 'inactivo';
 
 const DEFAULT_STATUS_FILTER: StatusFilter = 'activo';
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
-function isLowStock(producto: ProductoListItem): boolean {
-  return producto.alertaStock && Number(producto.cantidadInicial) <= Number(producto.cantidadMinima);
-}
-
-export default function ProductosPage() {
-  const [productos, setProductos] = useState<ProductoListItem[]>([]);
+export default function EtiquetasPage() {
+  const [etiquetas, setEtiquetas] = useState<EtiquetaListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState('');
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -81,6 +65,8 @@ export default function ProductosPage() {
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
   const [total, setTotal] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedEtiqueta, setSelectedEtiqueta] = useState<EtiquetaListItem | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -119,8 +105,8 @@ export default function ProductosPage() {
     setMenuPos(null);
   };
 
-  const openMenuFor = (productoId: number, event: React.MouseEvent<HTMLButtonElement>) => {
-    if (openMenuId === productoId) {
+  const openMenuFor = (etiquetaId: number, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (openMenuId === etiquetaId) {
       closeMenu();
       return;
     }
@@ -131,20 +117,20 @@ export default function ProductosPage() {
       left: rect.right - MENU_WIDTH,
       openUpward,
     });
-    setOpenMenuId(productoId);
+    setOpenMenuId(etiquetaId);
   };
 
-  const loadProductos = async () => {
+  const loadEtiquetas = async () => {
     setLoading(true);
     setListError('');
     try {
-      const result = await listProductos({
+      const result = await listEtiquetas({
         page,
         pageSize,
         search: search || undefined,
         status: statusFilter,
       });
-      setProductos(result.data);
+      setEtiquetas(result.data);
       setTotal(result.total);
       setActiveCount(result.activeCount);
     } catch (err) {
@@ -157,49 +143,38 @@ export default function ProductosPage() {
   };
 
   useEffect(() => {
-    loadProductos();
+    loadEtiquetas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, search, statusFilter]);
 
-  const handleToggleActivo = async (producto: ProductoListItem) => {
+  const handleToggleActivo = async (etiqueta: EtiquetaListItem) => {
     closeMenu();
-    const activating = !producto.activo;
+    const activating = !etiqueta.activo;
 
     if (!activating) {
       const confirmed = await showConfirm({
-        title: 'Desactivar producto',
-        text: `¿Seguro que querés desactivar ${producto.descripcion}?`,
+        title: 'Desactivar etiqueta',
+        text: `¿Seguro que querés desactivar ${etiqueta.descripcion}?`,
         confirmButtonText: 'Sí, desactivar',
         confirmButtonColor: '#e11d48',
       });
       if (!confirmed) return;
     }
 
-    setTogglingId(producto.id);
+    setTogglingId(etiqueta.id);
     try {
-      await updateProducto(producto.id, {
-        descripcion: producto.descripcion,
-        codigo: producto.codigo,
-        unidadMedidaId: producto.unidadMedidaId,
-        cantidadInicial: Number(producto.cantidadInicial),
-        alertaStock: producto.alertaStock,
-        cantidadMinima: Number(producto.cantidadMinima),
-        precioCompra: producto.precioCompra !== null ? Number(producto.precioCompra) : null,
-        porcentajeGanancia:
-          producto.porcentajeGanancia !== null ? Number(producto.porcentajeGanancia) : null,
-        precioVenta: producto.precioVenta !== null ? Number(producto.precioVenta) : 0,
-        precioMayorista: producto.precioMayorista !== null ? Number(producto.precioMayorista) : null,
-        alicuotaIva: producto.alicuotaIva,
+      await updateEtiqueta(etiqueta.id, {
+        descripcion: etiqueta.descripcion,
         activo: activating,
       });
       showSuccess(
-        activating ? 'Producto activado' : 'Producto desactivado',
-        `${producto.descripcion} fue ${activating ? 'activado' : 'desactivado'} correctamente.`,
+        activating ? 'Etiqueta activada' : 'Etiqueta desactivada',
+        `${etiqueta.descripcion} fue ${activating ? 'activada' : 'desactivada'} correctamente.`,
       );
-      await loadProductos();
+      await loadEtiquetas();
     } catch (err) {
       showError(
-        activating ? 'No se pudo activar el producto' : 'No se pudo desactivar el producto',
+        activating ? 'No se pudo activar la etiqueta' : 'No se pudo desactivar la etiqueta',
         err instanceof Error ? err.message : 'No se pudo conectar con el servidor.',
       );
     } finally {
@@ -239,26 +214,30 @@ export default function ProductosPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">
-            Productos
+            Etiquetas
           </h1>
           <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
-            Gestioná el catálogo de productos e insumos del taller.
+            Gestioná las etiquetas del sistema.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/productos/nuevo"
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedEtiqueta(null);
+              setModalOpen(true);
+            }}
             className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600"
           >
-            Nuevo producto
-          </Link>
+            Nueva etiqueta
+          </button>
         </div>
       </div>
 
       <div className="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
-            {activeCount} producto{activeCount === 1 ? '' : 's'} activo
+            {activeCount} etiqueta{activeCount === 1 ? '' : 's'} activa
             {activeCount === 1 ? '' : 's'} visible{activeCount === 1 ? '' : 's'}
           </span>
         </div>
@@ -277,7 +256,7 @@ export default function ProductosPage() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Descripción o código..."
+                  placeholder="Descripción..."
                   className="w-full rounded-lg border border-stone-200 bg-white py-2 pl-9 pr-3 text-sm text-stone-900 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
                 />
               </div>
@@ -304,7 +283,7 @@ export default function ProductosPage() {
 
             <div className="space-y-1">
               <label htmlFor="pageSize" className="text-sm font-medium text-stone-700">
-                Productos por página
+                Etiquetas por página
               </label>
               <select
                 id="pageSize"
@@ -343,26 +322,26 @@ export default function ProductosPage() {
               className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-rose-500"
               aria-hidden="true"
             />
-            Cargando productos...
+            Cargando etiquetas...
           </div>
         ) : listError ? (
           <div className="m-4 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             <span>{listError}</span>
             <button
               type="button"
-              onClick={loadProductos}
+              onClick={loadEtiquetas}
               className="shrink-0 font-medium text-red-700 underline hover:text-red-800"
             >
               Reintentar
             </button>
           </div>
-        ) : productos.length === 0 && total === 0 && !hasActiveFilters ? (
+        ) : etiquetas.length === 0 && total === 0 && !hasActiveFilters ? (
           <div className="p-8 text-center text-sm text-stone-500">
-            No hay productos registrados todavía.
+            No hay etiquetas registradas todavía.
           </div>
-        ) : productos.length === 0 && total === 0 ? (
+        ) : etiquetas.length === 0 && total === 0 ? (
           <div className="flex flex-col items-center gap-2 p-8 text-center text-sm text-stone-500">
-            <span>No se encontraron productos con esos filtros.</span>
+            <span>No se encontraron etiquetas con esos filtros.</span>
             <button
               type="button"
               onClick={clearFilters}
@@ -382,19 +361,7 @@ export default function ProductosPage() {
                   Descripción
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Código
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Unidad de Medida
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Precio Venta
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Alícuota IVA
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Stock
+                  Creación
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Estado
@@ -405,63 +372,51 @@ export default function ProductosPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {productos.map((producto, index) => (
-                <tr key={producto.id} className="hover:bg-stone-50/60">
+              {etiquetas.map((etiqueta, index) => (
+                <tr key={etiqueta.id} className="hover:bg-stone-50/60">
                   <td className="px-4 py-3 text-center text-sm text-stone-500">
                     {(page - 1) * pageSize + index + 1}
                   </td>
                   <td className="px-4 py-3 text-center text-sm font-medium text-stone-800">
-                    {producto.descripcion}
+                    {etiqueta.descripcion}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    {producto.codigo || '—'}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    {producto.unidadMedida.descripcion}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    {producto.precioVenta !== null ? `$${Number(producto.precioVenta).toFixed(2)}` : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    {producto.alicuotaIva === 0 ? 'Exento' : `${producto.alicuotaIva}%`}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    <span>{producto.cantidadInicial}</span>
-                    {isLowStock(producto) && (
-                      <span
-                        className="ml-1 inline-flex items-center gap-1 align-middle text-xs font-medium text-amber-600"
-                        title="Stock por debajo del mínimo"
-                      >
-                        <ExclamationTriangleIcon />
-                        Bajo stock
-                      </span>
-                    )}
+                    {etiqueta.creadoPor
+                      ? [etiqueta.creadoPor.nombre, etiqueta.creadoPor.apellido].filter(Boolean).join(' ') ||
+                        etiqueta.creadoPor.username
+                      : '—'}
+                    <span className="block text-xs text-stone-400">
+                      {new Date(etiqueta.createdAt).toLocaleString('es-AR', {
+                        dateStyle: 'short',
+                        timeStyle: 'short',
+                      })}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        producto.activo
+                        etiqueta.activo
                           ? 'bg-green-100 text-green-700'
                           : 'bg-rose-100 text-rose-700'
                       }`}
                     >
-                      {producto.activo ? 'Activo' : 'Inactivo'}
+                      {etiqueta.activo ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center text-sm">
                     <div
                       className="relative inline-block text-left"
-                      ref={openMenuId === producto.id ? triggerRef : null}
+                      ref={openMenuId === etiqueta.id ? triggerRef : null}
                     >
                       <button
                         type="button"
-                        onClick={(event) => openMenuFor(producto.id, event)}
+                        onClick={(event) => openMenuFor(etiqueta.id, event)}
                         aria-label="Abrir acciones"
                         className="rounded-lg px-2 py-1 text-lg leading-none text-stone-500 hover:bg-stone-100 hover:text-stone-700"
                       >
                         ⋯
                       </button>
-                      {openMenuId === producto.id &&
+                      {openMenuId === etiqueta.id &&
                         menuPos &&
                         typeof document !== 'undefined' &&
                         createPortal(
@@ -476,25 +431,29 @@ export default function ProductosPage() {
                             }}
                             className="z-50 rounded-lg border border-stone-200 bg-white py-1 shadow-lg"
                           >
-                            <Link
-                              href={`/productos/editar/${producto.id}`}
-                              onClick={closeMenu}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                closeMenu();
+                                setSelectedEtiqueta(etiqueta);
+                                setModalOpen(true);
+                              }}
                               className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-stone-700 hover:bg-stone-50"
                             >
                               <PencilIcon />
                               Editar
-                            </Link>
+                            </button>
                             <button
                               type="button"
-                              onClick={() => handleToggleActivo(producto)}
-                              disabled={togglingId === producto.id}
+                              onClick={() => handleToggleActivo(etiqueta)}
+                              disabled={togglingId === etiqueta.id}
                               className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 ${
-                                producto.activo
+                                etiqueta.activo
                                   ? 'text-rose-600 hover:bg-rose-50'
                                   : 'text-green-600 hover:bg-green-50'
                               }`}
                             >
-                              {producto.activo ? (
+                              {etiqueta.activo ? (
                                 <>
                                   <NoSymbolIcon />
                                   Desactivar
@@ -516,11 +475,11 @@ export default function ProductosPage() {
             </tbody>
           </table>
         )}
-        {!loading && !listError && productos.length > 0 && (
+        {!loading && !listError && etiquetas.length > 0 && (
           <div className="flex flex-col items-center justify-between gap-3 border-t border-stone-200 px-4 py-3 text-sm text-stone-500 sm:flex-row">
             <span>
               Mostrando {(page - 1) * pageSize + 1}–
-              {Math.min(page * pageSize, total)} de {total} productos
+              {Math.min(page * pageSize, total)} de {total} etiquetas
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -546,6 +505,16 @@ export default function ProductosPage() {
           </div>
         )}
       </div>
+
+      <EtiquetaFormModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        etiqueta={selectedEtiqueta}
+        onSaved={() => {
+          setModalOpen(false);
+          loadEtiquetas();
+        }}
+      />
     </div>
   );
 }

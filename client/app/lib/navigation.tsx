@@ -31,6 +31,36 @@ export const navigation: NavigationItem[] = [
         id: 'usuarios',
         icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
       },
+      {
+        name: 'Colores',
+        href: '/colores',
+        id: 'colores',
+        icon: <img src="/icons/colores.svg" alt="" className="h-5 w-5" aria-hidden />,
+      },
+      {
+        name: 'Marcas',
+        href: '/marcas',
+        id: 'marcas',
+        icon: <img src="/icons/marcas.svg" alt="" className="h-5 w-5" aria-hidden />,
+      },
+      {
+        name: 'Tipos de Servicio',
+        href: '/tipos-servicio',
+        id: 'tipos-servicio',
+        icon: <img src="/icons/tipos-servicio.svg" alt="" className="h-5 w-5" aria-hidden />,
+      },
+      {
+        name: 'Unidades de Medida',
+        href: '/unidades-medida',
+        id: 'unidades-medida',
+        icon: <img src="/icons/configuraciones.svg" alt="" className="h-5 w-5" aria-hidden />,
+      },
+      {
+        name: 'Etiquetas',
+        href: '/etiquetas',
+        id: 'etiquetas',
+        icon: <img src="/icons/etiquetas.svg" alt="" className="h-5 w-5" aria-hidden />,
+      },
     ],
   },
   {
@@ -40,41 +70,15 @@ export const navigation: NavigationItem[] = [
     icon: <img src="/icons/clientes.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
   {
-    name: 'Colores',
-    href: '/colores',
-    id: 'colores',
-    icon: <img src="/icons/colores.svg" alt="" className="h-5 w-5" aria-hidden />,
-  },
-  {
-    name: 'Marcas',
-    href: '/marcas',
-    id: 'marcas',
-    icon: <img src="/icons/marcas.svg" alt="" className="h-5 w-5" aria-hidden />,
-  },
-  {
     name: 'Vehículos',
     href: '/vehiculos',
     id: 'vehiculos',
     icon: <img src="/icons/vehiculos.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
   {
-    name: 'Tipos de Servicio',
-    href: '/tipos-servicio',
-    id: 'tipos-servicio',
-    icon: <img src="/icons/tipos-servicio.svg" alt="" className="h-5 w-5" aria-hidden />,
-  },
-  {
-    name: 'Unidades de Medida',
-    href: '/unidades-medida',
-    id: 'unidades-medida',
-    icon: <img src="/icons/configuraciones.svg" alt="" className="h-5 w-5" aria-hidden />,
-  },
-  {
     name: 'Productos',
     href: '/productos',
     id: 'productos',
-    // Placeholder icon (no dedicated productos.svg yet) — non-blocking,
-    // swappable later, same convention as "Unidades de Medida" above.
-    icon: <img src="/icons/configuraciones.svg" alt="" className="h-5 w-5" aria-hidden />,
+    icon: <img src="/icons/productos.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
 ];

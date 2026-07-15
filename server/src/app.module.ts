@@ -12,6 +12,7 @@ import { VehiclesModule } from './vehicles/vehicles.module';
 import { ServiceTypesModule } from './service-types/service-types.module';
 import { UnidadesMedidaModule } from './unidades-medida/unidades-medida.module';
 import { ProductosModule } from './productos/productos.module';
+import { EtiquetasModule } from './etiquetas/etiquetas.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ProductosModule } from './productos/productos.module';
     ServiceTypesModule,
     UnidadesMedidaModule,
     ProductosModule,
+    EtiquetasModule,
   ],
   controllers: [AppController],
   providers: [AppService],
