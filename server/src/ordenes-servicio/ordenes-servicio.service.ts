@@ -60,8 +60,12 @@ function buildOrdenServicioWhere(filter: OrdenServicioFilter): {
 export class OrdenesServicioService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async assertVehiculoPerteneceACliente(vehiculoId: number, clienteId: number) {
-    const vehiculo = await this.prisma.vehiculo.findUnique({ where: { id: vehiculoId } });
+  private async assertVehiculoPerteneceACliente(
+    client: Prisma.TransactionClient | PrismaService,
+    vehiculoId: number,
+    clienteId: number,
+  ) {
+    const vehiculo = await client.vehiculo.findUnique({ where: { id: vehiculoId } });
     if (!vehiculo) throw new BadRequestException('El vehículo no existe.');
     if (vehiculo.clienteId !== clienteId) {
       throw new BadRequestException('El vehículo no pertenece al cliente seleccionado.');
@@ -69,18 +73,18 @@ export class OrdenesServicioService {
   }
 
   // mirrors assertEtiquetasActivas + min-1
-  private async assertTiposServicioActivos(ids: number[]) {
+  private async assertTiposServicioActivos(client: Prisma.TransactionClient | PrismaService, ids: number[]) {
     if (ids.length === 0) throw new BadRequestException('Debe seleccionar al menos un tipo de servicio.');
-    const tipos = await this.prisma.tipoServicio.findMany({ where: { id: { in: ids } } });
-    if (tipos.length !== ids.length || tipos.some((t) => !t.activo)) {
+    const tipos = await client.tipoServicio.findMany({ where: { id: { in: ids } } });
+    if (tipos.length !== new Set(ids).size || tipos.some((t) => !t.activo)) {
       throw new BadRequestException('Uno o más tipos de servicio no existen o están inactivos.');
     }
   }
 
   // any active User (D6), not role-restricted
-  private async assertMecanicoActivo(mecanicoId: number) {
-    const u = await this.prisma.user.findUnique({ where: { id: mecanicoId } });
-    if (!u || !u.activo) throw new BadRequestException('El mecánico no existe o está inactivo.');
+  private async assertMecanicoActivo(client: Prisma.TransactionClient | PrismaService, mecanicoId: number) {
+    const mecanico = await client.user.findUnique({ where: { id: mecanicoId } });
+    if (!mecanico || !mecanico.activo) throw new BadRequestException('El mecánico no existe o está inactivo.');
   }
 
   async findAll(query: ListOrdenesServicioQueryDto) {
@@ -120,11 +124,14 @@ export class OrdenesServicioService {
   }
 
   async create(dto: CreateOrdenServicioDto, creadoPorId: number) {
-    await this.assertVehiculoPerteneceACliente(dto.vehiculoId, dto.clienteId);
-    await this.assertTiposServicioActivos(dto.tipoServicioIds);
-    await this.assertMecanicoActivo(dto.mecanicoId);
-
     return this.prisma.$transaction(async (tx) => {
+      // Guards run inside the transaction (with `tx`) so the referenced
+      // vehiculo/tiposServicio/mecanico can't be deactivated between the
+      // check and the write (closes the TOCTOU window).
+      await this.assertVehiculoPerteneceACliente(tx, dto.vehiculoId, dto.clienteId);
+      await this.assertTiposServicioActivos(tx, dto.tipoServicioIds);
+      await this.assertMecanicoActivo(tx, dto.mecanicoId);
+
       const created = await tx.ordenServicio.create({
         data: {
           fechaIngreso: dto.fechaIngreso ? new Date(dto.fechaIngreso) : undefined, // undefined → @default(now())
@@ -146,6 +153,9 @@ export class OrdenesServicioService {
         data: { numero: formatNumero(created.id) },
         select: ORDEN_SERVICIO_SELECT,
       });
+      // Saving an order overwrites the vehicle's current odometer reading —
+      // deliberate, user-confirmed product decision (proposal D5), lossy
+      // (no history kept) but intentional.
       await tx.vehiculo.update({ where: { id: dto.vehiculoId }, data: { kilometraje: dto.kilometros } });
       return orden;
     });
@@ -157,11 +167,12 @@ export class OrdenesServicioService {
       throw new NotFoundException('Orden de servicio no encontrada.');
     }
 
-    await this.assertVehiculoPerteneceACliente(dto.vehiculoId, dto.clienteId);
-    await this.assertTiposServicioActivos(dto.tipoServicioIds);
-    await this.assertMecanicoActivo(dto.mecanicoId);
-
     return this.prisma.$transaction(async (tx) => {
+      // Guards run inside the transaction — see comment in create() above.
+      await this.assertVehiculoPerteneceACliente(tx, dto.vehiculoId, dto.clienteId);
+      await this.assertTiposServicioActivos(tx, dto.tipoServicioIds);
+      await this.assertMecanicoActivo(tx, dto.mecanicoId);
+
       // numero is never regenerated on update — immutable once set.
       const orden = await tx.ordenServicio.update({
         where: { id },
@@ -179,6 +190,7 @@ export class OrdenesServicioService {
         },
         select: ORDEN_SERVICIO_SELECT,
       });
+      // Odometer overwrite — see comment in create() above (D5).
       await tx.vehiculo.update({ where: { id: dto.vehiculoId }, data: { kilometraje: dto.kilometros } });
       return orden;
     });

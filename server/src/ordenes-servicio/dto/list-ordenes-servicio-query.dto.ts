@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Estado } from '@prisma/client';
 
 export type EstadoFilter = 'all' | 'pendiente' | 'en_proceso' | 'terminado';
 
@@ -25,6 +26,6 @@ export class ListOrdenesServicioQueryDto {
   // Replaces the catalog-style activo filter (D2) — counts are reframed
   // per-estado rather than active/inactive.
   @IsOptional()
-  @IsIn(['all', 'pendiente', 'en_proceso', 'terminado'])
+  @IsIn(['all', ...Object.values(Estado)])
   estado?: EstadoFilter = 'all';
 }

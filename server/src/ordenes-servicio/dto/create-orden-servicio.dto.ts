@@ -24,7 +24,7 @@ export class CreateOrdenServicioDto {
   kilometros: number;
 
   @IsOptional()
-  @IsIn(['normal', 'alta', 'urgente'])
+  @IsIn(Object.values(Prioridad))
   prioridad?: Prioridad = 'normal';
 
   @IsString()
@@ -32,7 +32,7 @@ export class CreateOrdenServicioDto {
   motivoIngreso: string;
 
   @IsOptional()
-  @IsIn(['pendiente', 'en_proceso', 'terminado'])
+  @IsIn(Object.values(Estado))
   estado?: Estado = 'pendiente';
 
   @Type(() => Number)
