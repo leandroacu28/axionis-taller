@@ -171,7 +171,7 @@ export default function OrdenServicioForm({
             ? 'mecanico'
             : form.fechaIngreso === ''
               ? 'fechaIngreso'
-              : form.kilometros === ''
+              : form.kilometros === '' || form.kilometros < 0 || !Number.isInteger(form.kilometros)
                 ? 'kilometros'
                 : form.motivoIngreso.trim() === ''
                   ? 'motivoIngreso'

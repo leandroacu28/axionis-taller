@@ -46,8 +46,8 @@ const PRIORIDAD_BADGE_CLASSES: Record<OrdenServicioListItem['prioridad'], string
 };
 
 function formatFecha(iso: string): string {
-  const date = new Date(iso);
-  return date.toLocaleDateString('es-AR');
+  const [year, month, day] = iso.slice(0, 10).split('-');
+  return `${day}/${month}/${year}`;
 }
 
 function mecanicoLabel(mecanico: OrdenServicioListItem['mecanico']): string {
