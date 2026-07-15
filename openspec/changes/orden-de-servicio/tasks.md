@@ -76,18 +76,18 @@ This is a **new module + new top-level route**, so most of it is net-new code. E
 
 ## Phase 4: Frontend — API Client, Shared Form & Pickers
 
-- [ ] 4.1 Create `client/app/lib/ordenes-servicio.ts`: typed interfaces, `list`/`get`/`create`/`update` + `searchTiposServicio` helper, `getAuthHeader()` on every call, per design.md § Frontend Component Plan row for this file
-- [ ] 4.2 Modify `client/app/(dashboard)/vehiculos/SearchableSelect.tsx`: make the `quickCreate` prop optional — render the "+ Crear" footer/`QuickCreateModal` only when provided; verify existing callers (marca/color/cliente) are unaffected, per design.md § DD3
-- [ ] 4.3 Modify `client/app/(dashboard)/vehiculos/referenceSelectConfigs.tsx`: reuse `clienteSelectConfig` verbatim, add `mecanicoSelectConfig` (search only, no `quickCreate`), backed by `searchUsers`
-- [ ] 4.4 Create `client/app/(dashboard)/ordenes-servicio/TipoServicioMultiSelect.tsx`: copy of `EtiquetasMultiSelect.tsx` with `searchEtiquetas` → `searchTiposServicio`, per design.md § Frontend Component Plan
-- [ ] 4.5 Create `client/app/(dashboard)/ordenes-servicio/OrdenServicioForm.tsx`: shared create/edit form — cliente picker (`clienteSelectConfig`), dependent vehículo picker (`disabled={clienteId === ''}`, `search` closure `(term) => listVehicles({ clienteId, search: term })`, resets `vehiculoId=''` on cliente change), mecánico picker (`mecanicoSelectConfig`), `TipoServicioMultiSelect`, `prioridad`/`estado` enum controls, `fechaIngreso`/`kilometros`/`motivoIngreso` fields, per design.md § DD3 and § Data Flow
+- [x] 4.1 Create `client/app/lib/ordenes-servicio.ts`: typed interfaces, `list`/`get`/`create`/`update` + `searchTiposServicio` helper, `getAuthHeader()` on every call, per design.md § Frontend Component Plan row for this file
+- [x] 4.2 Modify `client/app/(dashboard)/vehiculos/SearchableSelect.tsx`: make the `quickCreate` prop optional — render the "+ Crear" footer/`QuickCreateModal` only when provided; verify existing callers (marca/color/cliente) are unaffected, per design.md § DD3
+- [x] 4.3 Modify `client/app/(dashboard)/vehiculos/referenceSelectConfigs.tsx`: reuse `clienteSelectConfig` verbatim, add `mecanicoSelectConfig` (search only, no `quickCreate`), backed by `searchUsers`
+- [x] 4.4 Create `client/app/(dashboard)/ordenes-servicio/TipoServicioMultiSelect.tsx`: copy of `EtiquetasMultiSelect.tsx` with `searchEtiquetas` → `searchTiposServicio`, per design.md § Frontend Component Plan
+- [x] 4.5 Create `client/app/(dashboard)/ordenes-servicio/OrdenServicioForm.tsx`: shared create/edit form — cliente picker (`clienteSelectConfig`), dependent vehículo picker (`disabled={clienteId === ''}`, `search` closure `(term) => listVehicles({ clienteId, search: term })`, resets `vehiculoId=''` on cliente change), mecánico picker (`mecanicoSelectConfig`), `TipoServicioMultiSelect`, `prioridad`/`estado` enum controls, `fechaIngreso`/`kilometros`/`motivoIngreso` fields, per design.md § DD3 and § Data Flow
 
 ## Phase 5: Frontend — Pages & Navigation
 
-- [ ] 5.1 Create `client/app/(dashboard)/ordenes-servicio/page.tsx`: list + table (`numero`, cliente, vehículo, estado, prioridad, mecánico, fecha) with per-`estado` count pills, adapting `productos/page.tsx`'s structure per design.md § Frontend Component Plan
-- [ ] 5.2 Create `client/app/(dashboard)/ordenes-servicio/nuevo/page.tsx`: wraps `OrdenServicioForm` in create mode
-- [ ] 5.3 Create `client/app/(dashboard)/ordenes-servicio/editar/[id]/page.tsx`: loads via `getOrdenServicio`, wraps `OrdenServicioForm` in edit mode
-- [ ] 5.4 Modify `client/app/lib/navigation.tsx`: add flat top-level "Orden de Servicio" entry (`href: '/ordenes-servicio'`), sibling of Clientes/Vehículos/Productos, **not** nested under Configuraciones's `children`, per D13/design.md § Frontend Component Plan; use `/icons/ordenes-servicio.svg` if added, else the existing placeholder convention
+- [x] 5.1 Create `client/app/(dashboard)/ordenes-servicio/page.tsx`: list + table (`numero`, cliente, vehículo, estado, prioridad, mecánico, fecha) with per-`estado` count pills, adapting `productos/page.tsx`'s structure per design.md § Frontend Component Plan
+- [x] 5.2 Create `client/app/(dashboard)/ordenes-servicio/nuevo/page.tsx`: wraps `OrdenServicioForm` in create mode
+- [x] 5.3 Create `client/app/(dashboard)/ordenes-servicio/editar/[id]/page.tsx`: loads via `getOrdenServicio`, wraps `OrdenServicioForm` in edit mode
+- [x] 5.4 Modify `client/app/lib/navigation.tsx`: add flat top-level "Orden de Servicio" entry (`href: '/ordenes-servicio'`), sibling of Clientes/Vehículos/Productos, **not** nested under Configuraciones's `children`, per D13/design.md § Frontend Component Plan; use `/icons/ordenes-servicio.svg` if added, else the existing placeholder convention
 
 ## Phase 6: Manual/E2E Verification
 
