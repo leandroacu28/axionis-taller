@@ -49,6 +49,7 @@ export interface ListVehiclesParams {
   pageSize: number;
   search?: string;
   status?: 'all' | 'activo' | 'inactivo';
+  clienteId?: number;
 }
 
 export interface PaginatedVehicles {
@@ -64,6 +65,7 @@ export async function listVehicles(params: ListVehiclesParams): Promise<Paginate
   });
   if (params.search) query.set('search', params.search);
   if (params.status) query.set('status', params.status);
+  if (params.clienteId) query.set('clienteId', String(params.clienteId));
 
   const res = await fetch(`${API_BASE_URL}/vehicles?${query.toString()}`, {
     headers: { ...getAuthHeader() },

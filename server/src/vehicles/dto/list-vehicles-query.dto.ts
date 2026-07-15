@@ -24,4 +24,9 @@ export class ListVehiclesQueryDto {
   @IsOptional()
   @IsIn(['all', 'activo', 'inactivo'])
   status?: VehicleStatusFilter = 'all';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  clienteId?: number;
 }

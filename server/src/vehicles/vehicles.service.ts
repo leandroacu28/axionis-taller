@@ -20,7 +20,7 @@ const VEHICLE_SELECT = {
   actualizadoPor: { select: { id: true, username: true } },
 };
 
-export type VehicleFilter = { search?: string; status?: VehicleStatusFilter };
+export type VehicleFilter = { search?: string; status?: VehicleStatusFilter; clienteId?: number };
 
 // Single source of truth for vehiculo list/export filtering. Returns BOTH
 // pieces because findAll needs `searchWhere` on its own for the
@@ -42,15 +42,21 @@ function buildVehicleWhere(filter: VehicleFilter): {
   // Vehiculo has no free-text field of its own, so search reaches into
   // its to-one relations — `contains` nested inside `OR` (not `some`,
   // which is for to-many relations).
-  const searchWhere: Prisma.VehiculoWhereInput = term
-    ? {
-        OR: [
-          { marca: { marca: { contains: term } } },
-          { marca: { modelo: { contains: term } } },
-          { cliente: { razonSocial: { contains: term } } },
-        ],
-      }
-    : {};
+  const searchWhere: Prisma.VehiculoWhereInput = {
+    ...(term
+      ? {
+          OR: [
+            { marca: { marca: { contains: term } } },
+            { marca: { modelo: { contains: term } } },
+            { cliente: { razonSocial: { contains: term } } },
+          ],
+        }
+      : {}),
+    // clienteId scopes the vehículo picker to a single cliente (D10) — folded
+    // into searchWhere (not just `where`) so it also narrows the
+    // status-independent activeCount below.
+    ...(filter.clienteId ? { clienteId: filter.clienteId } : {}),
+  };
 
   const where: Prisma.VehiculoWhereInput = {
     ...searchWhere,
