@@ -16,6 +16,22 @@ function SearchIcon() {
   );
 }
 
+function TableIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+    </svg>
+  );
+}
+
+function CardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.5h6v6h-6v-6zM14.25 4.5h6v6h-6v-6zM3.75 13.5h6v6h-6v-6zM14.25 13.5h6v6h-6v-6z" />
+    </svg>
+  );
+}
+
 type EstadoFilter = 'all' | Estado;
 
 const DEFAULT_ESTADO_FILTER: EstadoFilter = 'all';
@@ -55,6 +71,15 @@ function mecanicoLabel(mecanico: OrdenServicioListItem['mecanico']): string {
   return fullName || mecanico.username;
 }
 
+// fechaIngreso only ever carries a date (the form has no time input, so it's
+// always midnight UTC) — the hour shown next to it is createdAt's, the only
+// field that actually captures when the order was logged.
+function formatHora(iso: string): string {
+  return new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+}
+
+type ViewMode = 'tabla' | 'tarjetas';
+
 export default function OrdenesServicioPage() {
   const [ordenes, setOrdenes] = useState<OrdenServicioListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +91,7 @@ export default function OrdenesServicioPage() {
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
   const [total, setTotal] = useState(0);
   const [counts, setCounts] = useState({ pendiente: 0, en_proceso: 0, terminado: 0 });
+  const [viewMode, setViewMode] = useState<ViewMode>('tabla');
 
   const hasActiveFilters = searchInput.trim() !== '' || estadoFilter !== DEFAULT_ESTADO_FILTER;
   const clearFilters = () => {
@@ -131,6 +157,32 @@ export default function OrdenesServicioPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 rounded-lg border border-stone-200 bg-white p-1">
+            <button
+              type="button"
+              onClick={() => setViewMode('tabla')}
+              aria-pressed={viewMode === 'tabla'}
+              title="Ver como tabla"
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                viewMode === 'tabla' ? 'bg-rose-50 text-rose-600' : 'text-stone-500 hover:bg-stone-50'
+              }`}
+            >
+              <TableIcon />
+              Tabla
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('tarjetas')}
+              aria-pressed={viewMode === 'tarjetas'}
+              title="Ver como tarjetas"
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                viewMode === 'tarjetas' ? 'bg-rose-50 text-rose-600' : 'text-stone-500 hover:bg-stone-50'
+              }`}
+            >
+              <CardIcon />
+              Tarjetas
+            </button>
+          </div>
           <Link
             href="/ordenes-servicio/nuevo"
             className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600"
@@ -261,6 +313,71 @@ export default function OrdenesServicioPage() {
             >
               Limpiar filtros
             </button>
+          </div>
+        ) : viewMode === 'tarjetas' ? (
+          <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            {ordenes.map((orden) => (
+              <div
+                key={orden.id}
+                className="flex flex-col gap-3 rounded-xl border border-stone-200 p-4 shadow-sm"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+                      Orden de trabajo
+                    </p>
+                    <p className="text-sm font-bold text-stone-800">{orden.numero ?? '—'}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${ESTADO_BADGE_CLASSES[orden.estado]}`}
+                  >
+                    {ESTADO_LABELS[orden.estado]}
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-sm text-stone-600">
+                  <p>
+                    <span className="font-medium text-stone-800">Cliente:</span> {orden.cliente.razonSocial}
+                  </p>
+                  <p>
+                    <span className="font-medium text-stone-800">Vehículo:</span> {orden.vehiculo.marca.marca}{' '}
+                    {orden.vehiculo.marca.modelo}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {orden.tiposServicio.map((tipo) => (
+                    <span
+                      key={tipo.id}
+                      className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600"
+                    >
+                      {tipo.descripcion}
+                    </span>
+                  ))}
+                </div>
+
+                <p className="text-xs text-stone-400">
+                  Ingreso: {formatFecha(orden.fechaIngreso)} · {formatHora(orden.createdAt)}
+                </p>
+
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    disabled
+                    title="Próximamente"
+                    className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Iniciar trabajo
+                  </button>
+                  <Link
+                    href={`/ordenes-servicio/editar/${orden.id}`}
+                    className="text-sm font-medium text-rose-600 hover:text-rose-700"
+                  >
+                    Editar
+                  </Link>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <table className="min-w-full divide-y divide-stone-200">
