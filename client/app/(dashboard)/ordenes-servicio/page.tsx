@@ -45,6 +45,14 @@ function EllipsisIcon() {
   );
 }
 
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    </svg>
+  );
+}
+
 // Same Activar/Desactivar icon pair as etiquetas/page.tsx.
 function CheckCircleIcon() {
   return (
@@ -84,12 +92,16 @@ function AccionesMenu({
   orden,
   onToggled,
   showIniciarTrabajo = true,
+  trigger = 'icon',
 }: {
   orden: OrdenServicioListItem;
   onToggled: () => void;
   // The card view already shows its own "Iniciar trabajo" button outside
   // the menu, so it opts out of the redundant disabled menu item.
   showIniciarTrabajo?: boolean;
+  // Table rows use a compact "..." icon; the card view uses a labeled
+  // "Opciones" button since it has more room and no adjoining row context.
+  trigger?: 'icon' | 'label';
 }) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -191,17 +203,31 @@ function AccionesMenu({
 
   return (
     <>
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={handleTriggerClick}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Acciones"
-        className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
-      >
-        <EllipsisIcon />
-      </button>
+      {trigger === 'label' ? (
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={handleTriggerClick}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          className="flex items-center gap-1.5 rounded-lg border border-stone-200 px-3 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50"
+        >
+          Opciones
+          <ChevronDownIcon />
+        </button>
+      ) : (
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={handleTriggerClick}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="Acciones"
+          className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+        >
+          <EllipsisIcon />
+        </button>
+      )}
 
       {open &&
         menuPos &&
@@ -637,7 +663,12 @@ export default function OrdenesServicioPage() {
                   >
                     Iniciar trabajo
                   </button>
-                  <AccionesMenu orden={orden} onToggled={loadOrdenes} showIniciarTrabajo={false} />
+                  <AccionesMenu
+                    orden={orden}
+                    onToggled={loadOrdenes}
+                    showIniciarTrabajo={false}
+                    trigger="label"
+                  />
                 </div>
               </div>
             ))}
