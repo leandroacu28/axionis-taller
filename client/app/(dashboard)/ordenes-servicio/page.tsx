@@ -9,7 +9,7 @@ import {
   type Estado,
   type OrdenServicioListItem,
 } from '../../lib/ordenes-servicio';
-import { showError, showSuccess } from '../../lib/alerts';
+import { showConfirm, showError, showSuccess } from '../../lib/alerts';
 
 function SearchIcon() {
   return (
@@ -41,6 +41,23 @@ function EllipsisIcon() {
       <circle cx="5" cy="12" r="1.75" />
       <circle cx="12" cy="12" r="1.75" />
       <circle cx="19" cy="12" r="1.75" />
+    </svg>
+  );
+}
+
+// Same Activar/Desactivar icon pair as etiquetas/page.tsx.
+function CheckCircleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function NoSymbolIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
     </svg>
   );
 }
@@ -97,6 +114,20 @@ function AccionesMenu({ orden, onToggled }: { orden: OrdenServicioListItem; onTo
 
   const handleToggleActivo = async () => {
     closeMenu();
+    const activating = !orden.activo;
+
+    // Same confirm-before-deactivate pattern as etiquetas/page.tsx — no
+    // confirmation needed to re-activate.
+    if (!activating) {
+      const confirmed = await showConfirm({
+        title: 'Desactivar orden',
+        text: `¿Seguro que querés desactivar la orden ${orden.numero ?? ''}?`,
+        confirmButtonText: 'Sí, desactivar',
+        confirmButtonColor: '#e11d48',
+      });
+      if (!confirmed) return;
+    }
+
     setToggling(true);
     try {
       await updateOrdenServicio(orden.id, {
@@ -109,11 +140,11 @@ function AccionesMenu({ orden, onToggled }: { orden: OrdenServicioListItem; onTo
         vehiculoId: orden.vehiculo.id,
         mecanicoId: orden.mecanico.id,
         tipoServicioIds: orden.tiposServicio.map((t) => t.id),
-        activo: !orden.activo,
+        activo: activating,
       });
       showSuccess(
-        orden.activo ? 'Orden desactivada' : 'Orden activada',
-        `La orden ${orden.numero ?? ''} se ${orden.activo ? 'desactivó' : 'activó'} correctamente.`,
+        activating ? 'Orden activada' : 'Orden desactivada',
+        `La orden ${orden.numero ?? ''} se ${activating ? 'activó' : 'desactivó'} correctamente.`,
       );
       onToggled();
     } catch (err) {
@@ -195,9 +226,21 @@ function AccionesMenu({ orden, onToggled }: { orden: OrdenServicioListItem; onTo
               type="button"
               onClick={handleToggleActivo}
               disabled={toggling}
-              className="block w-full px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 ${
+                orden.activo ? 'text-rose-600 hover:bg-rose-50' : 'text-green-600 hover:bg-green-50'
+              }`}
             >
-              {orden.activo ? 'Desactivar' : 'Activar'}
+              {orden.activo ? (
+                <>
+                  <NoSymbolIcon />
+                  Desactivar
+                </>
+              ) : (
+                <>
+                  <CheckCircleIcon />
+                  Activar
+                </>
+              )}
             </button>
           </div>,
           document.body,
