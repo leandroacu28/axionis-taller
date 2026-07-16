@@ -5,9 +5,11 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   listOrdenesServicio,
+  updateOrdenServicio,
   type Estado,
   type OrdenServicioListItem,
 } from '../../lib/ordenes-servicio';
+import { showError, showSuccess } from '../../lib/alerts';
 
 function SearchIcon() {
   return (
@@ -43,10 +45,10 @@ function EllipsisIcon() {
   );
 }
 
-// Rough height of the two-item menu — used only to decide whether it should
-// flip upward for rows near the bottom of the viewport, mirroring the same
-// estimate/flip pattern used by the searchable-select components.
-const ACCIONES_MENU_HEIGHT_ESTIMATE = 90;
+// Rough height of the three-item menu — used only to decide whether it
+// should flip upward for rows near the bottom of the viewport, mirroring the
+// same estimate/flip pattern used by the searchable-select components.
+const ACCIONES_MENU_HEIGHT_ESTIMATE = 130;
 
 interface AccionesMenuPosition {
   top: number;
@@ -58,11 +60,15 @@ interface AccionesMenuPosition {
 // (same dismiss-on-click-outside/resize/scroll pattern as UnidadMedidaSelect
 // and EtiquetasMultiSelect) so it isn't clipped by the table wrapper's
 // `overflow-hidden`. "Iniciar trabajo" has no action yet — it's disabled.
-function AccionesMenu({ ordenId }: { ordenId: number }) {
+// Activar/Desactivar resends the order's current data (already available on
+// the list row) with only `activo` flipped — same partial-update contract
+// the edit form's checkbox uses, just without a page visit.
+function AccionesMenu({ orden, onToggled }: { orden: OrdenServicioListItem; onToggled: () => void }) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<AccionesMenuPosition | null>(null);
+  const [toggling, setToggling] = useState(false);
 
   const closeMenu = () => {
     setOpen(false);
@@ -87,6 +93,37 @@ function AccionesMenu({ ordenId }: { ordenId: number }) {
       return;
     }
     openMenu();
+  };
+
+  const handleToggleActivo = async () => {
+    closeMenu();
+    setToggling(true);
+    try {
+      await updateOrdenServicio(orden.id, {
+        fechaIngreso: orden.fechaIngreso,
+        kilometros: orden.kilometros,
+        prioridad: orden.prioridad,
+        motivoIngreso: orden.motivoIngreso,
+        estado: orden.estado,
+        clienteId: orden.cliente.id,
+        vehiculoId: orden.vehiculo.id,
+        mecanicoId: orden.mecanico.id,
+        tipoServicioIds: orden.tiposServicio.map((t) => t.id),
+        activo: !orden.activo,
+      });
+      showSuccess(
+        orden.activo ? 'Orden desactivada' : 'Orden activada',
+        `La orden ${orden.numero ?? ''} se ${orden.activo ? 'desactivó' : 'activó'} correctamente.`,
+      );
+      onToggled();
+    } catch (err) {
+      showError(
+        'No se pudo actualizar la orden',
+        err instanceof Error ? err.message : 'No se pudo conectar con el servidor.',
+      );
+    } finally {
+      setToggling(false);
+    }
   };
 
   useEffect(() => {
@@ -140,7 +177,7 @@ function AccionesMenu({ ordenId }: { ordenId: number }) {
             className="z-50 w-44 overflow-hidden rounded-lg border border-stone-200 bg-white py-1 shadow-lg"
           >
             <Link
-              href={`/ordenes-servicio/editar/${ordenId}`}
+              href={`/ordenes-servicio/editar/${orden.id}`}
               onClick={closeMenu}
               className="block px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50"
             >
@@ -153,6 +190,14 @@ function AccionesMenu({ ordenId }: { ordenId: number }) {
               className="block w-full px-3 py-2 text-left text-sm text-stone-400 disabled:cursor-not-allowed"
             >
               Iniciar trabajo
+            </button>
+            <button
+              type="button"
+              onClick={handleToggleActivo}
+              disabled={toggling}
+              className="block w-full px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {orden.activo ? 'Desactivar' : 'Activar'}
             </button>
           </div>,
           document.body,
@@ -617,7 +662,7 @@ export default function OrdenesServicioPage() {
                     {formatFecha(orden.fechaIngreso)}
                   </td>
                   <td className="px-4 py-3 text-center text-sm">
-                    <AccionesMenu ordenId={orden.id} />
+                    <AccionesMenu orden={orden} onToggled={loadOrdenes} />
                   </td>
                 </tr>
               ))}
