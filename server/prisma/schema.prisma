@@ -199,6 +199,7 @@ model OrdenServicio {
   prioridad        Prioridad      @default(normal)
   motivoIngreso    String         @db.Text
   estado           Estado         @default(pendiente)
+  activo           Boolean        @default(true)
   clienteId        Int
   cliente          Cliente        @relation(fields: [clienteId], references: [id])
   vehiculoId       Int

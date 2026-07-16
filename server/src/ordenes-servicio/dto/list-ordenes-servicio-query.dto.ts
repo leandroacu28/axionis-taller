@@ -4,6 +4,10 @@ import { Estado } from '@prisma/client';
 
 export type EstadoFilter = 'all' | 'pendiente' | 'en_proceso' | 'terminado';
 
+// Orthogonal to EstadoFilter — mirrors ListEtiquetasQueryDto's status filter.
+// activo is a soft-deactivation flag, independent of the estado lifecycle.
+export type OrdenServicioStatusFilter = 'all' | 'activo' | 'inactivo';
+
 export class ListOrdenesServicioQueryDto {
   @IsOptional()
   @Type(() => Number)
@@ -28,4 +32,11 @@ export class ListOrdenesServicioQueryDto {
   @IsOptional()
   @IsIn(['all', ...Object.values(Estado)])
   estado?: EstadoFilter = 'all';
+
+  // Additive on top of `estado` — activo is an orthogonal soft-deactivation
+  // flag, not a replacement for the estado lifecycle. Mirrors
+  // ListEtiquetasQueryDto's status filter.
+  @IsOptional()
+  @IsIn(['all', 'activo', 'inactivo'])
+  status?: OrdenServicioStatusFilter = 'all';
 }

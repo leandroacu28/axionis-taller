@@ -3,7 +3,11 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrdenServicioDto } from './dto/create-orden-servicio.dto';
 import { UpdateOrdenServicioDto } from './dto/update-orden-servicio.dto';
-import { ListOrdenesServicioQueryDto, EstadoFilter } from './dto/list-ordenes-servicio-query.dto';
+import {
+  ListOrdenesServicioQueryDto,
+  EstadoFilter,
+  OrdenServicioStatusFilter,
+} from './dto/list-ordenes-servicio-query.dto';
 
 const ORDEN_SERVICIO_SELECT = {
   id: true,
@@ -13,6 +17,7 @@ const ORDEN_SERVICIO_SELECT = {
   prioridad: true,
   motivoIngreso: true,
   estado: true,
+  activo: true,
   createdAt: true,
   updatedAt: true,
   cliente: { select: { id: true, razonSocial: true } },
@@ -25,17 +30,24 @@ const ORDEN_SERVICIO_SELECT = {
 
 const formatNumero = (id: number) => `OS-${String(id).padStart(4, '0')}`;
 
-export type OrdenServicioFilter = { search?: string; estado?: EstadoFilter };
+export type OrdenServicioFilter = {
+  search?: string;
+  estado?: EstadoFilter;
+  status?: OrdenServicioStatusFilter;
+};
 
 // Mirrors etiquetas.service.ts's buildEtiquetaWhere. Returns both
-// `searchWhere` (estado-independent, used for the per-estado counts) and
-// `where` (combined filter for the paginated list).
+// `searchWhere` (estado/activo-independent, used for the per-estado counts)
+// and `where` (combined filter for the paginated list). `status` (activo) is
+// additive on top of `estado` — an orthogonal soft-deactivation flag, not a
+// replacement for the estado lifecycle filter.
 function buildOrdenServicioWhere(filter: OrdenServicioFilter): {
   searchWhere: Prisma.OrdenServicioWhereInput;
   where: Prisma.OrdenServicioWhereInput;
 } {
   const term = filter.search?.trim();
   const estado = filter.estado ?? 'all';
+  const status = filter.status ?? 'all';
 
   const searchWhere: Prisma.OrdenServicioWhereInput = term
     ? {
@@ -51,6 +63,7 @@ function buildOrdenServicioWhere(filter: OrdenServicioFilter): {
   const where: Prisma.OrdenServicioWhereInput = {
     ...searchWhere,
     ...(estado !== 'all' ? { estado } : {}),
+    ...(status === 'activo' ? { activo: true } : status === 'inactivo' ? { activo: false } : {}),
   };
 
   return { searchWhere, where };
@@ -182,6 +195,7 @@ export class OrdenesServicioService {
           prioridad: dto.prioridad,
           motivoIngreso: dto.motivoIngreso,
           estado: dto.estado,
+          activo: dto.activo,
           clienteId: dto.clienteId,
           vehiculoId: dto.vehiculoId,
           mecanicoId: dto.mecanicoId,
