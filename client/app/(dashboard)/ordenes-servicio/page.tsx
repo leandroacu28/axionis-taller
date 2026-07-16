@@ -343,6 +343,9 @@ export default function OrdenesServicioPage() {
                     <span className="font-medium text-stone-800">Vehículo:</span> {orden.vehiculo.marca.marca}{' '}
                     {orden.vehiculo.marca.modelo}
                   </p>
+                  <p>
+                    <span className="font-medium text-stone-800">Mecánico:</span> {mecanicoLabel(orden.mecanico)}
+                  </p>
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
