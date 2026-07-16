@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   listOrdenesServicio,
   type Estado,
@@ -29,6 +30,134 @@ function CardIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.5h6v6h-6v-6zM14.25 4.5h6v6h-6v-6zM3.75 13.5h6v6h-6v-6zM14.25 13.5h6v6h-6v-6z" />
     </svg>
+  );
+}
+
+function EllipsisIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 shrink-0" aria-hidden="true">
+      <circle cx="5" cy="12" r="1.75" />
+      <circle cx="12" cy="12" r="1.75" />
+      <circle cx="19" cy="12" r="1.75" />
+    </svg>
+  );
+}
+
+// Rough height of the two-item menu — used only to decide whether it should
+// flip upward for rows near the bottom of the viewport, mirroring the same
+// estimate/flip pattern used by the searchable-select components.
+const ACCIONES_MENU_HEIGHT_ESTIMATE = 90;
+
+interface AccionesMenuPosition {
+  top: number;
+  left: number;
+  openUpward: boolean;
+}
+
+// Per-row "..." actions menu for the table view — a portal-rendered dropdown
+// (same dismiss-on-click-outside/resize/scroll pattern as UnidadMedidaSelect
+// and EtiquetasMultiSelect) so it isn't clipped by the table wrapper's
+// `overflow-hidden`. "Iniciar trabajo" has no action yet — it's disabled.
+function AccionesMenu({ ordenId }: { ordenId: number }) {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<AccionesMenuPosition | null>(null);
+
+  const closeMenu = () => {
+    setOpen(false);
+    setMenuPos(null);
+  };
+
+  const openMenu = () => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const openUpward = window.innerHeight - rect.bottom < ACCIONES_MENU_HEIGHT_ESTIMATE;
+    setMenuPos({
+      top: openUpward ? rect.top - 4 : rect.bottom + 4,
+      left: rect.right,
+      openUpward,
+    });
+    setOpen(true);
+  };
+
+  const handleTriggerClick = () => {
+    if (open) {
+      closeMenu();
+      return;
+    }
+    openMenu();
+  };
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const insideTrigger = triggerRef.current?.contains(target) ?? false;
+      const insideMenu = menuRef.current?.contains(target) ?? false;
+      if (!insideTrigger && !insideMenu) closeMenu();
+    };
+    const handleReposition = () => closeMenu();
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleReposition);
+    window.addEventListener('scroll', handleReposition, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleReposition);
+      window.removeEventListener('scroll', handleReposition, true);
+    };
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={handleTriggerClick}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Acciones"
+        className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+      >
+        <EllipsisIcon />
+      </button>
+
+      {open &&
+        menuPos &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={{
+              position: 'fixed',
+              top: menuPos.top,
+              left: menuPos.left,
+              transform: `translateX(-100%)${menuPos.openUpward ? ' translateY(-100%)' : ''}`,
+            }}
+            className="z-50 w-44 overflow-hidden rounded-lg border border-stone-200 bg-white py-1 shadow-lg"
+          >
+            <Link
+              href={`/ordenes-servicio/editar/${ordenId}`}
+              onClick={closeMenu}
+              className="block px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50"
+            >
+              Editar
+            </Link>
+            <button
+              type="button"
+              disabled
+              title="Próximamente"
+              className="block w-full px-3 py-2 text-left text-sm text-stone-400 disabled:cursor-not-allowed"
+            >
+              Iniciar trabajo
+            </button>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 
@@ -445,12 +574,7 @@ export default function OrdenesServicioPage() {
                     {formatFecha(orden.fechaIngreso)}
                   </td>
                   <td className="px-4 py-3 text-center text-sm">
-                    <Link
-                      href={`/ordenes-servicio/editar/${orden.id}`}
-                      className="font-medium text-rose-600 hover:text-rose-700"
-                    >
-                      Editar
-                    </Link>
+                    <AccionesMenu ordenId={orden.id} />
                   </td>
                 </tr>
               ))}
