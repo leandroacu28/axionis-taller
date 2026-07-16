@@ -80,7 +80,17 @@ interface AccionesMenuPosition {
 // Activar/Desactivar resends the order's current data (already available on
 // the list row) with only `activo` flipped — same partial-update contract
 // the edit form's checkbox uses, just without a page visit.
-function AccionesMenu({ orden, onToggled }: { orden: OrdenServicioListItem; onToggled: () => void }) {
+function AccionesMenu({
+  orden,
+  onToggled,
+  showIniciarTrabajo = true,
+}: {
+  orden: OrdenServicioListItem;
+  onToggled: () => void;
+  // The card view already shows its own "Iniciar trabajo" button outside
+  // the menu, so it opts out of the redundant disabled menu item.
+  showIniciarTrabajo?: boolean;
+}) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -214,14 +224,16 @@ function AccionesMenu({ orden, onToggled }: { orden: OrdenServicioListItem; onTo
             >
               Editar
             </Link>
-            <button
-              type="button"
-              disabled
-              title="Próximamente"
-              className="block w-full px-3 py-2 text-left text-sm text-stone-400 disabled:cursor-not-allowed"
-            >
-              Iniciar trabajo
-            </button>
+            {showIniciarTrabajo && (
+              <button
+                type="button"
+                disabled
+                title="Próximamente"
+                className="block w-full px-3 py-2 text-left text-sm text-stone-400 disabled:cursor-not-allowed"
+              >
+                Iniciar trabajo
+              </button>
+            )}
             <button
               type="button"
               onClick={handleToggleActivo}
@@ -625,12 +637,7 @@ export default function OrdenesServicioPage() {
                   >
                     Iniciar trabajo
                   </button>
-                  <Link
-                    href={`/ordenes-servicio/editar/${orden.id}`}
-                    className="text-sm font-medium text-rose-600 hover:text-rose-700"
-                  >
-                    Editar
-                  </Link>
+                  <AccionesMenu orden={orden} onToggled={loadOrdenes} showIniciarTrabajo={false} />
                 </div>
               </div>
             ))}
