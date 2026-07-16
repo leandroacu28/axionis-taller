@@ -13,6 +13,7 @@ export interface OrdenServicioListItem {
   prioridad: Prioridad;
   motivoIngreso: string;
   estado: Estado;
+  activo: boolean;
   createdAt: string;
   updatedAt: string;
   cliente: { id: number; razonSocial: string };
@@ -36,8 +37,10 @@ export interface CreateOrdenServicioPayload {
 }
 
 // Same field set as CreateOrdenServicioPayload — house pattern (mirrors the
-// server's UpdateOrdenServicioDto), no Partial<>.
-export type UpdateOrdenServicioPayload = CreateOrdenServicioPayload;
+// server's UpdateOrdenServicioDto) — plus optional `activo`, update-only
+// (mirrors UpdateProductoPayload). Creation always starts active via the
+// schema default, so `activo` never appears on the create payload.
+export type UpdateOrdenServicioPayload = CreateOrdenServicioPayload & { activo?: boolean };
 
 async function handleJsonResponse<T>(res: Response, fallbackMessage: string): Promise<T> {
   if (!res.ok) {
@@ -55,6 +58,9 @@ export interface ListOrdenesServicioParams {
   pageSize: number;
   search?: string;
   estado?: 'all' | Estado;
+  // Additive alongside `estado` — activo is an orthogonal soft-deactivation
+  // flag, not a replacement for the estado lifecycle filter.
+  status?: 'all' | 'activo' | 'inactivo';
 }
 
 // Reframed per D2: no `activeCount` — counts are grouped per `estado` value
@@ -74,6 +80,7 @@ export async function listOrdenesServicio(
   });
   if (params.search) query.set('search', params.search);
   if (params.estado) query.set('estado', params.estado);
+  if (params.status) query.set('status', params.status);
 
   const res = await fetch(`${API_BASE_URL}/ordenes-servicio?${query.toString()}`, {
     headers: { ...getAuthHeader() },

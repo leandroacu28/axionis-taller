@@ -162,8 +162,10 @@ function AccionesMenu({ ordenId }: { ordenId: number }) {
 }
 
 type EstadoFilter = 'all' | Estado;
+type ActivoFilter = 'all' | 'activo' | 'inactivo';
 
 const DEFAULT_ESTADO_FILTER: EstadoFilter = 'all';
+const DEFAULT_ACTIVO_FILTER: ActivoFilter = 'all';
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 const ESTADO_LABELS: Record<Estado, string> = {
@@ -216,17 +218,24 @@ export default function OrdenesServicioPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [estadoFilter, setEstadoFilter] = useState<EstadoFilter>(DEFAULT_ESTADO_FILTER);
+  // Additive alongside estadoFilter — activo is an orthogonal
+  // soft-deactivation flag, not a replacement for the estado lifecycle.
+  const [activoFilter, setActivoFilter] = useState<ActivoFilter>(DEFAULT_ACTIVO_FILTER);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
   const [total, setTotal] = useState(0);
   const [counts, setCounts] = useState({ pendiente: 0, en_proceso: 0, terminado: 0 });
   const [viewMode, setViewMode] = useState<ViewMode>('tabla');
 
-  const hasActiveFilters = searchInput.trim() !== '' || estadoFilter !== DEFAULT_ESTADO_FILTER;
+  const hasActiveFilters =
+    searchInput.trim() !== '' ||
+    estadoFilter !== DEFAULT_ESTADO_FILTER ||
+    activoFilter !== DEFAULT_ACTIVO_FILTER;
   const clearFilters = () => {
     setSearchInput('');
     setSearch('');
     setEstadoFilter(DEFAULT_ESTADO_FILTER);
+    setActivoFilter(DEFAULT_ACTIVO_FILTER);
     setPage(1);
   };
 
@@ -258,6 +267,7 @@ export default function OrdenesServicioPage() {
         pageSize,
         search: search || undefined,
         estado: estadoFilter,
+        status: activoFilter,
       });
       setOrdenes(result.data);
       setTotal(result.total);
@@ -272,7 +282,7 @@ export default function OrdenesServicioPage() {
   useEffect(() => {
     loadOrdenes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, search, estadoFilter]);
+  }, [page, pageSize, search, estadoFilter, activoFilter]);
 
   return (
     <div>
@@ -334,7 +344,7 @@ export default function OrdenesServicioPage() {
           </span>
         </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_auto]">
+          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_auto_auto]">
             <div className="space-y-1">
               <label htmlFor="search" className="text-sm font-medium text-stone-700">
                 Buscar
@@ -371,6 +381,25 @@ export default function OrdenesServicioPage() {
                 <option value="pendiente">Pendiente</option>
                 <option value="en_proceso">En proceso</option>
                 <option value="terminado">Terminado</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="activoFilter" className="text-sm font-medium text-stone-700">
+                Activo
+              </label>
+              <select
+                id="activoFilter"
+                value={activoFilter}
+                onChange={(e) => {
+                  setActivoFilter(e.target.value as ActivoFilter);
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+              >
+                <option value="all">Todas</option>
+                <option value="activo">Activas</option>
+                <option value="inactivo">Inactivas</option>
               </select>
             </div>
 
@@ -457,11 +486,18 @@ export default function OrdenesServicioPage() {
                     </p>
                     <p className="text-sm font-bold text-stone-800">{orden.numero ?? '—'}</p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${ESTADO_BADGE_CLASSES[orden.estado]}`}
-                  >
-                    {ESTADO_LABELS[orden.estado]}
-                  </span>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${ESTADO_BADGE_CLASSES[orden.estado]}`}
+                    >
+                      {ESTADO_LABELS[orden.estado]}
+                    </span>
+                    {!orden.activo && (
+                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
+                        Inactiva
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1 text-sm text-stone-600">
@@ -554,11 +590,18 @@ export default function OrdenesServicioPage() {
                     {orden.vehiculo.marca.marca} {orden.vehiculo.marca.modelo}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${ESTADO_BADGE_CLASSES[orden.estado]}`}
-                    >
-                      {ESTADO_LABELS[orden.estado]}
-                    </span>
+                    <div className="flex flex-col items-center gap-1">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${ESTADO_BADGE_CLASSES[orden.estado]}`}
+                      >
+                        {ESTADO_LABELS[orden.estado]}
+                      </span>
+                      {!orden.activo && (
+                        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
+                          Inactiva
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
                     <span

@@ -7,7 +7,12 @@ import { clienteSelectConfig, mecanicoSelectConfig } from '../vehiculos/referenc
 import TipoServicioMultiSelect from './TipoServicioMultiSelect';
 import { listVehicles } from '../../lib/vehicles';
 import { showConfirm, showError } from '../../lib/alerts';
-import type { CreateOrdenServicioPayload, Estado, Prioridad } from '../../lib/ordenes-servicio';
+import type {
+  CreateOrdenServicioPayload,
+  Estado,
+  Prioridad,
+  UpdateOrdenServicioPayload,
+} from '../../lib/ordenes-servicio';
 
 export interface OrdenServicioFormValues {
   clienteId: number | '';
@@ -22,6 +27,11 @@ export interface OrdenServicioFormValues {
   fechaIngreso: string; // yyyy-mm-dd, matches <input type="date">
   kilometros: number | '';
   motivoIngreso: string;
+  // Optional — edit-only (mirrors productos/editar's "Activo" checkbox).
+  // Absent on the create form's EMPTY_FORM since creation always starts
+  // active via the schema default; editar/[id]/page.tsx always sets it from
+  // the fetched order.
+  activo?: boolean;
 }
 
 interface OrdenServicioFormProps {
@@ -31,7 +41,7 @@ interface OrdenServicioFormProps {
   submitLabel: string;
   submittingLabel: string;
   cancelHref: string;
-  onSubmit: (payload: CreateOrdenServicioPayload) => void | Promise<void>;
+  onSubmit: (payload: UpdateOrdenServicioPayload) => void | Promise<void>;
 }
 
 const PRIORIDAD_OPTIONS: { value: Prioridad; label: string }[] = [
@@ -57,6 +67,7 @@ function serializeForm(values: OrdenServicioFormValues): string {
     mecanicoId: values.mecanicoId,
     prioridad: values.prioridad,
     estado: values.estado,
+    activo: values.activo,
     fechaIngreso: values.fechaIngreso,
     kilometros: values.kilometros,
     motivoIngreso: values.motivoIngreso,
@@ -229,7 +240,8 @@ export default function OrdenServicioForm({
       mecanicoId: Number(form.mecanicoId),
       tipoServicioIds: form.tiposServicio.map((t) => t.id),
     };
-    onSubmit(payload);
+    // activo is edit-only — never sent on create (schema default covers it).
+    onSubmit(mode === 'edit' ? { ...payload, activo: form.activo } : payload);
   };
 
   return (
@@ -352,6 +364,21 @@ export default function OrdenServicioForm({
           />
         </div>
       </div>
+
+      {mode === 'edit' && (
+        <div className="flex items-center gap-2">
+          <input
+            id="activo"
+            type="checkbox"
+            checked={form.activo ?? true}
+            onChange={(e) => updateField('activo', e.target.checked)}
+            className="h-4 w-4 rounded border-stone-300 text-rose-500 focus:ring-rose-400"
+          />
+          <label htmlFor="activo" className="text-sm font-medium text-stone-700">
+            Activo
+          </label>
+        </div>
+      )}
 
       <h2 className="text-sm font-bold uppercase tracking-wider text-stone-700 border-b border-stone-200 pb-2 mb-3">
         Motivo y tipos de servicio

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import {
   getOrdenServicio,
   updateOrdenServicio,
-  type CreateOrdenServicioPayload,
+  type UpdateOrdenServicioPayload,
 } from '../../../../lib/ordenes-servicio';
 import { showError, showSuccess } from '../../../../lib/alerts';
 import OrdenServicioForm, { type OrdenServicioFormValues } from '../../OrdenServicioForm';
@@ -40,6 +40,7 @@ export default function EditarOrdenServicioPage({ params }: { params: { id: stri
           tiposServicio: orden.tiposServicio.map((t) => ({ id: t.id, label: t.descripcion })),
           prioridad: orden.prioridad,
           estado: orden.estado,
+          activo: orden.activo,
           // ISO datetime -> date-only, matching <input type="date">.
           fechaIngreso: orden.fechaIngreso.slice(0, 10),
           kilometros: orden.kilometros,
@@ -60,7 +61,7 @@ export default function EditarOrdenServicioPage({ params }: { params: { id: stri
     };
   }, [ordenId]);
 
-  const handleSubmit = async (payload: CreateOrdenServicioPayload) => {
+  const handleSubmit = async (payload: UpdateOrdenServicioPayload) => {
     if (submitting) return;
     setSubmitting(true);
     try {
