@@ -24,6 +24,8 @@ model User {
   clientesActualizados        Cliente[]       @relation("ClienteActualizadoPor")
   coloresCreados              Color[]         @relation("ColorCreadoPor")
   coloresActualizados         Color[]         @relation("ColorActualizadoPor")
+  diagnosticosCreados         Diagnostico[]   @relation("DiagnosticoCreadoPor")
+  diagnosticosActualizados    Diagnostico[]   @relation("DiagnosticoActualizadoPor")
   marcasCreadas               Marca[]         @relation("MarcaCreadoPor")
   marcasActualizadas          Marca[]         @relation("MarcaActualizadoPor")
   vehiculosCreados            Vehiculo[]      @relation("VehiculoCreadoPor")
@@ -36,9 +38,9 @@ model User {
   productosActualizados       Producto[]      @relation("ProductoActualizadoPor")
   etiquetasCreadas            Etiqueta[]      @relation("EtiquetaCreadoPor")
   etiquetasActualizadas       Etiqueta[]      @relation("EtiquetaActualizadoPor")
-  ordenesServicioAsignadas    OrdenServicio[] @relation("OrdenServicioMecanico")
-  ordenesServicioCreadas      OrdenServicio[] @relation("OrdenServicioCreadoPor")
-  ordenesServicioActualizadas OrdenServicio[] @relation("OrdenServicioActualizadoPor")
+  ordenesTrabajoAsignadas    OrdenTrabajo[] @relation("OrdenTrabajoMecanico")
+  ordenesTrabajoCreadas      OrdenTrabajo[] @relation("OrdenTrabajoCreadoPor")
+  ordenesTrabajoActualizadas OrdenTrabajo[] @relation("OrdenTrabajoActualizadoPor")
   createdAt                   DateTime        @default(now())
   updatedAt                   DateTime        @updatedAt
 }
@@ -56,7 +58,7 @@ model Cliente {
   actualizadoPorId   Int?
   actualizadoPor     User?           @relation("ClienteActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   vehiculos          Vehiculo[]
-  ordenesServicio    OrdenServicio[]
+  ordenesTrabajo     OrdenTrabajo[]
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 }
@@ -72,6 +74,18 @@ model Color {
   vehiculos        Vehiculo[]
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
+}
+
+model Diagnostico {
+  id               Int      @id @default(autoincrement())
+  descripcion      String   @unique
+  activo           Boolean  @default(true)
+  creadoPorId      Int?
+  creadoPor        User?    @relation("DiagnosticoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId Int?
+  actualizadoPor   User?    @relation("DiagnosticoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Marca {
@@ -105,7 +119,7 @@ model Vehiculo {
   creadoPor        User?           @relation("VehiculoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId Int?
   actualizadoPor   User?           @relation("VehiculoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  ordenesServicio  OrdenServicio[]
+  ordenesTrabajo   OrdenTrabajo[]
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 }
@@ -118,7 +132,7 @@ model TipoServicio {
   creadoPor        User?           @relation("TipoServicioCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId Int?
   actualizadoPor   User?           @relation("TipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  ordenesServicio  OrdenServicio[]
+  ordenesTrabajo   OrdenTrabajo[]
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 }
@@ -189,9 +203,10 @@ enum Estado {
   pendiente
   en_proceso
   terminado
+  cancelado
 }
 
-model OrdenServicio {
+model OrdenTrabajo {
   id               Int            @id @default(autoincrement())
   numero           String?        @unique
   fechaIngreso     DateTime       @default(now())
@@ -205,12 +220,12 @@ model OrdenServicio {
   vehiculoId       Int
   vehiculo         Vehiculo       @relation(fields: [vehiculoId], references: [id])
   mecanicoId       Int
-  mecanico         User           @relation("OrdenServicioMecanico", fields: [mecanicoId], references: [id])
+  mecanico         User           @relation("OrdenTrabajoMecanico", fields: [mecanicoId], references: [id])
   tiposServicio    TipoServicio[]
   creadoPorId      Int?
-  creadoPor        User?          @relation("OrdenServicioCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creadoPor        User?          @relation("OrdenTrabajoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId Int?
-  actualizadoPor   User?          @relation("OrdenServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPor   User?          @relation("OrdenTrabajoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 }

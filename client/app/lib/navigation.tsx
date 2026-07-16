@@ -61,6 +61,14 @@ export const navigation: NavigationItem[] = [
         id: 'etiquetas',
         icon: <img src="/icons/etiquetas.svg" alt="" className="h-5 w-5" aria-hidden />,
       },
+      {
+        name: 'Diagnósticos',
+        href: '/diagnosticos',
+        id: 'diagnosticos',
+        // No dedicated /icons/diagnosticos.svg exists yet — reuses the generic
+        // configuraciones icon, same placeholder approach as Unidades de Medida.
+        icon: <img src="/icons/configuraciones.svg" alt="" className="h-5 w-5" aria-hidden />,
+      },
     ],
   },
   {
@@ -82,10 +90,10 @@ export const navigation: NavigationItem[] = [
     icon: <img src="/icons/productos.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
   {
-    name: 'Órdenes de Servicio',
-    href: '/ordenes-servicio',
-    id: 'ordenes-servicio',
-    // No dedicated /icons/ordenes-servicio.svg exists yet (design.md Open
+    name: 'Órdenes de Trabajo',
+    href: '/ordenes-trabajo',
+    id: 'ordenes-trabajo',
+    // No dedicated /icons/ordenes-trabajo.svg exists yet (design.md Open
     // Questions — cosmetic, not blocking); reuses the "Tipos de Servicio"
     // wrench icon as a neutral placeholder until one is added.
     icon: <img src="/icons/tipos-servicio.svg" alt="" className="h-5 w-5" aria-hidden />,
