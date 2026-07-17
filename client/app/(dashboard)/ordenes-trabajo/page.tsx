@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  iniciarOrdenTrabajo,
   listOrdenesTrabajo,
   updateOrdenTrabajo,
   type Estado,
@@ -81,13 +83,82 @@ interface AccionesMenuPosition {
   openUpward: boolean;
 }
 
+// "Iniciar trabajo" is a single action with two behaviors depending on the
+// order's current estado: on a `pendiente` order it first calls the atomic
+// iniciar cascade (order + every pendiente detalle -> en_proceso) and only
+// then navigates to the work page; on an order that's already past
+// `pendiente` it's pure navigation (calling iniciar again would just 409,
+// and the mechanic may be revisiting the page to keep editing detalles).
+// Shared between the table's AccionesMenu item and the card view's
+// standalone button so the behavior can't drift between the two surfaces.
+function IniciarTrabajoButton({
+  orden,
+  onIniciado,
+  onNavigateStart,
+  variant,
+}: {
+  orden: OrdenTrabajoListItem;
+  onIniciado: () => void;
+  // Menu usage needs to close the dropdown before navigating; the
+  // standalone card button has nothing to close.
+  onNavigateStart?: () => void;
+  variant: 'menu-item' | 'card';
+}) {
+  const router = useRouter();
+  const [iniciando, setIniciando] = useState(false);
+
+  const handleClick = async () => {
+    onNavigateStart?.();
+    if (orden.estado === 'pendiente') {
+      setIniciando(true);
+      try {
+        await iniciarOrdenTrabajo(orden.id);
+        onIniciado();
+      } catch (err) {
+        showError(
+          'No se pudo iniciar la orden',
+          err instanceof Error ? err.message : 'No se pudo conectar con el servidor.',
+        );
+        setIniciando(false);
+        return;
+      }
+      setIniciando(false);
+    }
+    router.push(`/ordenes-trabajo/${orden.id}/trabajo`);
+  };
+
+  if (variant === 'card') {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={iniciando}
+        className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {iniciando ? 'Iniciando...' : 'Iniciar trabajo'}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={iniciando}
+      className="block w-full px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {iniciando ? 'Iniciando...' : 'Iniciar trabajo'}
+    </button>
+  );
+}
+
 // Per-row "..." actions menu for the table view — a portal-rendered dropdown
 // (same dismiss-on-click-outside/resize/scroll pattern as UnidadMedidaSelect
 // and EtiquetasMultiSelect) so it isn't clipped by the table wrapper's
-// `overflow-hidden`. "Iniciar trabajo" has no action yet — it's disabled.
-// Activar/Desactivar resends the order's current data (already available on
-// the list row) with only `activo` flipped — same partial-update contract
-// the edit form's checkbox uses, just without a page visit.
+// `overflow-hidden`. Activar/Desactivar resends the order's current data
+// (already available on the list row) with only `activo` flipped — same
+// partial-update contract the edit form's checkbox uses, just without a
+// page visit.
 function AccionesMenu({
   orden,
   onToggled,
@@ -251,14 +322,12 @@ function AccionesMenu({
               Editar
             </Link>
             {showIniciarTrabajo && (
-              <button
-                type="button"
-                disabled
-                title="Próximamente"
-                className="block w-full px-3 py-2 text-left text-sm text-stone-400 disabled:cursor-not-allowed"
-              >
-                Iniciar trabajo
-              </button>
+              <IniciarTrabajoButton
+                orden={orden}
+                onIniciado={onToggled}
+                onNavigateStart={closeMenu}
+                variant="menu-item"
+              />
             )}
             <button
               type="button"
@@ -661,14 +730,7 @@ export default function OrdenesTrabajoPage() {
                 </p>
 
                 <div className="mt-1 flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    disabled
-                    title="Próximamente"
-                    className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Iniciar trabajo
-                  </button>
+                  <IniciarTrabajoButton orden={orden} onIniciado={loadOrdenes} variant="card" />
                   <AccionesMenu
                     orden={orden}
                     onToggled={loadOrdenes}

@@ -13,6 +13,7 @@ export interface OrdenTrabajoListItem {
   prioridad: Prioridad;
   motivoIngreso: string;
   estado: Estado;
+  fechaFinalizacion: string | null;
   activo: boolean;
   createdAt: string;
   updatedAt: string;
@@ -40,7 +41,10 @@ export interface CreateOrdenTrabajoPayload {
 // server's UpdateOrdenTrabajoDto) — plus optional `activo`, update-only
 // (mirrors UpdateProductoPayload). Creation always starts active via the
 // schema default, so `activo` never appears on the create payload.
-export type UpdateOrdenTrabajoPayload = CreateOrdenTrabajoPayload & { activo?: boolean };
+export type UpdateOrdenTrabajoPayload = CreateOrdenTrabajoPayload & {
+  activo?: boolean;
+  fechaFinalizacion?: string;
+};
 
 async function handleJsonResponse<T>(res: Response, fallbackMessage: string): Promise<T> {
   if (!res.ok) {
@@ -116,6 +120,58 @@ export async function updateOrdenTrabajo(
     body: JSON.stringify(data),
   });
   return handleJsonResponse(res, 'No se pudo actualizar la orden de trabajo');
+}
+
+// Dedicated business action — no body, actualizadoPorId comes from the JWT
+// caller server-side. Distinct from updateOrdenTrabajo's generic PATCH: this
+// atomically cascades the order and its still-pendiente detalles to en_proceso.
+export async function iniciarOrdenTrabajo(id: number): Promise<OrdenTrabajoListItem> {
+  const res = await fetch(`${API_BASE_URL}/ordenes-trabajo/${id}/iniciar`, {
+    method: 'POST',
+    headers: { ...getAuthHeader() },
+  });
+  return handleJsonResponse(res, 'No se pudo iniciar la orden de trabajo');
+}
+
+export interface OrdenTrabajoDetalle {
+  id: number;
+  estado: Estado;
+  tipoServicio: { id: number; descripcion: string };
+  diagnostico: { id: number; descripcion: string } | null;
+  trabajoRealizado: string | null;
+  proximoServiceFecha: string | null;
+  proximoServiceKm: number | null;
+  fechaFinalizacion: string | null;
+  updatedAt: string;
+}
+
+export interface UpdateOrdenTrabajoDetallePayload {
+  estado?: Estado;
+  diagnosticoId?: number | null;
+  trabajoRealizado?: string | null;
+  proximoServiceFecha?: string | null;
+  proximoServiceKm?: number | null;
+  fechaFinalizacion?: string | null;
+}
+
+export async function listOrdenTrabajoDetalles(ordenId: number): Promise<OrdenTrabajoDetalle[]> {
+  const res = await fetch(`${API_BASE_URL}/ordenes-trabajo/${ordenId}/detalles`, {
+    headers: { ...getAuthHeader() },
+  });
+  return handleJsonResponse(res, 'No se pudo obtener el detalle de la orden de trabajo');
+}
+
+export async function updateOrdenTrabajoDetalle(
+  ordenId: number,
+  detalleId: number,
+  data: UpdateOrdenTrabajoDetallePayload,
+): Promise<OrdenTrabajoDetalle> {
+  const res = await fetch(`${API_BASE_URL}/ordenes-trabajo/${ordenId}/detalles/${detalleId}`, {
+    method: 'PATCH',
+    headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return handleJsonResponse(res, 'No se pudo actualizar el detalle de la orden de trabajo');
 }
 
 /**

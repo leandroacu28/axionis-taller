@@ -38,6 +38,13 @@ export class UpdateOrdenTrabajoDto {
   @IsIn(Object.values(Estado))
   estado?: Estado;
 
+  // Optional, no default — set by the "Finalizar OT" client action when it
+  // sends estado: 'terminado'; omitted on every other PATCH (generic edit
+  // form), so undefined here means "leave unchanged" like activo below.
+  @IsOptional()
+  @IsDateString()
+  fechaFinalizacion?: string | null;
+
   @Type(() => Number)
   @IsInt()
   clienteId: number;

@@ -8,59 +8,60 @@ datasource db {
 }
 
 model User {
-  id                          Int             @id @default(autoincrement())
-  username                    String          @unique
-  passwordHash                String
-  dni                         String?         @unique
-  email                       String?
-  nombre                      String?
-  apellido                    String?
-  rol                         String          @default("empleado")
-  activo                      Boolean         @default(true)
-  creadoPorId                 Int?
-  creadoPor                   User?           @relation("UserCreatedBy", fields: [creadoPorId], references: [id], onDelete: SetNull)
-  creados                     User[]          @relation("UserCreatedBy")
-  clientesCreados             Cliente[]       @relation("ClienteCreadoPor")
-  clientesActualizados        Cliente[]       @relation("ClienteActualizadoPor")
-  coloresCreados              Color[]         @relation("ColorCreadoPor")
-  coloresActualizados         Color[]         @relation("ColorActualizadoPor")
-  diagnosticosCreados         Diagnostico[]   @relation("DiagnosticoCreadoPor")
-  diagnosticosActualizados    Diagnostico[]   @relation("DiagnosticoActualizadoPor")
-  marcasCreadas               Marca[]         @relation("MarcaCreadoPor")
-  marcasActualizadas          Marca[]         @relation("MarcaActualizadoPor")
-  vehiculosCreados            Vehiculo[]      @relation("VehiculoCreadoPor")
-  vehiculosActualizados       Vehiculo[]      @relation("VehiculoActualizadoPor")
-  tiposServicioCreados        TipoServicio[]  @relation("TipoServicioCreadoPor")
-  tiposServicioActualizados   TipoServicio[]  @relation("TipoServicioActualizadoPor")
-  unidadesMedidaCreadas       UnidadMedida[]  @relation("UnidadMedidaCreadoPor")
-  unidadesMedidaActualizadas  UnidadMedida[]  @relation("UnidadMedidaActualizadoPor")
-  productosCreados            Producto[]      @relation("ProductoCreadoPor")
-  productosActualizados       Producto[]      @relation("ProductoActualizadoPor")
-  etiquetasCreadas            Etiqueta[]      @relation("EtiquetaCreadoPor")
-  etiquetasActualizadas       Etiqueta[]      @relation("EtiquetaActualizadoPor")
-  ordenesTrabajoAsignadas    OrdenTrabajo[] @relation("OrdenTrabajoMecanico")
-  ordenesTrabajoCreadas      OrdenTrabajo[] @relation("OrdenTrabajoCreadoPor")
-  ordenesTrabajoActualizadas OrdenTrabajo[] @relation("OrdenTrabajoActualizadoPor")
-  createdAt                   DateTime        @default(now())
-  updatedAt                   DateTime        @updatedAt
+  id                                   Int                        @id @default(autoincrement())
+  username                             String                     @unique
+  passwordHash                         String
+  dni                                  String?                    @unique
+  email                                String?
+  nombre                               String?
+  apellido                             String?
+  rol                                  String                     @default("empleado")
+  activo                               Boolean                    @default(true)
+  creadoPorId                          Int?
+  creadoPor                            User?                      @relation("UserCreatedBy", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creados                              User[]                     @relation("UserCreatedBy")
+  clientesCreados                      Cliente[]                  @relation("ClienteCreadoPor")
+  clientesActualizados                 Cliente[]                  @relation("ClienteActualizadoPor")
+  coloresCreados                       Color[]                    @relation("ColorCreadoPor")
+  coloresActualizados                  Color[]                    @relation("ColorActualizadoPor")
+  diagnosticosCreados                  Diagnostico[]              @relation("DiagnosticoCreadoPor")
+  diagnosticosActualizados             Diagnostico[]              @relation("DiagnosticoActualizadoPor")
+  ordenTrabajoTipoServicioActualizados OrdenTrabajoTipoServicio[] @relation("OrdenTrabajoTipoServicioActualizadoPor")
+  marcasCreadas                        Marca[]                    @relation("MarcaCreadoPor")
+  marcasActualizadas                   Marca[]                    @relation("MarcaActualizadoPor")
+  vehiculosCreados                     Vehiculo[]                 @relation("VehiculoCreadoPor")
+  vehiculosActualizados                Vehiculo[]                 @relation("VehiculoActualizadoPor")
+  tiposServicioCreados                 TipoServicio[]             @relation("TipoServicioCreadoPor")
+  tiposServicioActualizados            TipoServicio[]             @relation("TipoServicioActualizadoPor")
+  unidadesMedidaCreadas                UnidadMedida[]             @relation("UnidadMedidaCreadoPor")
+  unidadesMedidaActualizadas           UnidadMedida[]             @relation("UnidadMedidaActualizadoPor")
+  productosCreados                     Producto[]                 @relation("ProductoCreadoPor")
+  productosActualizados                Producto[]                 @relation("ProductoActualizadoPor")
+  etiquetasCreadas                     Etiqueta[]                 @relation("EtiquetaCreadoPor")
+  etiquetasActualizadas                Etiqueta[]                 @relation("EtiquetaActualizadoPor")
+  ordenesTrabajoAsignadas              OrdenTrabajo[]             @relation("OrdenTrabajoMecanico")
+  ordenesTrabajoCreadas                OrdenTrabajo[]             @relation("OrdenTrabajoCreadoPor")
+  ordenesTrabajoActualizadas           OrdenTrabajo[]             @relation("OrdenTrabajoActualizadoPor")
+  createdAt                            DateTime                   @default(now())
+  updatedAt                            DateTime                   @updatedAt
 }
 
 model Cliente {
-  id                 Int             @id @default(autoincrement())
-  razonSocial        String          @unique
+  id                 Int            @id @default(autoincrement())
+  razonSocial        String         @unique
   tipoIdentificacion String
-  identificacion     String?         @unique
+  identificacion     String?        @unique
   telefono           String?
   domicilio          String?
-  activo             Boolean         @default(true)
+  activo             Boolean        @default(true)
   creadoPorId        Int?
-  creadoPor          User?           @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creadoPor          User?          @relation("ClienteCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId   Int?
-  actualizadoPor     User?           @relation("ClienteActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPor     User?          @relation("ClienteActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   vehiculos          Vehiculo[]
   ordenesTrabajo     OrdenTrabajo[]
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 }
 
 model Color {
@@ -77,15 +78,16 @@ model Color {
 }
 
 model Diagnostico {
-  id               Int      @id @default(autoincrement())
-  descripcion      String   @unique
-  activo           Boolean  @default(true)
+  id               Int                        @id @default(autoincrement())
+  descripcion      String                     @unique
+  activo           Boolean                    @default(true)
   creadoPorId      Int?
-  creadoPor        User?    @relation("DiagnosticoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creadoPor        User?                      @relation("DiagnosticoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId Int?
-  actualizadoPor   User?    @relation("DiagnosticoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  actualizadoPor   User?                      @relation("DiagnosticoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  detalles         OrdenTrabajoTipoServicio[]
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
 }
 
 model Marca {
@@ -105,36 +107,36 @@ model Marca {
 }
 
 model Vehiculo {
-  id               Int             @id @default(autoincrement())
+  id               Int            @id @default(autoincrement())
   marcaId          Int
-  marca            Marca           @relation(fields: [marcaId], references: [id])
+  marca            Marca          @relation(fields: [marcaId], references: [id])
   colorId          Int
-  color            Color           @relation(fields: [colorId], references: [id])
+  color            Color          @relation(fields: [colorId], references: [id])
   anio             Int
   kilometraje      Int
   clienteId        Int
-  cliente          Cliente         @relation(fields: [clienteId], references: [id])
-  activo           Boolean         @default(true)
+  cliente          Cliente        @relation(fields: [clienteId], references: [id])
+  activo           Boolean        @default(true)
   creadoPorId      Int?
-  creadoPor        User?           @relation("VehiculoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creadoPor        User?          @relation("VehiculoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId Int?
-  actualizadoPor   User?           @relation("VehiculoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPor   User?          @relation("VehiculoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   ordenesTrabajo   OrdenTrabajo[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model TipoServicio {
-  id               Int             @id @default(autoincrement())
-  descripcion      String          @unique
-  activo           Boolean         @default(true)
+  id               Int                        @id @default(autoincrement())
+  descripcion      String                     @unique
+  activo           Boolean                    @default(true)
   creadoPorId      Int?
-  creadoPor        User?           @relation("TipoServicioCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  creadoPor        User?                      @relation("TipoServicioCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
   actualizadoPorId Int?
-  actualizadoPor   User?           @relation("TipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  ordenesTrabajo   OrdenTrabajo[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  actualizadoPor   User?                      @relation("TipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  detalles         OrdenTrabajoTipoServicio[]
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
 }
 
 model UnidadMedida {
@@ -207,25 +209,47 @@ enum Estado {
 }
 
 model OrdenTrabajo {
-  id               Int            @id @default(autoincrement())
-  numero           String?        @unique
-  fechaIngreso     DateTime       @default(now())
-  kilometros       Int
-  prioridad        Prioridad      @default(normal)
-  motivoIngreso    String         @db.Text
-  estado           Estado         @default(pendiente)
-  activo           Boolean        @default(true)
-  clienteId        Int
-  cliente          Cliente        @relation(fields: [clienteId], references: [id])
-  vehiculoId       Int
-  vehiculo         Vehiculo       @relation(fields: [vehiculoId], references: [id])
-  mecanicoId       Int
-  mecanico         User           @relation("OrdenTrabajoMecanico", fields: [mecanicoId], references: [id])
-  tiposServicio    TipoServicio[]
-  creadoPorId      Int?
-  creadoPor        User?          @relation("OrdenTrabajoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
-  actualizadoPorId Int?
-  actualizadoPor   User?          @relation("OrdenTrabajoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id                Int                        @id @default(autoincrement())
+  numero            String?                    @unique
+  fechaIngreso      DateTime                   @default(now())
+  kilometros        Int
+  prioridad         Prioridad                  @default(normal)
+  motivoIngreso     String                     @db.Text
+  estado            Estado                     @default(pendiente)
+  fechaFinalizacion DateTime?
+  activo            Boolean                    @default(true)
+  clienteId         Int
+  cliente           Cliente                    @relation(fields: [clienteId], references: [id])
+  vehiculoId        Int
+  vehiculo          Vehiculo                   @relation(fields: [vehiculoId], references: [id])
+  mecanicoId        Int
+  mecanico          User                       @relation("OrdenTrabajoMecanico", fields: [mecanicoId], references: [id])
+  detalles          OrdenTrabajoTipoServicio[]
+  creadoPorId       Int?
+  creadoPor         User?                      @relation("OrdenTrabajoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId  Int?
+  actualizadoPor    User?                      @relation("OrdenTrabajoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+}
+
+model OrdenTrabajoTipoServicio {
+  id                  Int          @id @default(autoincrement())
+  ordenTrabajoId      Int
+  ordenTrabajo        OrdenTrabajo @relation(fields: [ordenTrabajoId], references: [id], onDelete: Cascade)
+  tipoServicioId      Int
+  tipoServicio        TipoServicio @relation(fields: [tipoServicioId], references: [id])
+  estado              Estado       @default(pendiente)
+  diagnosticoId       Int?
+  diagnostico         Diagnostico? @relation(fields: [diagnosticoId], references: [id], onDelete: SetNull)
+  trabajoRealizado    String?      @db.Text
+  proximoServiceFecha DateTime?
+  proximoServiceKm    Int?
+  fechaFinalizacion   DateTime?
+  actualizadoPorId    Int?
+  actualizadoPor      User?        @relation("OrdenTrabajoTipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@unique([ordenTrabajoId, tipoServicioId])
 }
