@@ -366,21 +366,6 @@ export default function OrdenTrabajoForm({
         </div>
       </div>
 
-      {mode === 'edit' && (
-        <div className="flex items-center gap-2">
-          <input
-            id="activo"
-            type="checkbox"
-            checked={form.activo ?? true}
-            onChange={(e) => updateField('activo', e.target.checked)}
-            className="h-4 w-4 rounded border-stone-300 text-rose-500 focus:ring-rose-400"
-          />
-          <label htmlFor="activo" className="text-sm font-medium text-stone-700">
-            Activo
-          </label>
-        </div>
-      )}
-
       <h2 className="text-sm font-bold uppercase tracking-wider text-stone-700 border-b border-stone-200 pb-2 mb-3">
         Motivo y tipos de servicio
       </h2>

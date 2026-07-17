@@ -10,7 +10,9 @@ import {
   updateOrdenTrabajo,
   type Estado,
   type OrdenTrabajoListItem,
+  type Prioridad,
 } from '../../lib/ordenes-trabajo';
+import { listUsers, type UserListItem } from '../../lib/users';
 import { showConfirm, showError, showSuccess } from '../../lib/alerts';
 
 function SearchIcon() {
@@ -358,9 +360,13 @@ function AccionesMenu({
 
 type EstadoFilter = 'all' | Estado;
 type ActivoFilter = 'all' | 'activo' | 'inactivo';
+type MecanicoFilter = 'all' | number;
+type PrioridadFilter = 'all' | Prioridad;
 
 const DEFAULT_ESTADO_FILTER: EstadoFilter = 'all';
-const DEFAULT_ACTIVO_FILTER: ActivoFilter = 'all';
+const DEFAULT_ACTIVO_FILTER: ActivoFilter = 'activo';
+const DEFAULT_MECANICO_FILTER: MecanicoFilter = 'all';
+const DEFAULT_PRIORIDAD_FILTER: PrioridadFilter = 'all';
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 const ESTADO_LABELS: Record<Estado, string> = {
@@ -374,7 +380,15 @@ const ESTADO_BADGE_CLASSES: Record<Estado, string> = {
   pendiente: 'bg-amber-100 text-amber-700',
   en_proceso: 'bg-sky-100 text-sky-700',
   terminado: 'bg-green-100 text-green-700',
-  cancelado: 'bg-stone-200 text-stone-700',
+  cancelado: 'bg-red-100 text-red-700',
+};
+
+// Table view uses its own palette (distinct from the tarjetas view above).
+const ESTADO_BADGE_CLASSES_TABLA: Record<Estado, string> = {
+  pendiente: 'bg-blue-100 text-blue-700',
+  en_proceso: 'bg-yellow-100 text-yellow-700',
+  terminado: 'bg-green-100 text-green-700',
+  cancelado: 'bg-red-100 text-red-700',
 };
 
 const PRIORIDAD_LABELS: Record<OrdenTrabajoListItem['prioridad'], string> = {
@@ -384,9 +398,9 @@ const PRIORIDAD_LABELS: Record<OrdenTrabajoListItem['prioridad'], string> = {
 };
 
 const PRIORIDAD_BADGE_CLASSES: Record<OrdenTrabajoListItem['prioridad'], string> = {
-  normal: 'bg-stone-100 text-stone-600',
+  normal: 'bg-blue-100 text-blue-700',
   alta: 'bg-orange-100 text-orange-700',
-  urgente: 'bg-rose-100 text-rose-700',
+  urgente: 'bg-red-100 text-red-700',
 };
 
 function formatFecha(iso: string): string {
@@ -418,6 +432,11 @@ export default function OrdenesTrabajoPage() {
   // Additive alongside estadoFilter — activo is an orthogonal
   // soft-deactivation flag, not a replacement for the estado lifecycle.
   const [activoFilter, setActivoFilter] = useState<ActivoFilter>(DEFAULT_ACTIVO_FILTER);
+  // Additive alongside the other filters — mecánico and prioridad are
+  // orthogonal to estado/activo, same as each other.
+  const [mecanicoFilter, setMecanicoFilter] = useState<MecanicoFilter>(DEFAULT_MECANICO_FILTER);
+  const [prioridadFilter, setPrioridadFilter] = useState<PrioridadFilter>(DEFAULT_PRIORIDAD_FILTER);
+  const [mecanicos, setMecanicos] = useState<UserListItem[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
   const [total, setTotal] = useState(0);
@@ -427,14 +446,30 @@ export default function OrdenesTrabajoPage() {
   const hasActiveFilters =
     searchInput.trim() !== '' ||
     estadoFilter !== DEFAULT_ESTADO_FILTER ||
-    activoFilter !== DEFAULT_ACTIVO_FILTER;
+    activoFilter !== DEFAULT_ACTIVO_FILTER ||
+    mecanicoFilter !== DEFAULT_MECANICO_FILTER ||
+    prioridadFilter !== DEFAULT_PRIORIDAD_FILTER;
   const clearFilters = () => {
     setSearchInput('');
     setSearch('');
     setEstadoFilter(DEFAULT_ESTADO_FILTER);
     setActivoFilter(DEFAULT_ACTIVO_FILTER);
+    setMecanicoFilter(DEFAULT_MECANICO_FILTER);
+    setPrioridadFilter(DEFAULT_PRIORIDAD_FILTER);
     setPage(1);
   };
+
+  // Mecánico options for the filter — a mecánico is just any active User
+  // (D6), same pool the order form's mecánico picker searches. Fetched once
+  // since the filter needs the full active list, not a debounced search.
+  useEffect(() => {
+    listUsers({ status: 'activo' })
+      .then(setMecanicos)
+      .catch(() => {
+        // Filter degrades to just "Todos" if this fails — not worth
+        // surfacing a separate error banner for a secondary control.
+      });
+  }, []);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -465,6 +500,8 @@ export default function OrdenesTrabajoPage() {
         search: search || undefined,
         estado: estadoFilter,
         status: activoFilter,
+        mecanicoId: mecanicoFilter === 'all' ? undefined : mecanicoFilter,
+        prioridad: prioridadFilter,
       });
       setOrdenes(result.data);
       setTotal(result.total);
@@ -479,7 +516,7 @@ export default function OrdenesTrabajoPage() {
   useEffect(() => {
     loadOrdenes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, search, estadoFilter, activoFilter]);
+  }, [page, pageSize, search, estadoFilter, activoFilter, mecanicoFilter, prioridadFilter]);
 
   return (
     <div>
@@ -539,13 +576,13 @@ export default function OrdenesTrabajoPage() {
           <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
             {counts.terminado} terminada{counts.terminado === 1 ? '' : 's'}
           </span>
-          <span className="rounded-full bg-stone-200 px-2.5 py-1 text-xs font-semibold text-stone-700">
+          <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
             {counts.cancelado} cancelada{counts.cancelado === 1 ? '' : 's'}
           </span>
         </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_auto_auto]">
-            <div className="space-y-1">
+          <div className="flex flex-1 flex-wrap items-end gap-4">
+            <div className="min-w-[200px] flex-1 space-y-1">
               <label htmlFor="search" className="text-sm font-medium text-stone-700">
                 Buscar
               </label>
@@ -564,7 +601,7 @@ export default function OrdenesTrabajoPage() {
               </div>
             </div>
 
-            <div className="space-y-1">
+            <div className="w-40 space-y-1">
               <label htmlFor="estadoFilter" className="text-sm font-medium text-stone-700">
                 Estado
               </label>
@@ -585,7 +622,7 @@ export default function OrdenesTrabajoPage() {
               </select>
             </div>
 
-            <div className="space-y-1">
+            <div className="w-40 space-y-1">
               <label htmlFor="activoFilter" className="text-sm font-medium text-stone-700">
                 Activo
               </label>
@@ -604,7 +641,49 @@ export default function OrdenesTrabajoPage() {
               </select>
             </div>
 
-            <div className="space-y-1">
+            <div className="w-48 space-y-1">
+              <label htmlFor="mecanicoFilter" className="text-sm font-medium text-stone-700">
+                Mecánico
+              </label>
+              <select
+                id="mecanicoFilter"
+                value={mecanicoFilter}
+                onChange={(e) => {
+                  setMecanicoFilter(e.target.value === 'all' ? 'all' : Number(e.target.value));
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+              >
+                <option value="all">Todos</option>
+                {mecanicos.map((mecanico) => (
+                  <option key={mecanico.id} value={mecanico.id}>
+                    {mecanicoLabel(mecanico)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="w-40 space-y-1">
+              <label htmlFor="prioridadFilter" className="text-sm font-medium text-stone-700">
+                Prioridad
+              </label>
+              <select
+                id="prioridadFilter"
+                value={prioridadFilter}
+                onChange={(e) => {
+                  setPrioridadFilter(e.target.value as PrioridadFilter);
+                  setPage(1);
+                }}
+                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+              >
+                <option value="all">Todas</option>
+                <option value="normal">{PRIORIDAD_LABELS.normal}</option>
+                <option value="alta">{PRIORIDAD_LABELS.alta}</option>
+                <option value="urgente">{PRIORIDAD_LABELS.urgente}</option>
+              </select>
+            </div>
+
+            <div className="w-36 space-y-1">
               <label htmlFor="pageSize" className="text-sm font-medium text-stone-700">
                 Órdenes por página
               </label>
@@ -712,6 +791,14 @@ export default function OrdenesTrabajoPage() {
                   <p>
                     <span className="font-medium text-stone-800">Mecánico:</span> {mecanicoLabel(orden.mecanico)}
                   </p>
+                  <p className="flex items-center gap-1.5">
+                    <span className="font-medium text-stone-800">Prioridad:</span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${PRIORIDAD_BADGE_CLASSES[orden.prioridad]}`}
+                    >
+                      {PRIORIDAD_LABELS[orden.prioridad]}
+                    </span>
+                  </p>
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
@@ -755,16 +842,19 @@ export default function OrdenesTrabajoPage() {
                   Vehículo
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Servicios
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Estado
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Prioridad
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Mecánico
+                  Fecha de ingreso
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Fecha de ingreso
+                  Fecha de finalización
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Acciones
@@ -781,12 +871,25 @@ export default function OrdenesTrabajoPage() {
                     {orden.cliente.razonSocial}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    {orden.vehiculo.marca.marca} {orden.vehiculo.marca.modelo}
+                    {orden.vehiculo.marca.marca} {orden.vehiculo.marca.modelo} -{' '}
+                    {orden.vehiculo.kilometraje.toLocaleString('es-AR')} km
+                  </td>
+                  <td className="px-4 py-3 text-center text-sm text-stone-600">
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      {orden.tiposServicio.map((tipo) => (
+                        <span
+                          key={tipo.id}
+                          className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700"
+                        >
+                          {tipo.descripcion}
+                        </span>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
                     <div className="flex flex-col items-center gap-1">
                       <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${ESTADO_BADGE_CLASSES[orden.estado]}`}
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${ESTADO_BADGE_CLASSES_TABLA[orden.estado]}`}
                       >
                         {ESTADO_LABELS[orden.estado]}
                       </span>
@@ -805,10 +908,10 @@ export default function OrdenesTrabajoPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    {mecanicoLabel(orden.mecanico)}
+                    {formatFecha(orden.fechaIngreso)}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    {formatFecha(orden.fechaIngreso)}
+                    {orden.fechaFinalizacion ? formatFecha(orden.fechaFinalizacion) : '—'}
                   </td>
                   <td className="px-4 py-3 text-center text-sm">
                     <AccionesMenu orden={orden} onToggled={loadOrdenes} />

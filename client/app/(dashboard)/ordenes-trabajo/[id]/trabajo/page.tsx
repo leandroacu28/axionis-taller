@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   getOrdenTrabajo,
@@ -32,11 +33,12 @@ interface DetalleCardProps {
   detalle: OrdenTrabajoDetalle;
   diagnosticos: DiagnosticoListItem[];
   onSaved: (updated: OrdenTrabajoDetalle) => void;
+  onReactivado: (updated: OrdenTrabajoDetalle) => void;
 }
 
 // Own local state, own "Guardar" button, own submitting state — cards save
 // independently, saving one never requires the others to be filled in.
-function DetalleCard({ ordenId, detalle, diagnosticos, onSaved }: DetalleCardProps) {
+function DetalleCard({ ordenId, detalle, diagnosticos, onSaved, onReactivado }: DetalleCardProps) {
   const [estado, setEstado] = useState<Estado>(detalle.estado);
   const [diagnosticoId, setDiagnosticoId] = useState<number | ''>(detalle.diagnostico?.id ?? '');
   const [trabajoRealizado, setTrabajoRealizado] = useState(detalle.trabajoRealizado ?? '');
@@ -121,6 +123,7 @@ function DetalleCard({ ordenId, detalle, diagnosticos, onSaved }: DetalleCardPro
       setEstado('en_proceso');
       showSuccess(`${detalle.tipoServicio.descripcion} reactivado`, 'El servicio volvió a estado En proceso.');
       onSaved(updated);
+      onReactivado(updated);
     } catch (err) {
       showError(
         'No se pudo reactivar el servicio',
@@ -156,11 +159,13 @@ function DetalleCard({ ordenId, detalle, diagnosticos, onSaved }: DetalleCardPro
             disabled={bloqueada}
             className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {ESTADO_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+            {ESTADO_OPTIONS.filter((option) => option.value !== 'terminado' || estado === 'terminado').map(
+              (option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ),
+            )}
           </select>
         </div>
 
@@ -261,7 +266,7 @@ function DetalleCard({ ordenId, detalle, diagnosticos, onSaved }: DetalleCardPro
             type="button"
             onClick={handleReactivar}
             disabled={submitting}
-            className="rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-600 transition-all hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-green-600/30 transition-all hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? 'Activando...' : 'Activar'}
           </button>
@@ -273,6 +278,7 @@ function DetalleCard({ ordenId, detalle, diagnosticos, onSaved }: DetalleCardPro
 
 export default function TrabajoOrdenTrabajoPage({ params }: { params: { id: string } }) {
   const ordenId = Number(params.id);
+  const router = useRouter();
 
   const [orden, setOrden] = useState<OrdenTrabajoListItem | null>(null);
   const [detalles, setDetalles] = useState<OrdenTrabajoDetalle[]>([]);
@@ -307,6 +313,33 @@ export default function TrabajoOrdenTrabajoPage({ params }: { params: { id: stri
 
   const handleDetalleSaved = (updated: OrdenTrabajoDetalle) => {
     setDetalles((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+  };
+
+  // Reactivating a tipo de servicio implies the order itself is back "en
+  // proceso" — covers the case where the order had already been marked
+  // terminado/pendiente and a mechanic reopens one of its services.
+  const handleDetalleReactivado = async () => {
+    if (!orden || orden.estado === 'en_proceso') return;
+    try {
+      const updated = await updateOrdenTrabajo(orden.id, {
+        fechaIngreso: orden.fechaIngreso,
+        kilometros: orden.kilometros,
+        prioridad: orden.prioridad,
+        motivoIngreso: orden.motivoIngreso,
+        estado: 'en_proceso',
+        activo: orden.activo,
+        clienteId: orden.cliente.id,
+        vehiculoId: orden.vehiculo.id,
+        mecanicoId: orden.mecanico.id,
+        tipoServicioIds: orden.tiposServicio.map((t) => t.id),
+      });
+      setOrden(updated);
+    } catch (err) {
+      showError(
+        'No se pudo actualizar el estado de la orden',
+        err instanceof Error ? err.message : 'No se pudo conectar con el servidor.',
+      );
+    }
   };
 
   // Every tipo de servicio must be Terminado or Cancelado before the order
@@ -364,6 +397,7 @@ export default function TrabajoOrdenTrabajoPage({ params }: { params: { id: stri
       });
       setOrden(updated);
       showSuccess('Orden finalizada', `${updated.numero ?? 'La orden'} fue marcada como Terminado.`);
+      router.push('/ordenes-trabajo');
     } catch (err) {
       showError(
         'No se pudo finalizar la orden',
@@ -446,6 +480,7 @@ export default function TrabajoOrdenTrabajoPage({ params }: { params: { id: stri
               detalle={detalle}
               diagnosticos={diagnosticos}
               onSaved={handleDetalleSaved}
+              onReactivado={handleDetalleReactivado}
             />
           ))}
         </div>

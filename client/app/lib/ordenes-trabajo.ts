@@ -65,6 +65,9 @@ export interface ListOrdenesTrabajoParams {
   // Additive alongside `estado` — activo is an orthogonal soft-deactivation
   // flag, not a replacement for the estado lifecycle filter.
   status?: 'all' | 'activo' | 'inactivo';
+  // Additive alongside `estado`/`status` — a mecánico is just any active User.
+  mecanicoId?: number;
+  prioridad?: 'all' | Prioridad;
 }
 
 // Reframed per D2: no `activeCount` — counts are grouped per `estado` value
@@ -85,6 +88,8 @@ export async function listOrdenesTrabajo(
   if (params.search) query.set('search', params.search);
   if (params.estado) query.set('estado', params.estado);
   if (params.status) query.set('status', params.status);
+  if (params.mecanicoId) query.set('mecanicoId', String(params.mecanicoId));
+  if (params.prioridad) query.set('prioridad', params.prioridad);
 
   const res = await fetch(`${API_BASE_URL}/ordenes-trabajo?${query.toString()}`, {
     headers: { ...getAuthHeader() },

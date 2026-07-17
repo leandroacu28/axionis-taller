@@ -13,6 +13,7 @@ import {
   ListOrdenesTrabajoQueryDto,
   EstadoFilter,
   OrdenTrabajoStatusFilter,
+  PrioridadFilter,
 } from './dto/list-ordenes-trabajo-query.dto';
 
 const ORDEN_TRABAJO_SELECT = {
@@ -55,13 +56,16 @@ export type OrdenTrabajoFilter = {
   search?: string;
   estado?: EstadoFilter;
   status?: OrdenTrabajoStatusFilter;
+  mecanicoId?: number;
+  prioridad?: PrioridadFilter;
 };
 
 // Mirrors etiquetas.service.ts's buildEtiquetaWhere. Returns both
 // `searchWhere` (estado/activo-independent, used for the per-estado counts)
-// and `where` (combined filter for the paginated list). `status` (activo) is
-// additive on top of `estado` — an orthogonal soft-deactivation flag, not a
-// replacement for the estado lifecycle filter.
+// and `where` (combined filter for the paginated list). `status` (activo),
+// `mecanicoId`, and `prioridad` are all additive on top of `estado` —
+// orthogonal filters, not a replacement for the estado lifecycle filter, and
+// (like `status`) excluded from the per-estado counts.
 function buildOrdenTrabajoWhere(filter: OrdenTrabajoFilter): {
   searchWhere: Prisma.OrdenTrabajoWhereInput;
   where: Prisma.OrdenTrabajoWhereInput;
@@ -69,6 +73,7 @@ function buildOrdenTrabajoWhere(filter: OrdenTrabajoFilter): {
   const term = filter.search?.trim();
   const estado = filter.estado ?? 'all';
   const status = filter.status ?? 'all';
+  const prioridad = filter.prioridad ?? 'all';
 
   const searchWhere: Prisma.OrdenTrabajoWhereInput = term
     ? {
@@ -85,6 +90,8 @@ function buildOrdenTrabajoWhere(filter: OrdenTrabajoFilter): {
     ...searchWhere,
     ...(estado !== 'all' ? { estado } : {}),
     ...(status === 'activo' ? { activo: true } : status === 'inactivo' ? { activo: false } : {}),
+    ...(filter.mecanicoId ? { mecanicoId: filter.mecanicoId } : {}),
+    ...(prioridad !== 'all' ? { prioridad } : {}),
   };
 
   return { searchWhere, where };

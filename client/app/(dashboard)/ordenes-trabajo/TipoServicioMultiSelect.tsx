@@ -248,7 +248,7 @@ export default function TipoServicioMultiSelect({
         {selected.map((option) => (
           <span
             key={option.id}
-            className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700"
+            className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700"
           >
             {option.label}
             <span
@@ -258,7 +258,7 @@ export default function TipoServicioMultiSelect({
                 e.stopPropagation();
                 removeOption(option.id);
               }}
-              className="rounded-full text-rose-500 hover:text-rose-700"
+              className="rounded-full text-blue-500 hover:text-blue-700"
               aria-label={`Quitar ${option.label}`}
             >
               <RemoveIcon />
