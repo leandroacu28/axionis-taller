@@ -27,6 +27,7 @@ model User {
   diagnosticosCreados                  Diagnostico[]              @relation("DiagnosticoCreadoPor")
   diagnosticosActualizados             Diagnostico[]              @relation("DiagnosticoActualizadoPor")
   ordenTrabajoTipoServicioActualizados OrdenTrabajoTipoServicio[] @relation("OrdenTrabajoTipoServicioActualizadoPor")
+  ordenTrabajoTipoServicioProductosActualizados OrdenTrabajoTipoServicioProducto[] @relation("OrdenTrabajoTipoServicioProductoActualizadoPor")
   marcasCreadas                        Marca[]                    @relation("MarcaCreadoPor")
   marcasActualizadas                   Marca[]                    @relation("MarcaActualizadoPor")
   vehiculosCreados                     Vehiculo[]                 @relation("VehiculoCreadoPor")
@@ -178,6 +179,7 @@ model Producto {
   actualizadoPorId   Int?
   actualizadoPor     User?        @relation("ProductoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   etiquetas          Etiqueta[]
+  ordenTrabajoTipoServicioProductos OrdenTrabajoTipoServicioProducto[]
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 }
@@ -248,8 +250,26 @@ model OrdenTrabajoTipoServicio {
   fechaFinalizacion   DateTime?
   actualizadoPorId    Int?
   actualizadoPor      User?        @relation("OrdenTrabajoTipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  productos           OrdenTrabajoTipoServicioProducto[]
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 
   @@unique([ordenTrabajoId, tipoServicioId])
+}
+
+model OrdenTrabajoTipoServicioProducto {
+  id                         Int                      @id @default(autoincrement())
+  ordenTrabajoTipoServicioId Int
+  ordenTrabajoTipoServicio   OrdenTrabajoTipoServicio @relation(fields: [ordenTrabajoTipoServicioId], references: [id], onDelete: Cascade)
+  productoId                 Int
+  producto                   Producto                 @relation(fields: [productoId], references: [id])
+  cantidad                   Decimal                  @db.Decimal(10, 2)
+  precioUnitario             Decimal                  @db.Decimal(10, 2)
+  precioTotal                Decimal                  @db.Decimal(10, 2)
+  actualizadoPorId           Int?
+  actualizadoPor             User?                    @relation("OrdenTrabajoTipoServicioProductoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt                  DateTime                 @default(now())
+  updatedAt                  DateTime                 @updatedAt
+
+  @@unique([ordenTrabajoTipoServicioId, productoId])
 }

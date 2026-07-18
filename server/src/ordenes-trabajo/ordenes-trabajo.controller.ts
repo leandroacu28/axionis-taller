@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -15,6 +16,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateOrdenTrabajoDto } from './dto/create-orden-trabajo.dto';
 import { UpdateOrdenTrabajoDto } from './dto/update-orden-trabajo.dto';
 import { UpdateOrdenTrabajoDetalleDto } from './dto/update-orden-trabajo-detalle.dto';
+import { CreateOrdenTrabajoProductoDto } from './dto/create-orden-trabajo-producto.dto';
+import { UpdateOrdenTrabajoProductoDto } from './dto/update-orden-trabajo-producto.dto';
 import { ListOrdenesTrabajoQueryDto } from './dto/list-ordenes-trabajo-query.dto';
 import { OrdenesTrabajoService } from './ordenes-trabajo.service';
 
@@ -46,6 +49,37 @@ export class OrdenesTrabajoController {
     @Request() req: { user: { userId: number; username: string } }
   ) {
     return this.ordenesTrabajoService.updateDetalle(id, detalleId, dto, req.user.userId);
+  }
+
+  @Post(':id/detalles/:detalleId/productos')
+  async addDetalleProducto(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('detalleId', ParseIntPipe) detalleId: number,
+    @Body() dto: CreateOrdenTrabajoProductoDto,
+    @Request() req: { user: { userId: number; username: string } }
+  ) {
+    return this.ordenesTrabajoService.addDetalleProducto(id, detalleId, dto, req.user.userId);
+  }
+
+  @Patch(':id/detalles/:detalleId/productos/:lineaId')
+  async updateDetalleProducto(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('detalleId', ParseIntPipe) detalleId: number,
+    @Param('lineaId', ParseIntPipe) lineaId: number,
+    @Body() dto: UpdateOrdenTrabajoProductoDto,
+    @Request() req: { user: { userId: number; username: string } }
+  ) {
+    return this.ordenesTrabajoService.updateDetalleProducto(id, detalleId, lineaId, dto, req.user.userId);
+  }
+
+  @Delete(':id/detalles/:detalleId/productos/:lineaId')
+  @HttpCode(204)
+  async removeDetalleProducto(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('detalleId', ParseIntPipe) detalleId: number,
+    @Param('lineaId', ParseIntPipe) lineaId: number
+  ) {
+    return this.ordenesTrabajoService.removeDetalleProducto(id, detalleId, lineaId);
   }
 
   @Post()

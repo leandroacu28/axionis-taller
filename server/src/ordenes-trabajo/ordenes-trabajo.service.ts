@@ -9,6 +9,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrdenTrabajoDto } from './dto/create-orden-trabajo.dto';
 import { UpdateOrdenTrabajoDto } from './dto/update-orden-trabajo.dto';
 import { UpdateOrdenTrabajoDetalleDto } from './dto/update-orden-trabajo-detalle.dto';
+import { CreateOrdenTrabajoProductoDto } from './dto/create-orden-trabajo-producto.dto';
+import { UpdateOrdenTrabajoProductoDto } from './dto/update-orden-trabajo-producto.dto';
 import {
   ListOrdenesTrabajoQueryDto,
   EstadoFilter,
@@ -39,6 +41,17 @@ const ORDEN_TRABAJO_SELECT = {
 };
 
 const formatNumero = (id: number) => `OT-${String(id).padStart(4, '0')}`;
+
+// Module-level line select, reused everywhere a producto línea is returned
+// (add/update responses + both embeds in findDetalles/updateDetalle).
+const ORDEN_TRABAJO_PRODUCTO_SELECT = {
+  id: true,
+  cantidad: true,
+  precioUnitario: true,
+  precioTotal: true,
+  producto: { select: { id: true, descripcion: true } },
+  updatedAt: true,
+};
 
 // ORDEN_TRABAJO_SELECT reads the new explicit `detalles` join instead of the
 // old implicit `tiposServicio` M2M, but the public API contract must not
@@ -134,6 +147,65 @@ export class OrdenesTrabajoService {
     const mecanico = await client.user.findUnique({ where: { id: mecanicoId } });
     if (!mecanico || !mecanico.activo)
       throw new BadRequestException('El mecánico no existe o está inactivo.');
+  }
+
+  // NOVEL server-side terminado guard + belongs-to check. No existing method
+  // guards estado === 'terminado' server-side (updateDetalle does not), so
+  // this is the enforcement point for D3 on the new producto endpoints.
+  private async loadDetalleParaProducto(
+    client: Prisma.TransactionClient | PrismaService,
+    ordenTrabajoId: number,
+    detalleId: number
+  ) {
+    const detalle = await client.ordenTrabajoTipoServicio.findUnique({
+      where: { id: detalleId },
+      select: { id: true, ordenTrabajoId: true, estado: true },
+    });
+    if (!detalle || detalle.ordenTrabajoId !== ordenTrabajoId) {
+      throw new NotFoundException('Detalle de orden de trabajo no encontrado.');
+    }
+    if (detalle.estado === 'terminado') {
+      throw new ConflictException('No se pueden modificar los productos de un servicio terminado.');
+    }
+    return detalle;
+  }
+
+  // Belongs-to check: the línea must belong to this detalle (so one detalle's
+  // línea can't be edited via another detalleId in the URL). Returns the
+  // frozen precioUnitario + cantidad needed by the update/sum recompute.
+  private async loadLinea(
+    client: Prisma.TransactionClient | PrismaService,
+    detalleId: number,
+    lineaId: number
+  ) {
+    const linea = await client.ordenTrabajoTipoServicioProducto.findUnique({
+      where: { id: lineaId },
+      select: { id: true, ordenTrabajoTipoServicioId: true, cantidad: true, precioUnitario: true },
+    });
+    if (!linea || linea.ordenTrabajoTipoServicioId !== detalleId) {
+      throw new NotFoundException('Línea de producto no encontrada.');
+    }
+    return linea;
+  }
+
+  // Mirrors assertUnidadMedidaActiva / assertTiposServicioActivos. Also
+  // returns the live precioVenta so the caller can freeze it into
+  // precioUnitario, and guards the nullable precioVenta (schema: Decimal?).
+  private async assertProductoActivo(
+    client: Prisma.TransactionClient | PrismaService,
+    productoId: number
+  ): Promise<{ precioVenta: Prisma.Decimal }> {
+    const producto = await client.producto.findUnique({
+      where: { id: productoId },
+      select: { activo: true, precioVenta: true },
+    });
+    if (!producto || !producto.activo) {
+      throw new BadRequestException('El producto no existe o está inactivo.');
+    }
+    if (producto.precioVenta == null) {
+      throw new BadRequestException('El producto no tiene un precio de venta definido.');
+    }
+    return { precioVenta: producto.precioVenta };
   }
 
   async findAll(query: ListOrdenesTrabajoQueryDto) {
@@ -348,6 +420,7 @@ export class OrdenesTrabajoService {
         fechaFinalizacion: true,
         tipoServicio: { select: { id: true, descripcion: true } },
         diagnostico: { select: { id: true, descripcion: true } },
+        productos: { select: ORDEN_TRABAJO_PRODUCTO_SELECT, orderBy: { id: 'asc' } },
         updatedAt: true,
       },
       orderBy: { id: 'asc' },
@@ -405,8 +478,94 @@ export class OrdenesTrabajoService {
         fechaFinalizacion: true,
         tipoServicio: { select: { id: true, descripcion: true } },
         diagnostico: { select: { id: true, descripcion: true } },
+        productos: { select: ORDEN_TRABAJO_PRODUCTO_SELECT, orderBy: { id: 'asc' } },
         updatedAt: true,
       },
+    });
+  }
+
+  async addDetalleProducto(
+    ordenTrabajoId: number,
+    detalleId: number,
+    dto: CreateOrdenTrabajoProductoDto,
+    actualizadoPorId: number
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.loadDetalleParaProducto(tx, ordenTrabajoId, detalleId);
+      const { precioVenta } = await this.assertProductoActivo(tx, dto.productoId);
+
+      const cantidad = new Prisma.Decimal(dto.cantidad);
+      const existing = await tx.ordenTrabajoTipoServicioProducto.findUnique({
+        where: {
+          ordenTrabajoTipoServicioId_productoId: {
+            ordenTrabajoTipoServicioId: detalleId,
+            productoId: dto.productoId,
+          },
+        },
+        select: { id: true, cantidad: true, precioUnitario: true },
+      });
+
+      if (existing) {
+        // D4: re-adding sums into the existing line and KEEPS the frozen
+        // precioUnitario (D1) — the current catalog precioVenta is NOT re-read.
+        const nuevaCantidad = existing.cantidad.plus(cantidad);
+        return tx.ordenTrabajoTipoServicioProducto.update({
+          where: { id: existing.id },
+          data: {
+            cantidad: nuevaCantidad,
+            precioTotal: existing.precioUnitario.times(nuevaCantidad),
+            actualizadoPorId,
+          },
+          select: ORDEN_TRABAJO_PRODUCTO_SELECT,
+        });
+      }
+
+      // New line: freeze precioUnitario from the current catalog precioVenta.
+      return tx.ordenTrabajoTipoServicioProducto.create({
+        data: {
+          ordenTrabajoTipoServicioId: detalleId,
+          productoId: dto.productoId,
+          cantidad,
+          precioUnitario: precioVenta,
+          precioTotal: precioVenta.times(cantidad),
+          actualizadoPorId,
+        },
+        select: ORDEN_TRABAJO_PRODUCTO_SELECT,
+      });
+    });
+  }
+
+  async updateDetalleProducto(
+    ordenTrabajoId: number,
+    detalleId: number,
+    lineaId: number,
+    dto: UpdateOrdenTrabajoProductoDto,
+    actualizadoPorId: number
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.loadDetalleParaProducto(tx, ordenTrabajoId, detalleId);
+      const linea = await this.loadLinea(tx, detalleId, lineaId);
+
+      const cantidad = new Prisma.Decimal(dto.cantidad);
+      return tx.ordenTrabajoTipoServicioProducto.update({
+        where: { id: lineaId },
+        data: {
+          cantidad,
+          // Recompute from the FROZEN precioUnitario (D1) — catalog never re-read.
+          precioTotal: linea.precioUnitario.times(cantidad),
+          actualizadoPorId,
+        },
+        select: ORDEN_TRABAJO_PRODUCTO_SELECT,
+      });
+    });
+  }
+
+  // No actualizadoPorId param — the row is deleted, there is nowhere to stamp it.
+  async removeDetalleProducto(ordenTrabajoId: number, detalleId: number, lineaId: number) {
+    return this.prisma.$transaction(async (tx) => {
+      await this.loadDetalleParaProducto(tx, ordenTrabajoId, detalleId);
+      await this.loadLinea(tx, detalleId, lineaId);
+      await tx.ordenTrabajoTipoServicioProducto.delete({ where: { id: lineaId } });
     });
   }
 }
