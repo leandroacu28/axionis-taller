@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   getOrdenTrabajo,
   listOrdenTrabajoDetalles,
@@ -15,6 +16,7 @@ import {
 } from '../../../../lib/ordenes-trabajo';
 import { listDiagnosticos, type DiagnosticoListItem } from '../../../../lib/diagnosticos';
 import { showConfirm, showError, showSuccess } from '../../../../lib/alerts';
+import DiagnosticoFormModal from '../../../diagnosticos/DiagnosticoFormModal';
 
 const ESTADO_OPTIONS: { value: Estado; label: string }[] = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -28,17 +30,252 @@ function formatFechaCorta(iso: string): string {
   return `${day}/${month}/${year}`;
 }
 
+function ChevronIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      className="h-4 w-4 shrink-0 text-stone-400"
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    </svg>
+  );
+}
+
+// Height of a single option row (px-3 py-2, text-sm) — used to cap the
+// results panel to exactly VISIBLE_ROWS before it scrolls.
+const OPTION_ROW_HEIGHT_PX = 36;
+const VISIBLE_ROWS = 5;
+
+interface DiagnosticoDropdownProps {
+  id: string;
+  value: number | '';
+  diagnosticos: DiagnosticoListItem[];
+  onChange: (id: number | '') => void;
+  onCreated: (created: DiagnosticoListItem) => void;
+  disabled?: boolean;
+}
+
+interface DropdownPosition {
+  top: number;
+  left: number;
+  width: number;
+  openUpward: boolean;
+}
+
+// Native <select> can't host a search box or cap its visible rows, so the
+// diagnóstico picker is a small custom combobox: trigger button + a portaled
+// panel with a search input and a fixed-height, scrollable options list. When
+// the search has no matches, the panel offers a "+ Crear" row instead of a
+// dead end, so there's no separate "nuevo diagnóstico" button anywhere else.
+function DiagnosticoDropdown({
+  id,
+  value,
+  diagnosticos,
+  onChange,
+  onCreated,
+  disabled,
+}: DiagnosticoDropdownProps) {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const [open, setOpen] = useState(false);
+  const [panelPos, setPanelPos] = useState<DropdownPosition | null>(null);
+  const [search, setSearch] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const selected = diagnosticos.find((d) => d.id === value) ?? null;
+  const filtered = diagnosticos.filter((d) =>
+    d.descripcion.toLowerCase().includes(search.trim().toLowerCase()),
+  );
+
+  const closePanel = () => {
+    setOpen(false);
+    setPanelPos(null);
+  };
+
+  const openPanel = () => {
+    if (disabled) return;
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const panelHeightEstimate = OPTION_ROW_HEIGHT_PX * (VISIBLE_ROWS + 1) + 56;
+    const openUpward = window.innerHeight - rect.bottom < panelHeightEstimate;
+    setPanelPos({
+      top: openUpward ? rect.top - 4 : rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      openUpward,
+    });
+    setSearch('');
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (open) searchInputRef.current?.focus();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const insideTrigger = triggerRef.current?.contains(target) ?? false;
+      const insidePanel = panelRef.current?.contains(target) ?? false;
+      if (!insideTrigger && !insidePanel) closePanel();
+    };
+    const handleReposition = () => closePanel();
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleReposition);
+    // Non-capture on purpose: the results list has its own overflow-y-auto,
+    // and `scroll` does not bubble, so inner-list scrolling never reaches
+    // `window` while page scroll still closes the panel. (Same fix as
+    // SearchableSelect.tsx.)
+    window.addEventListener('scroll', handleReposition);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleReposition);
+      window.removeEventListener('scroll', handleReposition);
+    };
+  }, [open]);
+
+  const selectOption = (optionId: number | '') => {
+    onChange(optionId);
+    closePanel();
+    triggerRef.current?.focus();
+  };
+
+  const openCreate = () => {
+    closePanel();
+    setCreateOpen(true);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        id={id}
+        ref={triggerRef}
+        type="button"
+        onClick={() => (open ? closePanel() : openPanel())}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex w-full items-center justify-between rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-left text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <span className={selected ? '' : 'text-stone-400'}>
+          {selected ? selected.descripcion : 'Sin diagnóstico'}
+        </span>
+        <ChevronIcon />
+      </button>
+
+      {open &&
+        panelPos &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={panelRef}
+            style={{
+              position: 'fixed',
+              top: panelPos.top,
+              left: panelPos.left,
+              width: panelPos.width,
+              transform: panelPos.openUpward ? 'translateY(-100%)' : undefined,
+            }}
+            className="z-50 flex flex-col rounded-lg border border-stone-200 bg-white shadow-lg"
+          >
+            <div className="border-b border-stone-200 p-2">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    closePanel();
+                    triggerRef.current?.focus();
+                  }
+                }}
+                placeholder="Buscar diagnóstico..."
+                className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+              />
+            </div>
+            <div
+              className="overflow-y-auto"
+              style={{ maxHeight: OPTION_ROW_HEIGHT_PX * VISIBLE_ROWS }}
+            >
+              <div
+                onClick={() => selectOption('')}
+                className={`cursor-pointer px-3 py-2 text-sm ${
+                  value === '' ? 'bg-rose-50 text-rose-700' : 'text-stone-700'
+                }`}
+              >
+                Sin diagnóstico
+              </div>
+              {filtered.length === 0 ? (
+                <button
+                  type="button"
+                  onClick={openCreate}
+                  className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
+                >
+                  <span aria-hidden="true">+</span>
+                  {search.trim() === ''
+                    ? 'Crear diagnóstico'
+                    : `Crear "${search.trim()}"`}
+                </button>
+              ) : (
+                filtered.map((diag) => (
+                  <div
+                    key={diag.id}
+                    onClick={() => selectOption(diag.id)}
+                    className={`cursor-pointer px-3 py-2 text-sm ${
+                      value === diag.id ? 'bg-rose-50 text-rose-700' : 'text-stone-700'
+                    }`}
+                  >
+                    {diag.descripcion}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      <DiagnosticoFormModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        diagnostico={null}
+        prefillDescripcion={search}
+        onSaved={(created) => {
+          setCreateOpen(false);
+          onChange(created.id);
+          onCreated(created);
+        }}
+      />
+    </div>
+  );
+}
+
 interface DetalleCardProps {
   ordenId: number;
   detalle: OrdenTrabajoDetalle;
   diagnosticos: DiagnosticoListItem[];
   onSaved: (updated: OrdenTrabajoDetalle) => void;
   onReactivado: (updated: OrdenTrabajoDetalle) => void;
+  onDiagnosticoCreado: (created: DiagnosticoListItem) => void;
 }
 
 // Own local state, own "Guardar" button, own submitting state — cards save
 // independently, saving one never requires the others to be filled in.
-function DetalleCard({ ordenId, detalle, diagnosticos, onSaved, onReactivado }: DetalleCardProps) {
+function DetalleCard({
+  ordenId,
+  detalle,
+  diagnosticos,
+  onSaved,
+  onReactivado,
+  onDiagnosticoCreado,
+}: DetalleCardProps) {
   const [estado, setEstado] = useState<Estado>(detalle.estado);
   const [diagnosticoId, setDiagnosticoId] = useState<number | ''>(detalle.diagnostico?.id ?? '');
   const [trabajoRealizado, setTrabajoRealizado] = useState(detalle.trabajoRealizado ?? '');
@@ -173,20 +410,14 @@ function DetalleCard({ ordenId, detalle, diagnosticos, onSaved, onReactivado }: 
           <label htmlFor={`diagnostico-${detalle.id}`} className="text-sm font-medium text-stone-700">
             Diagnóstico
           </label>
-          <select
+          <DiagnosticoDropdown
             id={`diagnostico-${detalle.id}`}
             value={diagnosticoId}
-            onChange={(e) => setDiagnosticoId(e.target.value === '' ? '' : Number(e.target.value))}
+            diagnosticos={diagnosticos}
+            onChange={setDiagnosticoId}
+            onCreated={onDiagnosticoCreado}
             disabled={bloqueada}
-            className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <option value="">Sin diagnóstico</option>
-            {diagnosticos.map((diag) => (
-              <option key={diag.id} value={diag.id}>
-                {diag.descripcion}
-              </option>
-            ))}
-          </select>
+          />
         </div>
       </div>
 
@@ -313,6 +544,12 @@ export default function TrabajoOrdenTrabajoPage({ params }: { params: { id: stri
 
   const handleDetalleSaved = (updated: OrdenTrabajoDetalle) => {
     setDetalles((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+  };
+
+  // A diagnóstico created from within a tarjeta must show up in every
+  // tarjeta's dropdown, not just the one that opened the modal.
+  const handleDiagnosticoCreado = (created: DiagnosticoListItem) => {
+    setDiagnosticos((prev) => [...prev, created]);
   };
 
   // Reactivating a tipo de servicio implies the order itself is back "en
@@ -481,6 +718,7 @@ export default function TrabajoOrdenTrabajoPage({ params }: { params: { id: stri
               diagnosticos={diagnosticos}
               onSaved={handleDetalleSaved}
               onReactivado={handleDetalleReactivado}
+              onDiagnosticoCreado={handleDiagnosticoCreado}
             />
           ))}
         </div>

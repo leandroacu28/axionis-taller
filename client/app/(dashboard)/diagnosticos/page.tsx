@@ -513,7 +513,7 @@ export default function DiagnosticosPage() {
         diagnostico={selectedDiagnostico}
         onSaved={() => {
           setModalOpen(false);
-          loadDiagnosticos();
+          void loadDiagnosticos();
         }}
       />
     </div>

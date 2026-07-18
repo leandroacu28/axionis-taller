@@ -35,7 +35,11 @@ interface DiagnosticoFormModalProps {
   open: boolean;
   onClose: () => void;
   diagnostico: DiagnosticoListItem | null;
-  onSaved: () => void;
+  onSaved: (saved: DiagnosticoListItem) => void;
+  // Prefills "descripción" when creating (ignored in edit mode) — used by
+  // callers that open this modal from a search box with no matches, so the
+  // typed term doesn't have to be retyped.
+  prefillDescripcion?: string;
 }
 
 export default function DiagnosticoFormModal({
@@ -43,6 +47,7 @@ export default function DiagnosticoFormModal({
   onClose,
   diagnostico,
   onSaved,
+  prefillDescripcion,
 }: DiagnosticoFormModalProps) {
   const isEdit = diagnostico !== null;
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -56,12 +61,12 @@ export default function DiagnosticoFormModal({
     if (!open) return;
     const loaded: FormState = diagnostico
       ? { descripcion: diagnostico.descripcion, activo: diagnostico.activo }
-      : EMPTY_FORM;
+      : { ...EMPTY_FORM, descripcion: prefillDescripcion ?? '' };
     setForm(loaded);
     initialFormRef.current = isEdit ? loaded : null;
     descripcionRef.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, diagnostico]);
+  }, [open, diagnostico, prefillDescripcion]);
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -82,6 +87,11 @@ export default function DiagnosticoFormModal({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // React re-bubbles portaled events through the React tree, not the DOM
+    // tree — without this, submitting the modal (rendered via Modal's
+    // createPortal, but still nested in a caller's own <form>, e.g. the
+    // orden de trabajo detalle card) also fires that outer form's onSubmit.
+    event.stopPropagation();
     if (submitting) return;
 
     if (form.descripcion.trim() === '') {
@@ -91,21 +101,22 @@ export default function DiagnosticoFormModal({
 
     setSubmitting(true);
     try {
+      let saved: DiagnosticoListItem;
       if (isEdit && diagnostico) {
         const payload: UpdateDiagnosticoPayload = {
           descripcion: form.descripcion,
           activo: form.activo,
         };
-        await updateDiagnostico(diagnostico.id, payload);
+        saved = await updateDiagnostico(diagnostico.id, payload);
         showSuccess('Diagnóstico actualizado', 'Los cambios se guardaron correctamente.');
       } else {
         const payload: CreateDiagnosticoPayload = {
           descripcion: form.descripcion,
         };
-        await createDiagnostico(payload);
+        saved = await createDiagnostico(payload);
         showSuccess('Diagnóstico creado', 'El diagnóstico ha sido creado correctamente.');
       }
-      onSaved();
+      onSaved(saved);
     } catch (err) {
       showError(
         isEdit ? 'Error al actualizar diagnóstico' : 'Error al crear diagnóstico',
