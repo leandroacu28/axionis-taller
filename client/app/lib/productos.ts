@@ -140,3 +140,19 @@ export async function searchEtiquetas(term: string): Promise<{ id: number; label
   });
   return result.data.map((etiqueta) => ({ id: etiqueta.id, label: etiqueta.descripcion }));
 }
+
+/**
+ * Search helper for the productos-consumidos picker (mirrors searchUnidadesMedida
+ * / searchEtiquetas). Restricts to active productos — a consumed line must not
+ * reference an inactive producto (see ordenes-trabajo.service.ts's
+ * assertProductoActivo).
+ */
+export async function searchProductos(term: string): Promise<{ id: number; label: string }[]> {
+  const result = await listProductos({
+    search: term || undefined,
+    status: 'activo',
+    page: 1,
+    pageSize: 20,
+  });
+  return result.data.map((producto) => ({ id: producto.id, label: producto.descripcion }));
+}

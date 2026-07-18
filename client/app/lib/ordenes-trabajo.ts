@@ -138,6 +138,17 @@ export async function iniciarOrdenTrabajo(id: number): Promise<OrdenTrabajoListI
   return handleJsonResponse(res, 'No se pudo iniciar la orden de trabajo');
 }
 
+// Decimal-backed fields serialize as JSON strings (like Producto.precio*) —
+// UI must Number(...) before arithmetic/formatting.
+export interface OrdenTrabajoProductoLinea {
+  id: number;
+  producto: { id: number; descripcion: string };
+  cantidad: string;
+  precioUnitario: string;
+  precioTotal: string;
+  updatedAt: string;
+}
+
 export interface OrdenTrabajoDetalle {
   id: number;
   estado: Estado;
@@ -147,7 +158,17 @@ export interface OrdenTrabajoDetalle {
   proximoServiceFecha: string | null;
   proximoServiceKm: number | null;
   fechaFinalizacion: string | null;
+  productos: OrdenTrabajoProductoLinea[];
   updatedAt: string;
+}
+
+export interface AddOrdenTrabajoProductoPayload {
+  productoId: number;
+  cantidad: number;
+}
+
+export interface UpdateOrdenTrabajoProductoPayload {
+  cantidad: number;
 }
 
 export interface UpdateOrdenTrabajoDetallePayload {
@@ -177,6 +198,59 @@ export async function updateOrdenTrabajoDetalle(
     body: JSON.stringify(data),
   });
   return handleJsonResponse(res, 'No se pudo actualizar el detalle de la orden de trabajo');
+}
+
+export async function addOrdenTrabajoDetalleProducto(
+  ordenId: number,
+  detalleId: number,
+  data: AddOrdenTrabajoProductoPayload,
+): Promise<OrdenTrabajoProductoLinea> {
+  const res = await fetch(
+    `${API_BASE_URL}/ordenes-trabajo/${ordenId}/detalles/${detalleId}/productos`,
+    {
+      method: 'POST',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+  return handleJsonResponse(res, 'No se pudo agregar el producto al detalle');
+}
+
+export async function updateOrdenTrabajoDetalleProducto(
+  ordenId: number,
+  detalleId: number,
+  lineaId: number,
+  data: UpdateOrdenTrabajoProductoPayload,
+): Promise<OrdenTrabajoProductoLinea> {
+  const res = await fetch(
+    `${API_BASE_URL}/ordenes-trabajo/${ordenId}/detalles/${detalleId}/productos/${lineaId}`,
+    {
+      method: 'PATCH',
+      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    },
+  );
+  return handleJsonResponse(res, 'No se pudo actualizar el producto del detalle');
+}
+
+// DELETE returns 204 (no body) — don't run handleJsonResponse (it calls
+// res.json() and would throw on an empty body).
+export async function removeOrdenTrabajoDetalleProducto(
+  ordenId: number,
+  detalleId: number,
+  lineaId: number,
+): Promise<void> {
+  const res = await fetch(
+    `${API_BASE_URL}/ordenes-trabajo/${ordenId}/detalles/${detalleId}/productos/${lineaId}`,
+    { method: 'DELETE', headers: { ...getAuthHeader() } },
+  );
+  if (!res.ok) {
+    const message = await res
+      .json()
+      .then((body) => body?.message)
+      .catch(() => undefined);
+    throw new Error(message || 'No se pudo eliminar el producto del detalle');
+  }
 }
 
 /**
