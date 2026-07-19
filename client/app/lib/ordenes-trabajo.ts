@@ -319,3 +319,31 @@ export async function getOrdenesTrabajoPanel(params: GetPanelParams): Promise<Pa
   });
   return handleJsonResponse(res, 'No se pudo obtener el panel de trabajo');
 }
+
+// --- Per-mechanic open-workload section -----------------------------------
+// Types below are duplicated from the server's response shape (see
+// ordenes-trabajo.service.ts's `panelMecanicos()`) — same standing
+// "change one, change the other" convention as PanelResponse above.
+
+export interface MecanicoWorkload {
+  mecanicoId: number;
+  nombre: string | null;
+  apellido: string | null;
+  username: string;
+  count: number;
+  percentage: number;
+}
+
+export interface PanelMecanicosResponse {
+  mecanicos: MecanicoWorkload[];
+  meta: { totalOrdenes: number };
+}
+
+// No params — the endpoint is an always-unfiltered global snapshot (D1),
+// unlike getOrdenesTrabajoPanel(params: GetPanelParams).
+export async function getPanelMecanicos(): Promise<PanelMecanicosResponse> {
+  const res = await fetch(`${API_BASE_URL}/ordenes-trabajo/panel/mecanicos`, {
+    headers: { ...getAuthHeader() },
+  });
+  return handleJsonResponse(res, 'No se pudo obtener la carga por mecánico');
+}

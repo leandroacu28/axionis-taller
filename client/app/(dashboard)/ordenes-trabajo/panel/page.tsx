@@ -1,7 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getOrdenesTrabajoPanel, type PanelResponse } from '../../../lib/ordenes-trabajo';
+import {
+  getOrdenesTrabajoPanel,
+  getPanelMecanicos,
+  type MecanicoWorkload,
+  type PanelResponse,
+} from '../../../lib/ordenes-trabajo';
 import { listUsers, type UserListItem } from '../../../lib/users';
 import PanelStats from './PanelStats';
 import PanelFilters, {
@@ -11,6 +16,7 @@ import PanelFilters, {
   type PrioridadFilter,
 } from './PanelFilters';
 import KanbanBoard from './KanbanBoard';
+import MecanicosWorkload from './MecanicosWorkload';
 
 // Browser-local yyyy-mm-dd formatting (no UTC conversion) — "today" is a
 // client concept per ADR-3, resolved from the operator's own calendar date.
@@ -71,6 +77,13 @@ export default function PanelTrabajoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Independent from result/loading/error above (design.md §2.3) — the
+  // per-mechanic workload section has its own fetch lifecycle, decoupled
+  // from the filter-driven panel fetch.
+  const [mecanicosWorkload, setMecanicosWorkload] = useState<MecanicoWorkload[] | null>(null);
+  const [workloadLoading, setWorkloadLoading] = useState(true);
+  const [workloadError, setWorkloadError] = useState('');
+
   // Mecánico options for the filter bar — fetched once on mount, same pool
   // and pattern as the list page (tasks.md 8.1).
   useEffect(() => {
@@ -112,6 +125,30 @@ export default function PanelTrabajoPage() {
     loadPanel();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estado, mecanicoId, prioridad, datePreset, customDesde, customHasta]);
+
+  const loadWorkload = async () => {
+    setWorkloadLoading(true);
+    setWorkloadError('');
+    try {
+      const res = await getPanelMecanicos();
+      setMecanicosWorkload(res.mecanicos);
+    } catch (err) {
+      setWorkloadError(err instanceof Error ? err.message : 'No se pudo conectar con el servidor.');
+    } finally {
+      setWorkloadLoading(false);
+    }
+  };
+
+  // Fetch ONCE on mount. This section is filter-INDEPENDENT (D1): its deps
+  // array is intentionally EMPTY. Do NOT add estado/mecanicoId/prioridad/
+  // date deps here — unlike the loadPanel() effect above, which IS correctly
+  // keyed on every filter. Adding filter deps would (a) re-shape a section
+  // that must stay global, and (b) waste a request returning identical data.
+  // See design.md ADR-5.
+  useEffect(() => {
+    loadWorkload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div>
@@ -165,6 +202,34 @@ export default function PanelTrabajoPage() {
         </div>
       ) : (
         <KanbanBoard data={result.data} meta={result.meta} />
+      )}
+
+      {/* Per-mechanic open-workload — independent of the filter bar (D1). */}
+      {workloadLoading ? (
+        <div className="mt-8 flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white p-8 text-sm text-stone-500 shadow-sm">
+          <span
+            className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-rose-500"
+            aria-hidden="true"
+          />
+          Cargando carga por mecánico...
+        </div>
+      ) : workloadError ? (
+        <div className="mt-8 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <span>{workloadError}</span>
+          <button
+            type="button"
+            onClick={loadWorkload}
+            className="shrink-0 font-medium text-red-700 underline hover:text-red-800"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : mecanicosWorkload && mecanicosWorkload.length > 0 ? (
+        <MecanicosWorkload mecanicos={mecanicosWorkload} />
+      ) : (
+        <div className="mt-8 rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
+          No hay mecánicos activos para mostrar.
+        </div>
       )}
     </div>
   );
