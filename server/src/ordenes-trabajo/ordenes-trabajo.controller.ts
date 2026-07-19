@@ -42,6 +42,15 @@ export class OrdenesTrabajoController {
     return this.ordenesTrabajoService.panel(query);
   }
 
+  // Two-segment literal route, no params — an always-unfiltered global
+  // snapshot (design.md §1.1/§1.2/ADR-1). Placed next to `panel` purely for
+  // readability; it cannot collide with `:id` regardless of order (single-
+  // segment param route can never match a two-segment request).
+  @Get('panel/mecanicos')
+  async panelMecanicos() {
+    return this.ordenesTrabajoService.panelMecanicos();
+  }
+
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.ordenesTrabajoService.findOne(id);

@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Estado, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrdenTrabajoDto } from './dto/create-orden-trabajo.dto';
 import { UpdateOrdenTrabajoDto } from './dto/update-orden-trabajo.dto';
@@ -127,6 +127,19 @@ function buildOrdenTrabajoWhere(filter: OrdenTrabajoFilter): {
 // tells the operator to narrow the window. A single constant, trivially
 // tunable later.
 const PANEL_ORDENES_CAP = 500;
+
+// Live-open predicate for the mecánicos workload `groupBy` and its shop-wide
+// total (panelMecanicos(), design.md §1.4). `activo: true` in that query is
+// the ORDER's soft-delete flag (live orders only) — distinct from the
+// User's `activo` used to build the active-mechanics pool below.
+const OPEN_ESTADOS: Estado[] = ['pendiente', 'en_proceso'];
+
+// Mirrors (but does not import/share with) the client's `mecanicoLabel()` —
+// used only for the service-layer sort tiebreak in panelMecanicos() (D7,
+// design.md §1.4/§1.6).
+function labelFor(m: { nombre: string | null; apellido: string | null; username: string }): string {
+  return `${m.nombre ?? ''} ${m.apellido ?? ''}`.trim() || m.username;
+}
 
 // Converts a yyyy-mm-dd window to a UTC half-open interval [gte, lt) on
 // fechaIngreso. fechaIngreso is stored via `new Date('yyyy-mm-dd')`, which is
@@ -375,6 +388,74 @@ export class OrdenesTrabajoService {
       data: rows.map(mapOrdenTrabajo),
       meta: { total, cap: PANEL_ORDENES_CAP, capped: total > PANEL_ORDENES_CAP },
     };
+  }
+
+  // Aggregated read endpoint for the per-mechanic open-workload section
+  // (design.md §1.4). No filters — always a global, unfiltered snapshot
+  // (ADR-1). Starts from the active-mechanics pool and left-joins the open
+  // order counts onto it, so idle mechanics still get a 0/0% entry (D2).
+  async panelMecanicos() {
+    // (b) Open-order counts per mechanic. `_count: { _all: true }` gives the
+    // per-group total; grouping is over whatever mecanicoIds actually hold
+    // open orders (may include a mechanic later deactivated — see note
+    // below). Extracted to its own typed const — inlining this call directly
+    // inside the `$transaction([...])` array literal below defeats Prisma's
+    // `_count` result-type inference in this Prisma version (widens to
+    // `true | {...}` instead of `{ _all: number }`).
+    const groupByOpenOrders = this.prisma.ordenTrabajo.groupBy({
+      by: ['mecanicoId'],
+      where: { activo: true, estado: { in: OPEN_ESTADOS } },
+      orderBy: { mecanicoId: 'asc' }, // required by Prisma's groupBy typing; final order is re-sorted below
+      _count: { _all: true },
+    });
+
+    // (a)+(b) run together in one $transaction for a consistent
+    // point-in-time snapshot (ADR-2) and to match this module's read
+    // convention (panel()).
+    const [mecanicos, groups] = await this.prisma.$transaction([
+      // (a) Active-mechanics pool — same pool the panel filter uses
+      //     (listUsers({ status: 'activo' })). No `rol` filter (D5).
+      this.prisma.user.findMany({
+        where: { activo: true },
+        select: { id: true, nombre: true, apellido: true, username: true },
+        orderBy: { id: 'asc' }, // deterministic input; final order is set below
+      }),
+      groupByOpenOrders,
+    ]);
+
+    // Map mecanicoId -> open count.
+    const countByMecanico = new Map<number, number>(
+      groups.map((g) => [g.mecanicoId, g._count._all])
+    );
+
+    // Denominator = shop-wide open total = sum of ALL group counts.
+    // Equivalent to count({ where: { activo: true, estado: { in:
+    // OPEN_ESTADOS } } }) — they agree by construction — so it is derived
+    // from the same groupBy rather than issuing a third query (ADR-3). This
+    // deliberately includes orders assigned to a mechanic later deactivated
+    // (excluded from the pool above), so visible cards can sum to less than
+    // this total — expected per the corrected spec (design.md §1.4 note).
+    const totalOrdenes = groups.reduce((sum, g) => sum + g._count._all, 0);
+
+    // Left-join counts onto the active-mechanic pool (zero-fill idle ones),
+    // compute percentage with the zero-denominator guard (D4), then sort.
+    const mecanicosOut = mecanicos
+      .map((m) => {
+        const count = countByMecanico.get(m.id) ?? 0;
+        const percentage = totalOrdenes === 0 ? 0 : Math.round((count / totalOrdenes) * 100);
+        return {
+          mecanicoId: m.id,
+          nombre: m.nombre,
+          apellido: m.apellido,
+          username: m.username,
+          count,
+          percentage,
+        };
+      })
+      // load desc, then resolved display-name asc as the stable tiebreak (D8).
+      .sort((a, b) => b.count - a.count || labelFor(a).localeCompare(labelFor(b), 'es'));
+
+    return { mecanicos: mecanicosOut, meta: { totalOrdenes } };
   }
 
   async findOne(id: number) {
