@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import SearchableSelect from '../vehiculos/SearchableSelect';
 import { clienteSelectConfig, mecanicoSelectConfig } from '../vehiculos/referenceSelectConfigs';
 import TipoServicioMultiSelect from './TipoServicioMultiSelect';
+import VehiculoQuickCreateModal from './VehiculoQuickCreateModal';
 import { listVehicles } from '../../lib/vehicles';
 import { showConfirm, showError } from '../../lib/alerts';
 import type {
@@ -275,6 +276,15 @@ export default function OrdenTrabajoForm({
             onChange={(id) => updateField('vehiculoId', id)}
             search={vehiculoSearch}
             disabled={form.clienteId === ''}
+            createLabel="vehículo"
+            renderQuickCreate={({ open, onClose, onCreated }) => (
+              <VehiculoQuickCreateModal
+                open={open}
+                clienteId={form.clienteId}
+                onClose={onClose}
+                onCreated={onCreated}
+              />
+            )}
           />
         </div>
       </div>

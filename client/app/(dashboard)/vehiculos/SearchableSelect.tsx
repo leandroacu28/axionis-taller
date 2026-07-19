@@ -20,7 +20,7 @@ export interface SearchableSelectProps {
   // `create`/`quickCreate` are a pair: both optional, both present or both
   // absent. When omitted, the "+ Crear" footer and `QuickCreateModal` are
   // not rendered at all (design.md DD3) — used by pickers where inline
-  // creation doesn't make sense (e.g. mecánico, vehículo).
+  // creation doesn't make sense (e.g. mecánico).
   create?: (values: Record<string, string>) => Promise<Option>;
   quickCreate?: {
     title: string;
@@ -30,6 +30,19 @@ export interface SearchableSelectProps {
     successTitle: string;
     successText: string;
   };
+  // `renderQuickCreate`/`createLabel` are the alternative pair for pickers
+  // whose create flow needs more than the generic `QuickCreateModal` can
+  // host (e.g. nested FK `SearchableSelect`s) — used by the Vehículo picker
+  // in `OrdenTrabajoForm.tsx` via `VehiculoQuickCreateModal`. Both optional;
+  // mutually exclusive with `create`/`quickCreate` in practice, but not
+  // enforced at the type level.
+  renderQuickCreate?: (args: {
+    open: boolean;
+    prefillValue: string;
+    onClose: () => void;
+    onCreated: (option: Option) => void;
+  }) => React.ReactNode;
+  createLabel?: string;
   disabled?: boolean;
   autoFocus?: boolean;
 }
@@ -71,6 +84,8 @@ export default function SearchableSelect({
   search,
   create,
   quickCreate,
+  renderQuickCreate,
+  createLabel,
   disabled,
   autoFocus,
 }: SearchableSelectProps) {
@@ -250,13 +265,23 @@ export default function SearchableSelect({
     setQuickCreateOpen(true);
   };
 
+  // Shared "created successfully" path for both quick-create mechanisms:
+  // selects the new option through the same setter an existing-option click
+  // would use, closes the quick-create layer, and closes the panel. Reused
+  // by the generic `quickCreate` submit handler below and by whatever
+  // `renderQuickCreate` node the caller renders (e.g.
+  // `VehiculoQuickCreateModal`), so the resulting label is never stale.
+  const handleCreated = (option: Option) => {
+    onChange(option.id);
+    setSelectedLabel(option.label);
+    setQuickCreateOpen(false);
+    closePanel();
+  };
+
   const handleQuickCreateSubmit = async (values: Record<string, string>) => {
     if (!create || !quickCreate) return;
     const created = await create(values);
-    onChange(created.id);
-    setSelectedLabel(created.label);
-    setQuickCreateOpen(false);
-    closePanel();
+    handleCreated(created);
     showSuccess(quickCreate.successTitle, quickCreate.successText);
   };
 
@@ -337,13 +362,13 @@ export default function SearchableSelect({
                 ))
               )}
             </div>
-            {quickCreate && (
+            {(quickCreate || renderQuickCreate) && (
               <button
                 type="button"
                 onClick={openQuickCreate}
                 className="border-t border-stone-200 px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
               >
-                + Crear {quickCreate.entityLabel}
+                + Crear {quickCreate ? quickCreate.entityLabel : createLabel}
               </button>
             )}
           </div>,
@@ -365,6 +390,17 @@ export default function SearchableSelect({
           }}
         />
       )}
+
+      {renderQuickCreate &&
+        renderQuickCreate({
+          open: quickCreateOpen,
+          prefillValue: searchInput,
+          onClose: () => {
+            setQuickCreateOpen(false);
+            searchInputRef.current?.focus();
+          },
+          onCreated: handleCreated,
+        })}
     </div>
   );
 }

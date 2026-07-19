@@ -1,7 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
+
+// Module-level LIFO stack of open modal tokens, shared across every `Modal`
+// instance mounted in the app. Escape must only close the top-most modal —
+// without this, stacking two `Modal`s (e.g. a "Nueva marca" quick-create
+// opened from inside a "Nuevo vehículo" quick-create) double-closes: a
+// single Escape keypress fires every mounted modal's `document` listener at
+// once, since none of them call `stopPropagation`.
+let openModalStack: string[] = [];
 
 interface ModalProps {
   open: boolean;
@@ -12,11 +20,19 @@ interface ModalProps {
 }
 
 export default function Modal({ open, onClose, title, description, children }: ModalProps) {
+  const token = useId();
+
   useEffect(() => {
     if (!open) return;
 
+    openModalStack.push(token);
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Escape') return;
+      // Only the top-most modal answers Escape; a modal stacked above this
+      // one (opened later) owns the keypress instead.
+      const isTopMost = openModalStack[openModalStack.length - 1] === token;
+      if (isTopMost) onClose();
     };
     document.addEventListener('keydown', handleKeyDown);
 
@@ -28,8 +44,12 @@ export default function Modal({ open, onClose, title, description, children }: M
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = previousOverflow;
+      // Remove by value, not by assuming this token is last — a lower layer
+      // can close out of order, and the stack must stay consistent for
+      // whichever modal(s) remain open.
+      openModalStack = openModalStack.filter((t) => t !== token);
     };
-  }, [open, onClose]);
+  }, [open, onClose, token]);
 
   if (!open || typeof document === 'undefined') return null;
 

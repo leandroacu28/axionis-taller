@@ -1,0 +1,22 @@
+change: orden-trabajo-vehiculo-quick-create
+created: 2026-07-18
+artifact_store: openspec
+execution_mode: interactive
+delivery_strategy: ask-on-risk
+phases:
+  proposal:
+    status: done
+  spec:
+    status: done
+  design:
+    status: done
+  tasks:
+    status: done
+  apply:
+    status: done
+    note: "Phases 1-4 done (Modal.tsx LIFO Escape stack, SearchableSelect renderQuickCreate/createLabel, VehiculoQuickCreateModal, OrdenTrabajoForm wiring). Phase 5 (9 manual browser-verification tasks) intentionally left unchecked — no browser automation available in this environment."
+  verify:
+    status: done
+    note: "PASS WITH WARNINGS. 6/11 spec requirements verified PASS via static code read + independent npm run build (0 type errors, 0 lint errors). 5/11 requirements (affordance visibility, nested marca/color create, 3-layer Escape cascade, auto-select post-create, editar dirty-tracking) marked NO-VERIFICABLE-ESTATICAMENTE, pending a human browser session. 0 CRITICAL, 0 WARNING, 2 SUGGESTION findings. See verify-report.md."
+  archive:
+    status: not-started
