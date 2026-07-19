@@ -58,7 +58,6 @@ function KanbanCard({ orden }: { orden: OrdenTrabajoListItem }) {
         <p>
           <span className="font-medium text-stone-800">Vehículo:</span> {orden.vehiculo.marca.marca}{' '}
           {orden.vehiculo.marca.modelo}
-          {orden.vehiculo.patente ? ` (${orden.vehiculo.patente})` : ''}
         </p>
         <p>
           <span className="font-medium text-stone-800">Mecánico:</span> {mecanicoLabel(orden.mecanico)}
