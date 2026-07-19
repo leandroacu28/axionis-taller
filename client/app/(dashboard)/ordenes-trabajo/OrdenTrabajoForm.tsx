@@ -153,7 +153,10 @@ export default function OrdenTrabajoForm({
       clienteId: form.clienteId,
       search: term || undefined,
     });
-    return result.data.map((v) => ({ id: v.id, label: `${v.marca.marca} ${v.marca.modelo}` }));
+    return result.data.map((v) => ({
+      id: v.id,
+      label: `${v.marca.marca} ${v.marca.modelo}${v.patente ? ` (${v.patente})` : ''}`,
+    }));
   };
 
   const handleCancel = async () => {

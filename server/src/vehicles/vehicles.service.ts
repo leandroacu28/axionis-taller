@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Workbook } from 'exceljs';
 import { PrismaService } from '../prisma/prisma.service';
@@ -6,10 +6,13 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { ListVehiclesQueryDto, VehicleStatusFilter } from './dto/list-vehicles-query.dto';
 
+const DUPLICATE_PATENTE_ERROR = 'La patente ya está registrada.';
+
 const VEHICLE_SELECT = {
   id: true,
   anio: true,
   kilometraje: true,
+  patente: true,
   activo: true,
   createdAt: true,
   updatedAt: true,
@@ -49,6 +52,7 @@ function buildVehicleWhere(filter: VehicleFilter): {
             { marca: { marca: { contains: term } } },
             { marca: { modelo: { contains: term } } },
             { cliente: { razonSocial: { contains: term } } },
+            { patente: { contains: term } },
           ],
         }
       : {}),
@@ -73,6 +77,7 @@ function buildVehicleWhere(filter: VehicleFilter): {
 type VehicleRow = {
   anio: number;
   kilometraje: number;
+  patente: string | null;
   activo: boolean;
   marca: { marca: string; modelo: string };
   color: { descripcion: string };
@@ -84,6 +89,7 @@ async function buildVehiclesExcel(rows: VehicleRow[]): Promise<Buffer> {
   const sheet = workbook.addWorksheet('Vehículos');
   sheet.columns = [
     { header: 'Marca', key: 'marca', width: 28 },
+    { header: 'Patente', key: 'patente', width: 14 },
     { header: 'Color', key: 'color', width: 16 },
     { header: 'Año', key: 'anio', width: 10 },
     { header: 'Kilometraje', key: 'kilometraje', width: 16 },
@@ -99,6 +105,7 @@ async function buildVehiclesExcel(rows: VehicleRow[]): Promise<Buffer> {
   for (const r of rows) {
     sheet.addRow({
       marca: `${r.marca.marca} ${r.marca.modelo}`,
+      patente: r.patente ?? '',
       color: r.color.descripcion,
       anio: r.anio,
       kilometraje: r.kilometraje,
@@ -108,6 +115,29 @@ async function buildVehiclesExcel(rows: VehicleRow[]): Promise<Buffer> {
   }
   const arrayBuffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(arrayBuffer);
+}
+
+// Empty optional fields come in as '' from the form — normalize to NULL
+// (rather than leaving '') both to keep the data clean and so patente's
+// unique index doesn't treat two blank vehicles as duplicates of each
+// other. Using `null` (not `undefined`) matters for update(): Prisma skips
+// `undefined` fields entirely but writes `null`, so this is also how a user
+// clears a previously-set value. Mirrors customers.service.ts's
+// normalizeOptional.
+function normalizeOptional(value?: string): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+// Same target-aware pattern as customers.service.ts's uniqueTargetIncludes.
+function uniqueTargetIncludes(error: unknown, field: string): boolean {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
+    return false;
+  }
+  const target = error.meta?.target;
+  if (typeof target === 'string') return target.includes(field);
+  if (Array.isArray(target)) return target.some((t) => String(t).includes(field));
+  return false;
 }
 
 @Injectable()
@@ -180,18 +210,38 @@ export class VehiclesService {
   async create(dto: CreateVehicleDto, creadoPorId: number) {
     await this.assertReferencesExist(dto);
 
-    return this.prisma.vehiculo.create({
-      data: {
-        marcaId: dto.marcaId,
-        colorId: dto.colorId,
-        anio: dto.anio,
-        kilometraje: dto.kilometraje,
-        clienteId: dto.clienteId,
-        activo: dto.activo,
-        creadoPorId,
-      },
-      select: VEHICLE_SELECT,
-    });
+    const patente = normalizeOptional(dto.patente);
+    if (patente !== null) {
+      const existingPatente = await this.prisma.vehiculo.findUnique({ where: { patente } });
+      if (existingPatente) {
+        throw new ConflictException(DUPLICATE_PATENTE_ERROR);
+      }
+    }
+
+    try {
+      return await this.prisma.vehiculo.create({
+        data: {
+          marcaId: dto.marcaId,
+          colorId: dto.colorId,
+          anio: dto.anio,
+          kilometraje: dto.kilometraje,
+          patente,
+          clienteId: dto.clienteId,
+          activo: dto.activo,
+          creadoPorId,
+        },
+        select: VEHICLE_SELECT,
+      });
+    } catch (error) {
+      // The findUnique check above isn't atomic with this create — two
+      // concurrent requests for the same plate can both pass it. The DB's
+      // unique constraint is the real backstop (same TOCTOU-safe pattern as
+      // customers.service.ts's identificacion/razonSocial checks).
+      if (uniqueTargetIncludes(error, 'patente')) {
+        throw new ConflictException(DUPLICATE_PATENTE_ERROR);
+      }
+      throw error;
+    }
   }
 
   // Like Cliente and TipoServicio, Vehiculo has an actualizadoPor relation —
@@ -204,18 +254,41 @@ export class VehiclesService {
 
     await this.assertReferencesExist(dto);
 
-    return this.prisma.vehiculo.update({
-      where: { id },
-      data: {
-        marcaId: dto.marcaId,
-        colorId: dto.colorId,
-        anio: dto.anio,
-        kilometraje: dto.kilometraje,
-        clienteId: dto.clienteId,
-        activo: dto.activo,
-        actualizadoPorId,
-      },
-      select: VEHICLE_SELECT,
-    });
+    const patente = normalizeOptional(dto.patente);
+    if (patente !== null) {
+      // findFirst can't rely on findUnique's shortcut here — we must allow
+      // the vehicle being edited to keep its own value while still
+      // rejecting a value owned by any other vehicle.
+      const patenteOwner = await this.prisma.vehiculo.findFirst({
+        where: { patente, NOT: { id } },
+      });
+      if (patenteOwner) {
+        throw new ConflictException(DUPLICATE_PATENTE_ERROR);
+      }
+    }
+
+    try {
+      return await this.prisma.vehiculo.update({
+        where: { id },
+        data: {
+          marcaId: dto.marcaId,
+          colorId: dto.colorId,
+          anio: dto.anio,
+          kilometraje: dto.kilometraje,
+          patente,
+          clienteId: dto.clienteId,
+          activo: dto.activo,
+          actualizadoPorId,
+        },
+        select: VEHICLE_SELECT,
+      });
+    } catch (error) {
+      // Same TOCTOU backstop as create() — the pre-check above isn't
+      // atomic with this update.
+      if (uniqueTargetIncludes(error, 'patente')) {
+        throw new ConflictException(DUPLICATE_PATENTE_ERROR);
+      }
+      throw error;
+    }
   }
 }

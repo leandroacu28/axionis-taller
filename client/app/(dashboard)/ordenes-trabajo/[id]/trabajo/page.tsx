@@ -1156,7 +1156,8 @@ export default function TrabajoOrdenTrabajoPage({ params }: { params: { id: stri
           </h1>
           {!loading && orden && (
             <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-              {orden.cliente.razonSocial} · {orden.vehiculo.marca.marca} {orden.vehiculo.marca.modelo} ·{' '}
+              {orden.cliente.razonSocial} · {orden.vehiculo.marca.marca} {orden.vehiculo.marca.modelo}
+              {orden.vehiculo.patente ? ` (${orden.vehiculo.patente})` : ''} ·{' '}
               <span className="font-medium text-stone-600 dark:text-stone-300">
                 {orden.vehiculo.kilometraje.toLocaleString('es-AR')} km actuales
               </span>

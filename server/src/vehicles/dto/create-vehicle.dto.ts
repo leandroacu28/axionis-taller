@@ -1,4 +1,6 @@
-import { IsBoolean, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsBoolean, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsPatenteValida } from './patente.validator';
 
 const MAX_ANIO = new Date().getFullYear() + 1;
 
@@ -20,6 +22,14 @@ export class CreateVehicleDto {
 
   @IsInt()
   clienteId: number;
+
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toUpperCase().replace(/\s+/g, '') : value,
+  )
+  @IsOptional()
+  @IsString()
+  @IsPatenteValida()
+  patente?: string;
 
   @IsOptional()
   @IsBoolean()

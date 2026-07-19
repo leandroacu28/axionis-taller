@@ -115,6 +115,7 @@ model Vehiculo {
   color            Color          @relation(fields: [colorId], references: [id])
   anio             Int
   kilometraje      Int
+  patente          String?        @unique
   clienteId        Int
   cliente          Cliente        @relation(fields: [clienteId], references: [id])
   activo           Boolean        @default(true)

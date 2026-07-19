@@ -17,9 +17,17 @@ interface ModalProps {
   title: string;
   description?: string;
   children: React.ReactNode;
+  maxWidth?: string;
 }
 
-export default function Modal({ open, onClose, title, description, children }: ModalProps) {
+export default function Modal({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  maxWidth = 'max-w-md',
+}: ModalProps) {
   const token = useId();
 
   useEffect(() => {
@@ -64,7 +72,7 @@ export default function Modal({ open, onClose, title, description, children }: M
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-y-auto rounded-xl border border-stone-200 bg-white p-6 shadow-lg"
+        className={`relative flex max-h-[90vh] w-full ${maxWidth} flex-col overflow-y-auto rounded-xl border border-stone-200 bg-white p-6 shadow-lg`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>

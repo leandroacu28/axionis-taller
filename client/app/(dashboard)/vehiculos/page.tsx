@@ -184,6 +184,7 @@ export default function VehiculosPage() {
         colorId: vehicle.color.id,
         anio: vehicle.anio,
         kilometraje: vehicle.kilometraje,
+        patente: vehicle.patente ?? undefined,
         clienteId: vehicle.cliente.id,
         activo: activating,
       });
@@ -316,7 +317,7 @@ export default function VehiculosPage() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Marca, modelo o cliente..."
+                  placeholder="Patente, marca, modelo o cliente..."
                   className="w-full rounded-lg border border-stone-200 bg-white py-2 pl-9 pr-3 text-sm text-stone-900 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
                 />
               </div>
@@ -421,6 +422,9 @@ export default function VehiculosPage() {
                   Marca
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
+                  Patente
+                </th>
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Color
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
@@ -449,6 +453,7 @@ export default function VehiculosPage() {
                   <td className="px-4 py-3 text-center text-sm font-medium text-stone-800">
                     {vehicle.marca.marca} {vehicle.marca.modelo}
                   </td>
+                  <td className="px-4 py-3 text-center text-sm text-stone-600">{vehicle.patente ?? '—'}</td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">{vehicle.color.descripcion}</td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">{vehicle.anio}</td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">

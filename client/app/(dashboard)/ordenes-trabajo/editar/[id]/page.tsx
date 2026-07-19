@@ -34,7 +34,7 @@ export default function EditarOrdenTrabajoPage({ params }: { params: { id: strin
           clienteId: orden.cliente.id,
           clienteLabel: orden.cliente.razonSocial,
           vehiculoId: orden.vehiculo.id,
-          vehiculoLabel: `${orden.vehiculo.marca.marca} ${orden.vehiculo.marca.modelo}`,
+          vehiculoLabel: `${orden.vehiculo.marca.marca} ${orden.vehiculo.marca.modelo}${orden.vehiculo.patente ? ` (${orden.vehiculo.patente})` : ''}`,
           mecanicoId: orden.mecanico.id,
           mecanicoLabel: nombreMecanico || orden.mecanico.username,
           tiposServicio: orden.tiposServicio.map((t) => ({ id: t.id, label: t.descripcion })),

@@ -26,6 +26,7 @@ interface FormState {
   colorId: number | '';
   anio: number | '';
   kilometraje: number | '';
+  patente: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -33,6 +34,7 @@ const EMPTY_FORM: FormState = {
   colorId: '',
   anio: '',
   kilometraje: '',
+  patente: '',
 };
 
 /**
@@ -105,11 +107,12 @@ export default function VehiculoQuickCreateModal({
         colorId: Number(form.colorId),
         anio: anioNum,
         kilometraje: kilometrajeNum,
+        patente: form.patente || undefined,
         clienteId,
       });
       const option: Option = {
         id: vehicle.id,
-        label: `${vehicle.marca.marca} ${vehicle.marca.modelo}`,
+        label: `${vehicle.marca.marca} ${vehicle.marca.modelo}${vehicle.patente ? ` (${vehicle.patente})` : ''}`,
       };
       onCreated(option);
       showSuccess('Vehículo creado', 'El vehículo ha sido creado correctamente.');
@@ -124,7 +127,7 @@ export default function VehiculoQuickCreateModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Nuevo vehículo">
+    <Modal open={open} onClose={onClose} title="Nuevo vehículo" maxWidth="max-w-lg">
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -186,6 +189,21 @@ export default function VehiculoQuickCreateModal({
               className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
             />
           </div>
+        </div>
+
+        <div className="space-y-1">
+          <label htmlFor="vehiculo-quick-create-patente" className="text-sm font-medium text-stone-700">
+            Patente
+          </label>
+          <input
+            id="vehiculo-quick-create-patente"
+            type="text"
+            value={form.patente}
+            onChange={(e) => updateField('patente', e.target.value.toUpperCase())}
+            placeholder="Ej: ABC123 o AB123CD"
+            maxLength={7}
+            className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 uppercase focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+          />
         </div>
 
         <div className="flex gap-3">

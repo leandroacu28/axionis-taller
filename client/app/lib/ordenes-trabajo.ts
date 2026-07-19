@@ -18,7 +18,12 @@ export interface OrdenTrabajoListItem {
   createdAt: string;
   updatedAt: string;
   cliente: { id: number; razonSocial: string };
-  vehiculo: { id: number; kilometraje: number; marca: { marca: string; modelo: string } };
+  vehiculo: {
+    id: number;
+    kilometraje: number;
+    patente: string | null;
+    marca: { marca: string; modelo: string };
+  };
   mecanico: { id: number; username: string; nombre: string | null; apellido: string | null };
   tiposServicio: { id: number; descripcion: string }[];
   creadoPor: { id: number; username: string } | null;

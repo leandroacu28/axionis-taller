@@ -5,6 +5,7 @@ export interface VehicleListItem {
   id: number;
   anio: number;
   kilometraje: number;
+  patente: string | null;
   activo: boolean;
   createdAt: string;
   updatedAt: string;
@@ -20,6 +21,7 @@ export interface CreateVehiclePayload {
   colorId: number;
   anio: number;
   kilometraje: number;
+  patente?: string;
   clienteId: number;
   activo?: boolean;
 }
@@ -29,6 +31,7 @@ export interface UpdateVehiclePayload {
   colorId: number;
   anio: number;
   kilometraje: number;
+  patente?: string;
   clienteId: number;
   activo?: boolean;
 }

@@ -473,6 +473,11 @@ export default function OrdenesTrabajoPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
+  // Summary pills above the filters mirror whichever estado palette the
+  // currently active view uses, so they never clash with the badges shown
+  // below (tabla and tarjetas each keep their own distinct palette).
+  const estadoBadgeClasses = viewMode === 'tabla' ? ESTADO_BADGE_CLASSES_TABLA : ESTADO_BADGE_CLASSES;
+
   // Debounce: the input updates `searchInput` instantly for responsive
   // typing, but the value actually sent to the backend (`search`) only
   // updates 350ms after the user stops typing.
@@ -567,16 +572,18 @@ export default function OrdenesTrabajoPage() {
 
       <div className="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+          {/* Same palette as the currently active view (tabla vs tarjetas), so
+              the summary pills never clash with the estado badges below them. */}
+          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estadoBadgeClasses.pendiente}`}>
             {counts.pendiente} pendiente{counts.pendiente === 1 ? '' : 's'}
           </span>
-          <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-700">
+          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estadoBadgeClasses.en_proceso}`}>
             {counts.en_proceso} en proceso
           </span>
-          <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estadoBadgeClasses.terminado}`}>
             {counts.terminado} terminada{counts.terminado === 1 ? '' : 's'}
           </span>
-          <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
+          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estadoBadgeClasses.cancelado}`}>
             {counts.cancelado} cancelada{counts.cancelado === 1 ? '' : 's'}
           </span>
         </div>
@@ -787,6 +794,7 @@ export default function OrdenesTrabajoPage() {
                   <p>
                     <span className="font-medium text-stone-800">Vehículo:</span> {orden.vehiculo.marca.marca}{' '}
                     {orden.vehiculo.marca.modelo}
+                    {orden.vehiculo.patente ? ` (${orden.vehiculo.patente})` : ''}
                   </p>
                   <p>
                     <span className="font-medium text-stone-800">Mecánico:</span> {mecanicoLabel(orden.mecanico)}
@@ -863,7 +871,12 @@ export default function OrdenesTrabajoPage() {
             </thead>
             <tbody className="divide-y divide-stone-100">
               {ordenes.map((orden) => (
-                <tr key={orden.id} className="hover:bg-stone-50/60">
+                <tr
+                  key={orden.id}
+                  className={
+                    orden.activo ? 'hover:bg-stone-50/60' : 'bg-rose-100/70 hover:bg-rose-100'
+                  }
+                >
                   <td className="px-4 py-3 text-center text-sm font-medium text-stone-800">
                     {orden.numero ?? '—'}
                   </td>
@@ -871,7 +884,8 @@ export default function OrdenesTrabajoPage() {
                     {orden.cliente.razonSocial}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    {orden.vehiculo.marca.marca} {orden.vehiculo.marca.modelo} -{' '}
+                    {orden.vehiculo.marca.marca} {orden.vehiculo.marca.modelo}
+                    {orden.vehiculo.patente ? ` (${orden.vehiculo.patente})` : ''} -{' '}
                     {orden.vehiculo.kilometraje.toLocaleString('es-AR')} km
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">

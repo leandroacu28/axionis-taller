@@ -16,6 +16,7 @@ interface FormState {
   colorId: number | '';
   anio: number | '';
   kilometraje: number | '';
+  patente: string;
   clienteId: number | '';
 }
 
@@ -24,6 +25,7 @@ const EMPTY_FORM: FormState = {
   colorId: '',
   anio: '',
   kilometraje: '',
+  patente: '',
   clienteId: '',
 };
 
@@ -58,6 +60,7 @@ export default function NuevoVehiculoPage() {
         colorId: Number(form.colorId),
         anio: Number(form.anio),
         kilometraje: Number(form.kilometraje),
+        patente: form.patente || undefined,
         clienteId: Number(form.clienteId),
       };
       await createVehicle(payload);
@@ -88,14 +91,39 @@ export default function NuevoVehiculoPage() {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <SearchableSelect
+              label="Cliente"
+              placeholder="Seleccioná un cliente"
+              value={form.clienteId}
+              onChange={(id) => updateField('clienteId', id)}
+              autoFocus
+              {...clienteSelectConfig}
+            />
+
+            <div className="space-y-1">
+              <label htmlFor="patente" className="text-sm font-medium text-stone-700">
+                Patente
+              </label>
+              <input
+                id="patente"
+                type="text"
+                value={form.patente}
+                onChange={(e) => updateField('patente', e.target.value.toUpperCase())}
+                placeholder="Ej: ABC123 o AB123CD"
+                maxLength={7}
+                className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-stone-900 uppercase focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
+              />
+            </div>
+
+            <SearchableSelect
               label="Marca"
               placeholder="Seleccioná una marca"
               value={form.marcaId}
               onChange={(id) => updateField('marcaId', id)}
-              autoFocus
               {...marcaSelectConfig}
             />
+          </div>
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <SearchableSelect
               label="Color"
               placeholder="Seleccioná un color"
@@ -104,16 +132,6 @@ export default function NuevoVehiculoPage() {
               {...colorSelectConfig}
             />
 
-            <SearchableSelect
-              label="Cliente"
-              placeholder="Seleccioná un cliente"
-              value={form.clienteId}
-              onChange={(id) => updateField('clienteId', id)}
-              {...clienteSelectConfig}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1">
               <label htmlFor="anio" className="text-sm font-medium text-stone-700">
                 Año <span className="text-rose-500">*</span>

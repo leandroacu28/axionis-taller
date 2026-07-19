@@ -33,7 +33,12 @@ const ORDEN_TRABAJO_SELECT = {
   updatedAt: true,
   cliente: { select: { id: true, razonSocial: true } },
   vehiculo: {
-    select: { id: true, kilometraje: true, marca: { select: { marca: true, modelo: true } } },
+    select: {
+      id: true,
+      kilometraje: true,
+      patente: true,
+      marca: { select: { marca: true, modelo: true } },
+    },
   },
   mecanico: { select: { id: true, username: true, nombre: true, apellido: true } },
   detalles: { select: { tipoServicio: { select: { id: true, descripcion: true } } } },
@@ -75,11 +80,13 @@ export type OrdenTrabajoFilter = {
 };
 
 // Mirrors etiquetas.service.ts's buildEtiquetaWhere. Returns both
-// `searchWhere` (estado/activo-independent, used for the per-estado counts)
-// and `where` (combined filter for the paginated list). `status` (activo),
-// `mecanicoId`, and `prioridad` are all additive on top of `estado` —
-// orthogonal filters, not a replacement for the estado lifecycle filter, and
-// (like `status`) excluded from the per-estado counts.
+// `searchWhere` (estado/activo-independent, used as the base for the
+// per-estado counts) and `where` (combined filter for the paginated list).
+// `status` (activo), `mecanicoId`, and `prioridad` are all additive on top of
+// `estado` — orthogonal filters, not a replacement for the estado lifecycle
+// filter, and (like `mecanicoId`/`prioridad`) ignored by the per-estado
+// counts regardless of the chosen `status` — those always force `activo:
+// true` (see countsWhere in findAll) so deactivated orders never inflate them.
 function buildOrdenTrabajoWhere(filter: OrdenTrabajoFilter): {
   searchWhere: Prisma.OrdenTrabajoWhereInput;
   where: Prisma.OrdenTrabajoWhereInput;
@@ -274,6 +281,11 @@ export class OrdenesTrabajoService {
     const pageSize = query.pageSize ?? 10;
     const { searchWhere, where } = buildOrdenTrabajoWhere(query);
 
+    // Per-estado counts always exclude inactive (soft-deactivated) orders,
+    // regardless of the `status` filter — they're a summary of live work,
+    // not a mirror of the current activo filter.
+    const countsWhere: Prisma.OrdenTrabajoWhereInput = { ...searchWhere, activo: true };
+
     const [data, total, pendienteCount, enProcesoCount, terminadoCount, canceladoCount] =
       await this.prisma.$transaction([
         this.prisma.ordenTrabajo.findMany({
@@ -286,10 +298,10 @@ export class OrdenesTrabajoService {
         this.prisma.ordenTrabajo.count({ where }),
         // Per-estado counts ignore the estado filter (but honor search) —
         // reframes the catalog activeCount pattern per D2.
-        this.prisma.ordenTrabajo.count({ where: { ...searchWhere, estado: 'pendiente' } }),
-        this.prisma.ordenTrabajo.count({ where: { ...searchWhere, estado: 'en_proceso' } }),
-        this.prisma.ordenTrabajo.count({ where: { ...searchWhere, estado: 'terminado' } }),
-        this.prisma.ordenTrabajo.count({ where: { ...searchWhere, estado: 'cancelado' } }),
+        this.prisma.ordenTrabajo.count({ where: { ...countsWhere, estado: 'pendiente' } }),
+        this.prisma.ordenTrabajo.count({ where: { ...countsWhere, estado: 'en_proceso' } }),
+        this.prisma.ordenTrabajo.count({ where: { ...countsWhere, estado: 'terminado' } }),
+        this.prisma.ordenTrabajo.count({ where: { ...countsWhere, estado: 'cancelado' } }),
       ]);
 
     return {
