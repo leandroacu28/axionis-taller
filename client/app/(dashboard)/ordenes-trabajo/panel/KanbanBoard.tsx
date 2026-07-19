@@ -37,6 +37,31 @@ function mecanicoLabel(mecanico: OrdenTrabajoListItem['mecanico']): string {
 // still renders with a zero count.
 const COLUMNS: Estado[] = ['pendiente', 'en_proceso', 'terminado', 'cancelado'];
 
+// Same palette as the list page's tarjetas-view ESTADO_BADGE_CLASSES, so a
+// column's color reads consistently with the estado badges elsewhere in the app.
+const COLUMN_CLASSES: Record<Estado, { container: string; title: string; count: string }> = {
+  pendiente: {
+    container: 'border-amber-200 bg-amber-50',
+    title: 'text-amber-800',
+    count: 'bg-amber-100 text-amber-700',
+  },
+  en_proceso: {
+    container: 'border-sky-200 bg-sky-50',
+    title: 'text-sky-800',
+    count: 'bg-sky-100 text-sky-700',
+  },
+  terminado: {
+    container: 'border-green-200 bg-green-50',
+    title: 'text-green-800',
+    count: 'bg-green-100 text-green-700',
+  },
+  cancelado: {
+    container: 'border-red-200 bg-red-50',
+    title: 'text-red-800',
+    count: 'bg-red-100 text-red-700',
+  },
+};
+
 function KanbanCard({ orden }: { orden: OrdenTrabajoListItem }) {
   // Read-only card (D2) — plain markup, no drag handlers of any kind, no
   // drag-and-drop library.
@@ -83,11 +108,12 @@ function KanbanCard({ orden }: { orden: OrdenTrabajoListItem }) {
 }
 
 function KanbanColumn({ estado, ordenes }: { estado: Estado; ordenes: OrdenTrabajoListItem[] }) {
+  const classes = COLUMN_CLASSES[estado];
   return (
-    <div className="flex min-w-[260px] flex-1 flex-col gap-3 rounded-xl border border-stone-200 bg-stone-50 p-3">
+    <div className={`flex min-w-[260px] flex-1 flex-col gap-3 rounded-xl border p-3 ${classes.container}`}>
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-sm font-semibold text-stone-700">{ESTADO_LABELS[estado]}</h3>
-        <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-stone-500 shadow-sm">
+        <h3 className={`text-sm font-semibold ${classes.title}`}>{ESTADO_LABELS[estado]}</h3>
+        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold shadow-sm ${classes.count}`}>
           {ordenes.length}
         </span>
       </div>
