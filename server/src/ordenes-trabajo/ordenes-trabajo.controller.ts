@@ -19,6 +19,7 @@ import { UpdateOrdenTrabajoDetalleDto } from './dto/update-orden-trabajo-detalle
 import { CreateOrdenTrabajoProductoDto } from './dto/create-orden-trabajo-producto.dto';
 import { UpdateOrdenTrabajoProductoDto } from './dto/update-orden-trabajo-producto.dto';
 import { ListOrdenesTrabajoQueryDto } from './dto/list-ordenes-trabajo-query.dto';
+import { PanelOrdenesTrabajoQueryDto } from './dto/panel-ordenes-trabajo-query.dto';
 import { OrdenesTrabajoService } from './ordenes-trabajo.service';
 
 @Controller('ordenes-trabajo')
@@ -29,6 +30,16 @@ export class OrdenesTrabajoController {
   @Get()
   async findAll(@Query() query: ListOrdenesTrabajoQueryDto) {
     return this.ordenesTrabajoService.findAll(query);
+  }
+
+  // Literal route — must precede `:id` (below) or a request to
+  // /ordenes-trabajo/panel would be captured by findOne, handing the literal
+  // string "panel" to ParseIntPipe and producing a broken 400. Same
+  // literal-before-param discipline as service-types.controller.ts's
+  // @Get('export') before its own `:id`.
+  @Get('panel')
+  async panel(@Query() query: PanelOrdenesTrabajoQueryDto) {
+    return this.ordenesTrabajoService.panel(query);
   }
 
   @Get(':id')

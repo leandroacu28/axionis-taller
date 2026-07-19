@@ -17,6 +17,7 @@ import {
   OrdenTrabajoStatusFilter,
   PrioridadFilter,
 } from './dto/list-ordenes-trabajo-query.dto';
+import { PanelOrdenesTrabajoQueryDto } from './dto/panel-ordenes-trabajo-query.dto';
 
 const ORDEN_TRABAJO_SELECT = {
   id: true,
@@ -109,6 +110,66 @@ function buildOrdenTrabajoWhere(filter: OrdenTrabajoFilter): {
 
   return { searchWhere, where };
 }
+
+// Hard cap on the Panel's unpaginated board (resolves D5). A workshop's live
+// (activo: true) order set within any sane window — even "mes" — is
+// realistically dozens to low hundreds. 500 gives generous headroom while
+// bounding worst-case payload (~500 × ~1 KB card JSON ≈ 0.5 MB) and DOM cost
+// (4 columns × up to 500 cards). Crossing 500 signals a filter that is too
+// broad rather than a real operational need; the "showing first N" banner
+// tells the operator to narrow the window. A single constant, trivially
+// tunable later.
+const PANEL_ORDENES_CAP = 500;
+
+// Converts a yyyy-mm-dd window to a UTC half-open interval [gte, lt) on
+// fechaIngreso. fechaIngreso is stored via `new Date('yyyy-mm-dd')`, which is
+// midnight UTC of the picked calendar date — so boundaries MUST be built in
+// UTC (never local server time, never setDate/getDate) to line up exactly
+// with how the rows were stored, regardless of the server's timezone.
+function dateRange(desde: string, hasta: string): { gte: Date; lt: Date } {
+  const gte = new Date(`${desde}T00:00:00.000Z`); // inclusive lower bound, UTC midnight
+  const lt = new Date(`${hasta}T00:00:00.000Z`);
+  lt.setUTCDate(lt.getUTCDate() + 1); // exclusive upper bound = (hasta + 1 day) UTC midnight
+  return { gte, lt };
+}
+
+// Panel-local where builder (ADR-1: NOT a reuse/extension of
+// buildOrdenTrabajoWhere above). The Panel where has different invariants —
+// it always forces activo: true (board = live work only, D4 convention), adds
+// a fechaIngreso range, and carries no search/status. Overloading the shared
+// list builder with these would couple two endpoints with divergent
+// invariants for zero benefit.
+function buildPanelOrdenTrabajoWhere(
+  query: PanelOrdenesTrabajoQueryDto
+): Prisma.OrdenTrabajoWhereInput {
+  const estado = query.estado ?? 'all';
+  const prioridad = query.prioridad ?? 'all';
+
+  return {
+    activo: true,
+    ...(estado !== 'all' ? { estado } : {}),
+    ...(prioridad !== 'all' ? { prioridad } : {}),
+    ...(query.mecanicoId ? { mecanicoId: query.mecanicoId } : {}),
+    ...(query.fechaDesde && query.fechaHasta
+      ? { fechaIngreso: dateRange(query.fechaDesde, query.fechaHasta) }
+      : {}),
+  };
+}
+
+// Response shape for panel() (design.md §1.3). `data`'s element type is left
+// to inference (like findAll()'s own `data.map(mapOrdenTrabajo)` — no
+// parallel OrdenTrabajoListItem type exists on the backend) rather than
+// re-declared here. No `cancelado` figure in `stats` — the five figures are
+// fixed by the proposal (del día, pendiente, en proceso, terminado, mecánicos
+// trabajando); the `cancelado` board column is populated purely client-side
+// from `data`.
+type PanelStats = {
+  delDia: number;
+  pendiente: number;
+  enProceso: number;
+  terminado: number;
+  mecanicosTrabajando: number;
+};
 
 @Injectable()
 export class OrdenesTrabajoService {
@@ -240,6 +301,67 @@ export class OrdenesTrabajoService {
         terminado: terminadoCount,
         cancelado: canceladoCount,
       },
+    };
+  }
+
+  // Aggregated read endpoint for the Panel de Trabajo (Kanban) view. Returns
+  // stats + mecanicosTrabajando + the (capped) filtered order set in one
+  // $transaction so they can never disagree (D3) — see design.md §1.5/§1.6.
+  async panel(query: PanelOrdenesTrabajoQueryDto) {
+    // Cross-field date validation (mirrors how the service already raises
+    // BadRequestException for business rules rather than a custom
+    // class-validator): both-or-neither, and fechaDesde <= fechaHasta.
+    const hasDesde = query.fechaDesde != null;
+    const hasHasta = query.fechaHasta != null;
+    if (hasDesde !== hasHasta) {
+      throw new BadRequestException(
+        'Debe indicar tanto fechaDesde como fechaHasta, o ninguno de los dos.'
+      );
+    }
+    if (hasDesde && hasHasta && query.fechaDesde! > query.fechaHasta!) {
+      throw new BadRequestException('fechaDesde no puede ser posterior a fechaHasta.');
+    }
+
+    const where = buildPanelOrdenTrabajoWhere(query);
+    // No `hoy` → delDia is cheaply 0 via an impossible predicate, rather than
+    // a conditional branch inside the $transaction array.
+    const delDiaWhere: Prisma.OrdenTrabajoWhereInput = query.hoy
+      ? { AND: [where, { fechaIngreso: dateRange(query.hoy, query.hoy) }] }
+      : { id: -1 };
+
+    const [rows, total, delDiaCount, pendienteCount, enProcesoCount, terminadoCount, mecanicos] =
+      await this.prisma.$transaction([
+        this.prisma.ordenTrabajo.findMany({
+          where,
+          select: ORDEN_TRABAJO_SELECT,
+          orderBy: [{ prioridad: 'desc' }, { fechaIngreso: 'desc' }, { id: 'desc' }],
+          take: PANEL_ORDENES_CAP,
+        }),
+        this.prisma.ordenTrabajo.count({ where }),
+        this.prisma.ordenTrabajo.count({ where: delDiaWhere }),
+        // AND-composition (not spread) — see buildPanelOrdenTrabajoWhere/
+        // design.md §1.5: a user's own estado filter must not be overridable
+        // by these sub-counts (D3).
+        this.prisma.ordenTrabajo.count({ where: { AND: [where, { estado: 'pendiente' }] } }),
+        this.prisma.ordenTrabajo.count({ where: { AND: [where, { estado: 'en_proceso' }] } }),
+        this.prisma.ordenTrabajo.count({ where: { AND: [where, { estado: 'terminado' }] } }),
+        this.prisma.ordenTrabajo.groupBy({
+          by: ['mecanicoId'],
+          where: { AND: [where, { estado: 'en_proceso' }] },
+          orderBy: { mecanicoId: 'asc' },
+        }),
+      ]);
+
+    return {
+      stats: {
+        delDia: delDiaCount,
+        pendiente: pendienteCount,
+        enProceso: enProcesoCount,
+        terminado: terminadoCount,
+        mecanicosTrabajando: mecanicos.length,
+      },
+      data: rows.map(mapOrdenTrabajo),
+      meta: { total, cap: PANEL_ORDENES_CAP, capped: total > PANEL_ORDENES_CAP },
     };
   }
 
