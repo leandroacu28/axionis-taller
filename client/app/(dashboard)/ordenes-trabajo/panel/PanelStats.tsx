@@ -15,18 +15,38 @@ interface Figure {
   label: string;
   value: number;
   badgeClass: string;
+  unit: (value: number) => string;
 }
+
+const ordenesUnit = (value: number) => (value === 1 ? 'orden' : 'órdenes');
+const mecanicosUnit = (value: number) => (value === 1 ? 'mecánico' : 'mecánicos');
 
 export default function PanelStats({ stats }: { stats: PanelStatsData }) {
   const figures: Figure[] = [
-    { label: 'Del día', value: stats.delDia, badgeClass: 'bg-stone-100 text-stone-700' },
-    { label: 'Pendientes', value: stats.pendiente, badgeClass: ESTADO_BADGE_CLASSES.pendiente },
-    { label: 'En proceso', value: stats.enProceso, badgeClass: ESTADO_BADGE_CLASSES.en_proceso },
-    { label: 'Terminados', value: stats.terminado, badgeClass: ESTADO_BADGE_CLASSES.terminado },
+    { label: 'Del día', value: stats.delDia, badgeClass: 'bg-stone-100 text-stone-700', unit: ordenesUnit },
+    {
+      label: 'Pendientes',
+      value: stats.pendiente,
+      badgeClass: ESTADO_BADGE_CLASSES.pendiente,
+      unit: ordenesUnit,
+    },
+    {
+      label: 'En proceso',
+      value: stats.enProceso,
+      badgeClass: ESTADO_BADGE_CLASSES.en_proceso,
+      unit: ordenesUnit,
+    },
+    {
+      label: 'Terminados',
+      value: stats.terminado,
+      badgeClass: ESTADO_BADGE_CLASSES.terminado,
+      unit: ordenesUnit,
+    },
     {
       label: 'Mecánicos trabajando',
       value: stats.mecanicosTrabajando,
       badgeClass: 'bg-purple-100 text-purple-700',
+      unit: mecanicosUnit,
     },
   ];
 
@@ -40,7 +60,10 @@ export default function PanelStats({ stats }: { stats: PanelStatsData }) {
           <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${figure.badgeClass}`}>
             {figure.label}
           </span>
-          <span className="text-2xl font-bold text-stone-900">{figure.value}</span>
+          <span className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold text-stone-900">{figure.value}</span>
+            <span className="text-xs text-stone-500">{figure.unit(figure.value)}</span>
+          </span>
         </div>
       ))}
     </div>
