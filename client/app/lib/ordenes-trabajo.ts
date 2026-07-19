@@ -270,3 +270,47 @@ export async function searchTiposServicio(term: string): Promise<{ id: number; l
   });
   return result.data.map((tipo) => ({ id: tipo.id, label: tipo.descripcion }));
 }
+
+// --- Panel de Trabajo (Kanban) --------------------------------------------
+// Types below are duplicated from the server's response shape (see
+// ordenes-trabajo.service.ts's `panel()`/`PanelStats`) — no shared type
+// package exists in this codebase (standing "change one, change the other"
+// convention, same as every other DTO/response pair here).
+
+export interface PanelStats {
+  delDia: number;
+  pendiente: number;
+  enProceso: number;
+  terminado: number;
+  mecanicosTrabajando: number;
+}
+
+export interface PanelResponse {
+  stats: PanelStats;
+  data: OrdenTrabajoListItem[];
+  meta: { total: number; cap: number; capped: boolean };
+}
+
+export interface GetPanelParams {
+  estado?: 'all' | Estado;
+  mecanicoId?: number;
+  prioridad?: 'all' | Prioridad;
+  fechaDesde?: string; // yyyy-mm-dd
+  fechaHasta?: string; // yyyy-mm-dd
+  hoy?: string; // yyyy-mm-dd, browser-local today
+}
+
+export async function getOrdenesTrabajoPanel(params: GetPanelParams): Promise<PanelResponse> {
+  const query = new URLSearchParams();
+  if (params.estado) query.set('estado', params.estado);
+  if (params.mecanicoId) query.set('mecanicoId', String(params.mecanicoId));
+  if (params.prioridad) query.set('prioridad', params.prioridad);
+  if (params.fechaDesde) query.set('fechaDesde', params.fechaDesde);
+  if (params.fechaHasta) query.set('fechaHasta', params.fechaHasta);
+  if (params.hoy) query.set('hoy', params.hoy);
+
+  const res = await fetch(`${API_BASE_URL}/ordenes-trabajo/panel?${query.toString()}`, {
+    headers: { ...getAuthHeader() },
+  });
+  return handleJsonResponse(res, 'No se pudo obtener el panel de trabajo');
+}

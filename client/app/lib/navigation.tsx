@@ -98,4 +98,13 @@ export const navigation: NavigationItem[] = [
     // wrench icon as a neutral placeholder until one is added.
     icon: <img src="/icons/tipos-servicio.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
+  {
+    name: 'Panel de Trabajo',
+    href: '/ordenes-trabajo/panel',
+    id: 'ordenes-trabajo-panel',
+    // Cosmetic placeholder — no dedicated icon exists yet; reuses the same
+    // "tipos-servicio" wrench as "Órdenes de Trabajo" so the two órdenes
+    // surfaces read as a pair (same convention/comment as that entry).
+    icon: <img src="/icons/tipos-servicio.svg" alt="" className="h-5 w-5" aria-hidden />,
+  },
 ];
