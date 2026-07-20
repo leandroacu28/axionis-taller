@@ -77,15 +77,11 @@ function KanbanCard({
     <div className="flex flex-col gap-2 rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-bold text-stone-800">{orden.numero ?? '—'}</span>
-        {/* Right cluster: existing prioridad badge + the actions trigger. */}
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${PRIORIDAD_BADGE_CLASSES[orden.prioridad]}`}
-          >
-            {PRIORIDAD_LABELS[orden.prioridad]}
-          </span>
-          <KanbanCardActions orden={orden} onActionSuccess={onActionSuccess} />
-        </div>
+        <span
+          className={`rounded-full px-2 py-0.5 text-xs font-medium ${PRIORIDAD_BADGE_CLASSES[orden.prioridad]}`}
+        >
+          {PRIORIDAD_LABELS[orden.prioridad]}
+        </span>
       </div>
 
       <div className="space-y-0.5 text-xs text-stone-600">
@@ -115,6 +111,8 @@ function KanbanCard({
       )}
 
       <p className="text-xs text-stone-400">Ingreso: {formatFecha(orden.fechaIngreso)}</p>
+
+      <KanbanCardActions orden={orden} onActionSuccess={onActionSuccess} />
     </div>
   );
 }

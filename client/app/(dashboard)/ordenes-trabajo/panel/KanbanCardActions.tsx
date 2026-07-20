@@ -2,48 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import {
-  iniciarOrdenTrabajo,
-  updateOrdenTrabajo,
-  type OrdenTrabajoListItem,
-} from '../../../lib/ordenes-trabajo';
+import { useState } from 'react';
+import { iniciarOrdenTrabajo, updateOrdenTrabajo, type OrdenTrabajoListItem } from '../../../lib/ordenes-trabajo';
 import { showConfirm, showError, showSuccess } from '../../../lib/alerts';
-
-// Re-declared per D3/D7 — mirrors the list page's AccionesMenu icons rather than
-// importing them (an import would couple the panel to page.tsx and risk touching
-// the untouched list page). Same "duplicate small presentation helpers per
-// surface" convention already used in KanbanBoard.tsx.
-function EllipsisIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 shrink-0" aria-hidden="true">
-      <circle cx="5" cy="12" r="1.75" />
-      <circle cx="12" cy="12" r="1.75" />
-      <circle cx="19" cy="12" r="1.75" />
-    </svg>
-  );
-}
-
-function NoSymbolIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-    </svg>
-  );
-}
-
-// Same flip estimate as the list page's AccionesMenu — the panel menu also has a
-// max of three items (Editar, Iniciar, Desactivar), so the estimate carries over
-// unchanged. On a cancelado card the menu is shorter (two items); over-estimating
-// only makes the upward-flip trigger slightly earlier, which is safe.
-const ACCIONES_MENU_HEIGHT_ESTIMATE = 130;
-
-interface MenuPosition {
-  top: number;
-  left: number;
-  openUpward: boolean;
-}
 
 export default function KanbanCardActions({
   orden,
@@ -53,44 +14,14 @@ export default function KanbanCardActions({
   onActionSuccess: () => void;
 }) {
   const router = useRouter();
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<MenuPosition | null>(null);
   const [iniciando, setIniciando] = useState(false);
   const [desactivando, setDesactivando] = useState(false);
-
-  const closeMenu = () => {
-    setOpen(false);
-    setMenuPos(null);
-  };
-
-  const openMenu = () => {
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const openUpward = window.innerHeight - rect.bottom < ACCIONES_MENU_HEIGHT_ESTIMATE;
-    setMenuPos({
-      top: openUpward ? rect.top - 4 : rect.bottom + 4,
-      left: rect.right,
-      openUpward,
-    });
-    setOpen(true);
-  };
-
-  const handleTriggerClick = () => {
-    if (open) {
-      closeMenu();
-      return;
-    }
-    openMenu();
-  };
 
   // Mirrors IniciarTrabajoButton.handleClick (page.tsx). The API call fires
   // only on a pendiente order; every other visible estado (en_proceso,
   // terminado) is pure navigation — a second iniciar would 409. No
   // confirmation dialog in either branch.
   const handleIniciar = async () => {
-    closeMenu();
     if (orden.estado === 'pendiente') {
       setIniciando(true);
       try {
@@ -114,7 +45,6 @@ export default function KanbanCardActions({
   // entirely from the card's own OrdenTrabajoListItem — no getOrdenTrabajo(id)
   // prefetch required (ADR-C).
   const handleDesactivar = async () => {
-    closeMenu();
     const confirmed = await showConfirm({
       title: 'Desactivar orden',
       text: `¿Seguro que querés desactivar la orden ${orden.numero ?? ''}?`,
@@ -150,84 +80,34 @@ export default function KanbanCardActions({
     }
   };
 
-  useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      const insideTrigger = triggerRef.current?.contains(target) ?? false;
-      const insideMenu = menuRef.current?.contains(target) ?? false;
-      if (!insideTrigger && !insideMenu) closeMenu();
-    };
-    const handleReposition = () => closeMenu();
-    document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('resize', handleReposition);
-    window.addEventListener('scroll', handleReposition, true); // capture: closes on ANY scroll, incl. the board's overflow-x-auto
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('resize', handleReposition);
-      window.removeEventListener('scroll', handleReposition, true);
-    };
-  }, [open]);
-
   return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={handleTriggerClick}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Acciones"
-        className="rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-700"
+    <div className="flex flex-wrap gap-1.5 border-t border-stone-100 pt-2">
+      {orden.estado !== 'cancelado' && (
+        <button
+          type="button"
+          onClick={handleIniciar}
+          disabled={iniciando}
+          className="flex-1 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-2 py-1.5 text-center text-xs font-semibold text-white shadow-sm transition-all hover:from-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {iniciando ? 'Iniciando...' : 'Iniciar trabajo'}
+        </button>
+      )}
+
+      <Link
+        href={`/ordenes-trabajo/editar/${orden.id}`}
+        className="flex-1 rounded-lg border border-stone-200 px-2 py-1.5 text-center text-xs font-semibold text-stone-600 transition-all hover:bg-stone-50"
       >
-        <EllipsisIcon />
+        Editar
+      </Link>
+
+      <button
+        type="button"
+        onClick={handleDesactivar}
+        disabled={desactivando}
+        className="flex-1 rounded-lg border border-rose-200 px-2 py-1.5 text-center text-xs font-semibold text-rose-600 transition-all hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {desactivando ? 'Desactivando...' : 'Desactivar'}
       </button>
-
-      {open &&
-        menuPos &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            ref={menuRef}
-            style={{
-              position: 'fixed',
-              top: menuPos.top,
-              left: menuPos.left,
-              transform: `translateX(-100%)${menuPos.openUpward ? ' translateY(-100%)' : ''}`,
-            }}
-            className="z-50 w-44 overflow-hidden rounded-lg border border-stone-200 bg-white py-1 shadow-lg"
-          >
-            <Link
-              href={`/ordenes-trabajo/editar/${orden.id}`}
-              onClick={closeMenu}
-              className="block px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50"
-            >
-              Editar
-            </Link>
-
-            {orden.estado !== 'cancelado' && (
-              <button
-                type="button"
-                onClick={handleIniciar}
-                disabled={iniciando}
-                className="block w-full px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {iniciando ? 'Iniciando...' : 'Iniciar trabajo'}
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={handleDesactivar}
-              disabled={desactivando}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <NoSymbolIcon />
-              Desactivar
-            </button>
-          </div>,
-          document.body,
-        )}
-    </>
+    </div>
   );
 }
