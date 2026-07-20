@@ -1,0 +1,97 @@
+# Exploration: Visual/aesthetic redesign of `/ordenes-trabajo/panel`
+
+## Current State
+
+### Component-by-component inventory
+
+**`page.tsx`** (container, 236 lines) — owns all filter state, two independent fetch lifecycles (`loadPanel` keyed on 6 filter deps, `loadWorkload` fetched once on mount per ADR-5). Renders, top to bottom: `<h1>`/`<p>` header → `PanelStats` (only when `result` is truthy) → `PanelFilters` (always) → loading/error/empty/`KanbanBoard` (ternary chain) → loading/error/empty/`MecanicosWorkload` (second ternary chain). Loading state: spinning `border-t-rose-500` ring inside a `rounded-xl border border-stone-200 bg-white p-8 shadow-sm` box. Error state: `rounded-lg border border-red-200 bg-red-50` banner with an underlined "Reintentar" link. Empty state: same `rounded-xl` box as loading, just static text. All three states are duplicated near-verbatim twice (once for panel, once for workload) — no shared `<StateBox>` component exists.
+
+**`PanelStats.tsx`** (74 lines) — 5 hardcoded "figure" tiles (`Total de órdenes`, `Pendientes`, `En proceso`, `Terminados`, `Mecánicos trabajando`), each a `flex flex-col gap-2 rounded-xl border border-stone-200 bg-white p-4 shadow-sm` box containing a colored pill badge (`ESTADO_BADGE_CLASSES`, e.g. `bg-amber-100 text-amber-700`) above a `text-2xl font-bold` number + small unit label. Grid: `grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5`. **No `dark:` classes anywhere in this file.**
+
+**`PanelFilters.tsx`** (159 lines) — single `rounded-xl border border-stone-200 bg-white p-4 shadow-sm` container, `flex flex-wrap items-end gap-4` row of up to 6 controls (Mecánico `w-48`, Estado `w-40`, Prioridad `w-40`, Fecha `w-40`, + conditional Desde/Hasta `w-40` each when `datePreset === 'personalizado'`). Shared `selectClassName` = `w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100`. **No `dark:` classes anywhere in this file.**
+
+**`KanbanBoard.tsx`** (178 lines) — fixed 4-column order (`pendiente, en_proceso, terminado, cancelado`), each column colored via `COLUMN_CLASSES` (e.g. pendiente: `border-amber-200 bg-amber-50` container, `text-amber-800` title, `bg-amber-100 text-amber-700` count pill). Board wrapper: `<div className="flex gap-4 overflow-x-auto pb-2">`. Each column: `flex min-w-[260px] flex-1 flex-col gap-3 rounded-xl border p-3 ${classes.container}`. Each card: `flex flex-col gap-2 rounded-lg border border-stone-200 bg-white p-3 shadow-sm` with numero+priority badge row, 3 lines of cliente/vehículo/mecánico, optional `tiposServicio` pill wrap, `Ingreso: dd/mm/yyyy` footer, then `KanbanCardActions`. **No `dark:` classes anywhere in this file.**
+
+**`KanbanCardActions.tsx`** (114 lines) — 3 inline buttons in `<div className="flex flex-wrap gap-1.5 border-t border-stone-100 pt-2">`: "Iniciar trabajo" (conditional on `estado !== 'cancelado'`, gradient `from-rose-500 to-red-500`, `flex-1`), "Editar" (`Link`, outlined `border-stone-200`, `flex-1`), "Desactivar" (outlined `border-rose-200 text-rose-600`, `flex-1`). Each button: `rounded-lg px-2 py-1.5 text-xs font-semibold`. **No `dark:` classes anywhere in this file.**
+
+**`MecanicosWorkload.tsx`** (47 lines) — `<section className="mt-8">` with `<h2 className="text-sm font-semibold text-stone-700 dark:text-stone-200">` (the ONLY `dark:` class in the whole panel feature besides `page.tsx`'s header). Grid: `grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4`. Each card: same `rounded-xl border border-stone-200 bg-white p-4 shadow-sm` shell as `PanelStats`, containing a truncated mechanic name, a `text-2xl font-bold` count, and a horizontal load bar (`h-1.5 w-full overflow-hidden rounded-full bg-stone-100` track, `bg-gradient-to-r from-rose-500 to-red-400` fill sized via inline `style={{ width: '${m.percentage}%' }}`) plus a `${percentage}% de la carga` caption.
+
+### Concrete mobile/responsive pain points (verified against the exact classes above)
+
+1. **Kanban horizontal scroll has zero visual affordance.** `overflow-x-auto` with no scroll-snap, no fade/gradient edge mask, and no scrollbar styling. On a narrow phone (`app`'s `<main className="flex-1 p-4 md:p-6">` gives ~343px of content width at a 375px viewport after 16px×2 padding), the first `min-w-[260px]` column plus the 16px `gap-4` leaves only ~67px of the next column peeking into view — just enough of a sliver to look like a rendering glitch or cut-off layout rather than an intentional "swipe for more" pattern. There's no chevron, dot indicator, or partial-card affordance signaling more content exists.
+2. **Stats row wraps 5 items into an awkward 2-2-1 split on mobile.** `grid-cols-2` at the base breakpoint puts 5 tiles as rows of [2, 2, 1] — the last tile ("Mecánicos trabajando") sits alone, stretching to fill the full row width while its siblings are half-width, which reads as visually unbalanced/unfinished rather than deliberate.
+3. **Three inline action buttons likely wrap inside a `min-w-[260px]` column.** Buttons are `flex-1` inside `flex flex-wrap gap-1.5`, each `text-xs px-2 py-1.5`. "Iniciar trabajo" (13 chars) at `text-xs font-semibold` needs roughly 70-80px of rendered text width alone; three such buttons plus horizontal padding and two `gap-1.5` (6px) gaps inside a ~236px content area (260px column minus `p-3`'s 24px) is tight even on desktop and will very likely force a 2+1 wrap on any column narrower than ~260px (which mobile forces, since it can't grow past `min-w`). No `min-w-0` truncation/ellipsis fallback exists for button labels if the wrap gets worse.
+4. **Filter bar has up to 6 fixed-width controls (`w-48`/`w-40` × 4) in a single `flex flex-wrap` row** — on mobile this wraps into an uneven multi-row stack rather than a clean full-width vertical stack (no `sm:flex-row` responsive direction switch like `clientes/page.tsx`'s filter panel uses via `flex flex-col gap-4 sm:flex-row sm:items-end`). The panel's filter bar is comparatively less mobile-adapted than the equivalent block on the Clientes list page.
+5. **Workload grid (`grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`)** has the same "N items don't divide evenly into 2 columns" risk as the stats row whenever the active-mechanic count is odd, though it's less severe since names are more homogeneous than the stats row's mixed label lengths.
+
+## Established Design Language (survey of `clientes/page.tsx`, `(dashboard)/layout.tsx`, `tailwind.config.ts`, `theme.tsx`, `ThemeToggle.tsx`)
+
+- **Color palette**: `rose`/`red` gradient (`from-rose-500 to-red-500` or `to-red-400`) is the confirmed primary accent, used for primary CTAs (`Nuevo cliente`, `Iniciar trabajo`), focus rings (`focus:ring-rose-100 focus:border-rose-400`), and the workload bar fill. Semantic status colors are `stone` (neutral/base), `amber` (pendiente/warning), `sky` (en_proceso/info), `green` (terminado/success, also used for the "Exportar" button and active-status badges), `red`/`rose` (cancelado/danger), `purple` (mecánicos trabajando badge), `blue`/`orange` (prioridad normal/alta). This is a fairly conventional Tailwind default-palette usage, not a custom brand palette.
+- **Border/shadow/radius conventions — confirmed consistent**: `rounded-xl` for section-level containers (stat tiles, filter bars, table wrappers, panel boxes), `rounded-lg` for buttons/inputs/individual cards, `border border-stone-200` universally for card/section borders, `shadow-sm` on most cards, `shadow-lg shadow-{color}-500/30` (colored shadow glow) specifically on primary gradient CTA buttons (seen on both Clientes' "Nuevo cliente" and the panel's "Iniciar trabajo" — though the panel's card-level button omits the glow shadow, using only `shadow-sm`, presumably to avoid overpowering a dense card).
+- **Typography scale**: `text-2xl font-bold` for page `<h1>` and for stat-tile big numbers; `text-sm font-semibold`/`font-medium` for section subheadings and control labels; `text-xs font-semibold`/`font-medium` for badges, pills, and small buttons; `text-sm text-stone-500` for secondary/muted body copy. Consistent and already reads as a coherent, restrained scale — not chaotic.
+- **Dark mode reality — structurally real but content-wise partial.** `client/app/lib/theme.tsx` implements a real `ThemeProvider`/`useTheme` context that toggles the `dark` class on `<html>` and persists to `localStorage`; `client/app/components/ThemeToggle.tsx` is a working sun/moon toggle button wired into `Header.tsx`; `tailwind.config.ts` has `darkMode: 'class'`. So the *mechanism* is fully functional app-wide. However, **`dark:` class coverage on individual pages is shallow**: `clientes/page.tsx` (570 lines) has exactly 2 `dark:` occurrences — both on the `<h1>`/`<p>` page header — with zero dark styling on its table, filter inputs, badges, buttons, or pagination controls. The panel feature is the same or worse: `page.tsx` has 2 (header only), `MecanicosWorkload.tsx` has 1 (the `<h2>` only), and `PanelStats.tsx`, `PanelFilters.tsx`, `KanbanBoard.tsx`, `KanbanCardActions.tsx` have **zero** `dark:` classes. Toggling dark mode today on the panel would leave the entire content area rendering light-mode-only cards on the dashboard's dark shell (`bg-gray-950` from `(dashboard)/layout.tsx`) — a visibly broken/unfinished dark experience, not a deliberately-scoped omission.
+- **Icon convention**: no icon library — every SVG is hand-declared inline per file as a small local function component (e.g. `PencilIcon`, `SearchIcon`, `ExcelFileIcon` in `clientes/page.tsx`; sun/moon paths inline in `ThemeToggle.tsx`). This is a consistent house convention across the app, not an ad hoc one-off.
+
+## Design Tokens / Config
+
+- `client/tailwind.config.ts` extends only two custom `keyframes`/`animation` pairs (`slide-in-left`, `slide-in-right`, both `0.8s ease-out`) — no custom color palette, spacing scale, shadow scale, or font-family extension. Everything else is stock Tailwind v3 utilities used ad hoc per component. **There is no existing design-token layer to lean on** beyond those two unused-in-panel keyframes — a "premium" redesign inherits zero pre-built primitives beyond Tailwind's defaults and the two conventions above (rose/red accent, `rounded-xl`+`border-stone-200`+`shadow-sm` card shell).
+- `darkMode: 'class'` confirmed (supports the `ThemeProvider` mechanism above).
+
+## Dependencies (`client/package.json`)
+
+Runtime deps: `next@^14.2.18`, `react@^18.3.1`, `react-dom@^18.3.1`, `sweetalert2` + `sweetalert2-react-content` (used for confirm/success/error dialogs, e.g. `KanbanCardActions`'s `showConfirm`). Dev deps: standard Next/TS/ESLint/Prettier/Tailwind toolchain. **No `framer-motion`, `clsx`, `tailwind-merge`, `class-variance-authority`, or any icon package** (`lucide-react`, `heroicons`, etc.) — despite the inline-SVG convention looking hand-copied from Heroicons' stroke paths (`strokeWidth={1.5}`, viewBox `0 0 24 24` matches Heroicons Outline exactly), the package itself was never installed. This confirms the "no new dependency unless justified" pattern is a real, consistently-followed constraint across every prior panel change, not just an assumption.
+
+## Affected Areas (styling-only, per the no-behavior-change constraint)
+
+- `client/app/(dashboard)/ordenes-trabajo/panel/page.tsx` — section spacing/order, loading/error/empty state boxes (currently duplicated 2×, could be unified into one shared presentational helper as part of the polish without touching fetch logic).
+- `client/app/(dashboard)/ordenes-trabajo/panel/PanelStats.tsx` — stat tile visuals, mobile grid wrap behavior.
+- `client/app/(dashboard)/ordenes-trabajo/panel/PanelFilters.tsx` — control layout/spacing, mobile stacking behavior.
+- `client/app/(dashboard)/ordenes-trabajo/panel/KanbanBoard.tsx` — column/card visuals, mobile scroll UX (the single biggest scope-fork surface).
+- `client/app/(dashboard)/ordenes-trabajo/panel/KanbanCardActions.tsx` — button visuals, mobile wrap fix.
+- `client/app/(dashboard)/ordenes-trabajo/panel/MecanicosWorkload.tsx` — card visuals, load-bar styling.
+- Possibly `client/tailwind.config.ts` — only if the proposal chooses the "introduce a small design-token layer" direction (Approach 3 below).
+- Possibly `client/package.json` — only if a redesign direction justifies one narrowly-scoped new dependency; no direction requires this.
+- **Out of scope, confirmed no changes needed**: all `client/app/lib/*.ts` data-fetching modules, all server-side files, `KanbanCardActions.tsx`'s action handlers (`handleIniciar`, `handleDesactivar` logic must stay byte-identical — only their button JSX/classes are in scope).
+
+## Open Questions (for `sdd-propose`)
+
+1. **Scope of "premium"** — (a) refined spacing/typography/shadows/micro-interactions within the EXISTING component structure, vs. (b) more substantial visual restructuring (e.g. Kanban mobile layout change, entrance animations, new visual hierarchy). This is the single biggest fork and should be resolved before design.
+2. **Mobile Kanban strategy** — polish the horizontal-scroll experience (narrower cards, snap points via `scroll-snap-type`, a fade-edge mask, a "N more columns →" affordance) vs. a genuinely different mobile layout (column-switcher tabs, accordion-collapsed columns, or a single filterable list view on mobile only). This is a real UX/interaction decision, not pure styling — recommend surfacing to the user explicitly rather than deciding unilaterally in `sdd-propose`.
+3. **Dark mode** — the app HAS a real, working dark-mode toggle and mechanism, but adoption across pages (including the panel) is currently shallow/inconsistent. Should this redesign (a) extend full `dark:` coverage to the panel, (b) leave dark mode out of scope entirely (matching the panel's current state and most other pages' partial state), or (c) best-effort only on the highest-visibility elements?
+4. **New dependencies** — should stay dependency-free per the established, verified "no new dependency unless justified" pattern, unless a specific, narrow addition is explicitly proposed and justified.
+5. **Icon usage** — does "premium" call for introducing small inline SVG icons (matching the established house convention) into the panel's badges/buttons for visual polish, or should icons stay out of scope given the panel currently has none?
+
+## Approaches
+
+1. **Polish within current structure** — refine spacing, shadows, gradients, hover/focus states, unify the duplicated loading/error/empty-state boxes into one shared presentational component, fix the concrete mobile pain points (stats grid breakpoint tuning, button wrap fix via smaller text/icon-only buttons on narrow columns, filter bar `flex-col`→`sm:flex-row` stacking like `clientes/page.tsx` already does) — all without changing the Kanban's fundamental horizontal-scroll model or introducing new components/dependencies.
+   - Pros: Lowest risk, fastest, zero new dependencies, easiest to review, stays consistent with established project conventions.
+   - Cons: Does not fix the core mobile Kanban usability gap (sliver-of-next-column, no scroll affordance) — only cosmetically improves it; may not fully satisfy "premium" if the user's bar includes a materially better mobile interaction model.
+   - Effort: Low.
+
+2. **Restructure the Kanban for mobile** — keep desktop's 4-column horizontal-scroll layout, but introduce a mobile-specific alternate layout (e.g. a tab/segmented-control column switcher showing one column at a time, or collapsible accordion sections) below a breakpoint, plus the same polish items from Approach 1 elsewhere.
+   - Pros: Directly resolves the most concrete, evidence-backed mobile pain point found in this exploration; likely the most visible "premium" win, especially since the user explicitly called out "both desktop and mobile."
+   - Cons: A real interaction-design decision (Q2) that needs explicit user input before locking. Higher implementation and review surface than Approach 1; touches `KanbanBoard.tsx`'s core layout logic, not just classes.
+   - Effort: Medium.
+
+3. **Introduce a small design-token layer** — extend `tailwind.config.ts` with a few semantic color/shadow/spacing tokens (formalizing the already-consistent rose/stone/`rounded-xl`/`shadow-sm` conventions into named theme extensions) before/while applying Approach 1 or 2's visual changes.
+   - Pros: Gives the redesign a documented, reusable vocabulary; reduces future per-component drift; low risk since it only formalizes patterns already in consistent use.
+   - Cons: Extra abstraction layer for a single-page change; the existing ad hoc utility approach has worked consistently across 5+ pages surveyed, so the token layer's payoff is speculative; adds a config-file diff to review alongside component diffs.
+   - Effort: Low–Medium.
+
+Approaches are not mutually exclusive: 1 is the floor every direction should include; 2 is an additive UX decision layered on top; 3 is an orthogonal infrastructure choice that could wrap either 1 or 2.
+
+## Recommendation
+
+No final decision — reserved for `sdd-propose`. This exploration surfaces Q1/Q2 as the decisions that materially change implementation scope and should be put to the user explicitly (especially Q2, since it is a genuine UX/interaction call, not a styling preference) before `sdd-design` proceeds.
+
+## Risks
+
+- Deciding the Kanban mobile strategy (Q2) without explicit user sign-off risks building the wrong interaction model — a tabs/accordion restructuring is a materially different amount of work and a materially different user experience than scroll-affordance polish, and reversing that decision mid-`sdd-design`/`sdd-apply` would waste a full implementation pass.
+- Dark mode (Q3) is real, working infrastructure that the panel (and most of the app) currently ignores content-wise. If the redesign fixes the panel's `dark:` coverage while sibling pages remain uncovered, the panel becomes visually inconsistent with the rest of the app in the *opposite* direction (over-polished relative to its neighbors) — worth naming as an intentional, scoped tradeoff rather than an oversight.
+- The 3-inline-button wrap risk in `KanbanCardActions.tsx` (pain point 3) was assessed by reading exact class widths and text length, not by rendering in a real browser at a real 375px viewport — recommend a quick manual visual check during `sdd-apply`/`sdd-verify` to confirm the wrap actually occurs before committing to a specific button-layout fix.
+- No automated visual regression or E2E test coverage exists for this page — verification of the redesign will be manual/visual only, same as prior panel changes.
+- Any direction that touches `KanbanCardActions.tsx`'s button markup must be reviewed carefully to guarantee the `handleIniciar`/`handleDesactivar` click handlers, disabled states, and `Link` navigation are preserved byte-for-byte — the constraint is "look different, behave identically."
+
+## Ready for Proposal
+
+Yes, with conditions — the codebase investigation is complete: every panel file's exact current markup and classes are documented, concrete mobile pain points are evidence-backed, and the app's design language is confirmed via direct file reads. The proposal phase MUST resolve Q1 (scope: polish vs. restructure) and Q2 (mobile Kanban strategy) with the user explicitly before `sdd-design` starts. Q3 (dark mode) and Q5 (icons) should also be confirmed but carry lower reversal cost if decided provisionally.
