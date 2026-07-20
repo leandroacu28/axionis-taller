@@ -21,9 +21,12 @@ interface Figure {
 const ordenesUnit = (value: number) => (value === 1 ? 'orden' : 'órdenes');
 const mecanicosUnit = (value: number) => (value === 1 ? 'mecánico' : 'mecánicos');
 
-export default function PanelStats({ stats }: { stats: PanelStatsData }) {
+export default function PanelStats({ stats, total }: { stats: PanelStatsData; total: number }) {
   const figures: Figure[] = [
-    { label: 'Del día', value: stats.delDia, badgeClass: 'bg-stone-100 text-stone-700', unit: ordenesUnit },
+    // Total de órdenes que coinciden con los filtros actuales — reacciona al
+    // filtro de fecha (y al resto de los filtros), a diferencia de "Del día"
+    // que siempre mide el día calendario actual.
+    { label: 'Total de órdenes', value: total, badgeClass: 'bg-stone-100 text-stone-700', unit: ordenesUnit },
     {
       label: 'Pendientes',
       value: stats.pendiente,

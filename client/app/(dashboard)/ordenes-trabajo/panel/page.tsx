@@ -159,7 +159,7 @@ export default function PanelTrabajoPage() {
         </p>
       </div>
 
-      {result && <PanelStats stats={result.stats} />}
+      {result && <PanelStats stats={result.stats} total={result.meta.total} />}
 
       <PanelFilters
         mecanicos={mecanicos}
