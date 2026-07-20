@@ -17,6 +17,7 @@ import PanelFilters, {
 } from './PanelFilters';
 import KanbanBoard from './KanbanBoard';
 import MecanicosWorkload from './MecanicosWorkload';
+import PanelStateBox from './PanelStateBox';
 
 // Browser-local yyyy-mm-dd formatting (no UTC conversion) — "today" is a
 // client concept per ADR-3, resolved from the operator's own calendar date.
@@ -178,58 +179,32 @@ export default function PanelTrabajoPage() {
       />
 
       {loading ? (
-        <div className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white p-8 text-sm text-stone-500 shadow-sm">
-          <span
-            className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-rose-500"
-            aria-hidden="true"
-          />
-          Cargando panel de trabajo...
-        </div>
+        <PanelStateBox variant="loading" message="Cargando panel de trabajo..." className="mt-6" />
       ) : error ? (
-        <div className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          <span>{error}</span>
-          <button
-            type="button"
-            onClick={loadPanel}
-            className="shrink-0 font-medium text-red-700 underline hover:text-red-800"
-          >
-            Reintentar
-          </button>
-        </div>
+        <PanelStateBox variant="error" message={error} onRetry={loadPanel} className="mt-6" />
       ) : !result || result.data.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
-          No se encontraron órdenes con los filtros seleccionados.
-        </div>
+        <PanelStateBox
+          variant="empty"
+          message="No se encontraron órdenes con los filtros seleccionados."
+          className="mt-6"
+        />
       ) : (
         <KanbanBoard data={result.data} meta={result.meta} onActionSuccess={loadPanel} />
       )}
 
-      {/* Per-mechanic open-workload — independent of the filter bar (D1). */}
+      {/* Per-mechanic open-workload — independent of the filter bar (D1). Conditions UNCHANGED. */}
       {workloadLoading ? (
-        <div className="mt-8 flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white p-8 text-sm text-stone-500 shadow-sm">
-          <span
-            className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-rose-500"
-            aria-hidden="true"
-          />
-          Cargando carga por mecánico...
-        </div>
+        <PanelStateBox variant="loading" message="Cargando carga por mecánico..." className="mt-8" />
       ) : workloadError ? (
-        <div className="mt-8 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          <span>{workloadError}</span>
-          <button
-            type="button"
-            onClick={loadWorkload}
-            className="shrink-0 font-medium text-red-700 underline hover:text-red-800"
-          >
-            Reintentar
-          </button>
-        </div>
+        <PanelStateBox variant="error" message={workloadError} onRetry={loadWorkload} className="mt-8" />
       ) : mecanicosWorkload && mecanicosWorkload.length > 0 ? (
         <MecanicosWorkload mecanicos={mecanicosWorkload} />
       ) : (
-        <div className="mt-8 rounded-xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 shadow-sm">
-          No hay mecánicos activos para mostrar.
-        </div>
+        <PanelStateBox
+          variant="empty"
+          message="No hay mecánicos activos para mostrar."
+          className="mt-8"
+        />
       )}
     </div>
   );

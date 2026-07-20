@@ -106,7 +106,7 @@ Switcher" (scaffolding), "Full Dark Mode Coverage, Scoped to the Panel" (baselin
       vehículo/mecánico, tiposServicio chips, Ingreso line, `KanbanCardActions` mount), no logic change to
       `formatFecha`/`mecanicoLabel`. This guards against an accidental behavior/structure change sneaking
       into what is meant to be a pure refactor-then-restyle.
-- [ ] 1.3 Create `client/app/(dashboard)/ordenes-trabajo/panel/PanelStateBox.tsx` (design §2.2, ADR-B) —
+- [x] 1.3 Create `client/app/(dashboard)/ordenes-trabajo/panel/PanelStateBox.tsx` (design §2.2, ADR-B) —
       no `'use client'`, no hooks. Implement the `PanelStateVariant` type (`'loading' | 'error' | 'empty'`)
       and the `PanelStateBoxProps` interface (`variant`, `message`, optional `onRetry` rendered only for
       `'error'`, `className` for caller-supplied top margin) exactly as in design §2.2's code block —
@@ -165,31 +165,31 @@ Independent of Phases 1-2 (can run in parallel) — but note `KanbanColumn.tsx`'
 imports this file, so this file's public props interface (`{ orden, onActionSuccess }`) must stay stable
 regardless of which phase lands first.
 
-- [ ] 3.1 **Guard checkpoint — preserve handlers byte-for-byte (CRITICAL, its own checkable item, design
+- [x] 3.1 **Guard checkpoint — preserve handlers byte-for-byte (CRITICAL, its own checkable item, design
       §6.1).** Before touching any JSX, confirm `handleIniciar` (the `orden.estado === 'pendiente'` API
       branch, `router.push` call, and guard against `cancelado`) and `handleDesactivar` (the `showConfirm`
       → full-object `{ ...fields, activo: false }` PATCH → `showSuccess`/`showError` →
       `onActionSuccess()` flow) remain **byte-for-byte unchanged** — same conditions, same call order, same
       state transitions (`iniciando`/`desactivando`). Only the JSX **returned** by the component (the
       wrapping container and the three buttons/link) changes in this phase.
-- [ ] 3.2 Replace the `flex flex-wrap gap-1.5` container with `grid grid-cols-2 gap-1.5 border-t
+- [x] 3.2 Replace the `flex flex-wrap gap-1.5` container with `grid grid-cols-2 gap-1.5 border-t
       border-stone-100 pt-2 dark:border-stone-800` (design §6.2/§6.3, ADR-C).
-- [ ] 3.3 Iniciar button: `col-span-2` (full top row) when `orden.estado !== 'cancelado'`; add
+- [x] 3.3 Iniciar button: `col-span-2` (full top row) when `orden.estado !== 'cancelado'`; add
       `inline-flex items-center justify-center gap-1.5`; drop `flex-1`; prepend the new `PlayIcon`
       (design §8/§9, path `M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010
       1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z`, `h-4 w-4 shrink-0`). Per ADR-D, the gradient
       (`bg-gradient-to-r from-rose-500 to-red-500 text-white`) gets **no** dark override — leave it as is.
-- [ ] 3.4 Editar link: `inline-flex items-center justify-center gap-1.5`; drop `flex-1`; prepend the
+- [x] 3.4 Editar link: `inline-flex items-center justify-center gap-1.5`; drop `flex-1`; prepend the
       reused `PencilIcon` (exact path from `clientes/page.tsx` lines 22-52, per design §8 table); add the
       dark pair `dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800` (§1.4).
-- [ ] 3.5 Desactivar button: `inline-flex items-center justify-center gap-1.5`; drop `flex-1`; prepend the
+- [x] 3.5 Desactivar button: `inline-flex items-center justify-center gap-1.5`; drop `flex-1`; prepend the
       reused `NoSymbolIcon` (exact path from `clientes/page.tsx`, per design §8 table); add the dark pair
       `dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10` (§1.4).
-- [ ] 3.6 Declare `PlayIcon` locally in this file per the house convention (`viewBox="0 0 24 24"
+- [x] 3.6 Declare `PlayIcon` locally in this file per the house convention (`viewBox="0 0 24 24"
       fill="none" stroke="currentColor" strokeWidth={1.5}`, `h-4 w-4 shrink-0`, `aria-hidden="true"`,
       design §8's example declaration); re-declare `PencilIcon`/`NoSymbolIcon` locally with their exact
       reused `d` paths (no import from `clientes/page.tsx` — per-file icon convention).
-- [ ] 3.7 Confirm the `cancelado` case (Iniciar absent) still renders exactly two grid cells (Editar +
+- [x] 3.7 Confirm the `cancelado` case (Iniciar absent) still renders exactly two grid cells (Editar +
       Desactivar) filling one row with no empty cell/orphan (design §6.2's explicit callout).
 
 ## Phase 4: `page.tsx` Wiring — `PanelStateBox` Adoption
@@ -199,22 +199,22 @@ Change".
 
 Depends on Phase 1 (`PanelStateBox.tsx` must exist first).
 
-- [ ] 4.1 Add `import PanelStateBox from './PanelStateBox';` to `page.tsx` (design §2.3).
-- [ ] 4.2 **Guard checkpoint.** Confirm `toYmd`, `mondayOfWeek`, `firstOfMonth`, `resolveDateWindow`,
+- [x] 4.1 Add `import PanelStateBox from './PanelStateBox';` to `page.tsx` (design §2.3).
+- [x] 4.2 **Guard checkpoint.** Confirm `toYmd`, `mondayOfWeek`, `firstOfMonth`, `resolveDateWindow`,
       every `useState`/`useEffect` hook, `loadPanel`, `loadWorkload`, the mecánicos `listUsers` effect,
       and — critically — **both ternary chains' branch conditions** (`loading ? … : error ? … : !result ||
       result.data.length === 0 ? … : …` and the workload equivalent) are **untouched** (design §2.1). Only
       the JSX *inside* the non-`KanbanBoard`/non-`MecanicosWorkload` branches changes.
-- [ ] 4.3 Replace the panel section's three inline state boxes with `<PanelStateBox variant="loading"
+- [x] 4.3 Replace the panel section's three inline state boxes with `<PanelStateBox variant="loading"
       message="Cargando panel de trabajo..." className="mt-6" />`, `<PanelStateBox variant="error"
       message={error} onRetry={loadPanel} className="mt-6" />`, and `<PanelStateBox variant="empty"
       message="No se encontraron órdenes con los filtros seleccionados." className="mt-6" />` exactly per
       design §2.3.
-- [ ] 4.4 Replace the workload section's three inline state boxes with the `className="mt-8"` equivalents
+- [x] 4.4 Replace the workload section's three inline state boxes with the `className="mt-8"` equivalents
       (`onRetry={loadWorkload}` for the error variant, message "Cargando carga por mecánico...",
       "No hay mecánicos activos para mostrar.") exactly per design §2.3 — leave `PanelStats`'s
       `{result && <PanelStats .../>}` line and the `KanbanBoard`/`MecanicosWorkload` mounts unchanged.
-- [ ] 4.5 Header block and container-level spacing polish (design's "Section spacing/rhythm polish";
+- [x] 4.5 Header block and container-level spacing polish (design's "Section spacing/rhythm polish";
       header's existing `dark:text-stone-50`/`dark:text-stone-400` classes already present per design's
       Environment facts — confirm no regression, no unnecessary rewrite).
 
