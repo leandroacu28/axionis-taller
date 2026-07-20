@@ -201,7 +201,7 @@ export default function PanelTrabajoPage() {
           No se encontraron órdenes con los filtros seleccionados.
         </div>
       ) : (
-        <KanbanBoard data={result.data} meta={result.meta} />
+        <KanbanBoard data={result.data} meta={result.meta} onActionSuccess={loadPanel} />
       )}
 
       {/* Per-mechanic open-workload — independent of the filter bar (D1). */}

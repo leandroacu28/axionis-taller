@@ -1,4 +1,5 @@
 import type { Estado, OrdenTrabajoListItem, Prioridad } from '../../../lib/ordenes-trabajo';
+import KanbanCardActions from './KanbanCardActions';
 
 // Re-declared locally per design.md §2.3 — small presentation maps/helpers
 // duplicated from the list page rather than shared, so the list page's
@@ -62,18 +63,29 @@ const COLUMN_CLASSES: Record<Estado, { container: string; title: string; count: 
   },
 };
 
-function KanbanCard({ orden }: { orden: OrdenTrabajoListItem }) {
+function KanbanCard({
+  orden,
+  onActionSuccess,
+}: {
+  orden: OrdenTrabajoListItem;
+  onActionSuccess: () => void;
+}) {
   // Read-only card (D2) — plain markup, no drag handlers of any kind, no
-  // drag-and-drop library.
+  // drag-and-drop library. The actions trigger below is a click/tap control,
+  // not drag-and-drop.
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-bold text-stone-800">{orden.numero ?? '—'}</span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${PRIORIDAD_BADGE_CLASSES[orden.prioridad]}`}
-        >
-          {PRIORIDAD_LABELS[orden.prioridad]}
-        </span>
+        {/* Right cluster: existing prioridad badge + the actions trigger. */}
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-medium ${PRIORIDAD_BADGE_CLASSES[orden.prioridad]}`}
+          >
+            {PRIORIDAD_LABELS[orden.prioridad]}
+          </span>
+          <KanbanCardActions orden={orden} onActionSuccess={onActionSuccess} />
+        </div>
       </div>
 
       <div className="space-y-0.5 text-xs text-stone-600">
@@ -107,7 +119,15 @@ function KanbanCard({ orden }: { orden: OrdenTrabajoListItem }) {
   );
 }
 
-function KanbanColumn({ estado, ordenes }: { estado: Estado; ordenes: OrdenTrabajoListItem[] }) {
+function KanbanColumn({
+  estado,
+  ordenes,
+  onActionSuccess,
+}: {
+  estado: Estado;
+  ordenes: OrdenTrabajoListItem[];
+  onActionSuccess: () => void;
+}) {
   const classes = COLUMN_CLASSES[estado];
   return (
     <div className={`flex min-w-[260px] flex-1 flex-col gap-3 rounded-xl border p-3 ${classes.container}`}>
@@ -121,7 +141,9 @@ function KanbanColumn({ estado, ordenes }: { estado: Estado; ordenes: OrdenTraba
         {ordenes.length === 0 ? (
           <p className="px-1 text-xs text-stone-400">Sin órdenes</p>
         ) : (
-          ordenes.map((orden) => <KanbanCard key={orden.id} orden={orden} />)
+          ordenes.map((orden) => (
+            <KanbanCard key={orden.id} orden={orden} onActionSuccess={onActionSuccess} />
+          ))
         )}
       </div>
     </div>
@@ -131,9 +153,10 @@ function KanbanColumn({ estado, ordenes }: { estado: Estado; ordenes: OrdenTraba
 interface KanbanBoardProps {
   data: OrdenTrabajoListItem[];
   meta: { total: number; cap: number; capped: boolean };
+  onActionSuccess: () => void;
 }
 
-export default function KanbanBoard({ data, meta }: KanbanBoardProps) {
+export default function KanbanBoard({ data, meta, onActionSuccess }: KanbanBoardProps) {
   return (
     <div className="mt-6">
       {meta.capped && (
@@ -147,6 +170,7 @@ export default function KanbanBoard({ data, meta }: KanbanBoardProps) {
             key={estado}
             estado={estado}
             ordenes={data.filter((orden) => orden.estado === estado)}
+            onActionSuccess={onActionSuccess}
           />
         ))}
       </div>
