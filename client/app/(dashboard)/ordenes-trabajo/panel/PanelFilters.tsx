@@ -31,7 +31,10 @@ interface PanelFiltersProps {
 }
 
 const selectClassName =
-  'w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100';
+  'w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 ' +
+  'focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100 ' +
+  'dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 ' +
+  'dark:focus:border-rose-500 dark:focus:ring-rose-500/30';
 
 export default function PanelFilters({
   mecanicos,
@@ -49,10 +52,10 @@ export default function PanelFilters({
   onCustomHastaChange,
 }: PanelFiltersProps) {
   return (
-    <div className="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="w-48 space-y-1">
-          <label htmlFor="panelMecanicoFilter" className="text-sm font-medium text-stone-700">
+    <div className="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-700 dark:bg-stone-900">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="w-full space-y-1 sm:w-48">
+          <label htmlFor="panelMecanicoFilter" className="text-sm font-medium text-stone-700 dark:text-stone-300">
             Mecánico
           </label>
           <select
@@ -72,8 +75,8 @@ export default function PanelFilters({
           </select>
         </div>
 
-        <div className="w-40 space-y-1">
-          <label htmlFor="panelEstadoFilter" className="text-sm font-medium text-stone-700">
+        <div className="w-full space-y-1 sm:w-40">
+          <label htmlFor="panelEstadoFilter" className="text-sm font-medium text-stone-700 dark:text-stone-300">
             Estado
           </label>
           <select
@@ -90,8 +93,8 @@ export default function PanelFilters({
           </select>
         </div>
 
-        <div className="w-40 space-y-1">
-          <label htmlFor="panelPrioridadFilter" className="text-sm font-medium text-stone-700">
+        <div className="w-full space-y-1 sm:w-40">
+          <label htmlFor="panelPrioridadFilter" className="text-sm font-medium text-stone-700 dark:text-stone-300">
             Prioridad
           </label>
           <select
@@ -107,8 +110,8 @@ export default function PanelFilters({
           </select>
         </div>
 
-        <div className="w-40 space-y-1">
-          <label htmlFor="panelDatePreset" className="text-sm font-medium text-stone-700">
+        <div className="w-full space-y-1 sm:w-40">
+          <label htmlFor="panelDatePreset" className="text-sm font-medium text-stone-700 dark:text-stone-300">
             Fecha
           </label>
           <select
@@ -126,8 +129,8 @@ export default function PanelFilters({
 
         {datePreset === 'personalizado' && (
           <>
-            <div className="w-40 space-y-1">
-              <label htmlFor="panelCustomDesde" className="text-sm font-medium text-stone-700">
+            <div className="w-full space-y-1 sm:w-40">
+              <label htmlFor="panelCustomDesde" className="text-sm font-medium text-stone-700 dark:text-stone-300">
                 Desde
               </label>
               <input
@@ -138,8 +141,8 @@ export default function PanelFilters({
                 className={selectClassName}
               />
             </div>
-            <div className="w-40 space-y-1">
-              <label htmlFor="panelCustomHasta" className="text-sm font-medium text-stone-700">
+            <div className="w-full space-y-1 sm:w-40">
+              <label htmlFor="panelCustomHasta" className="text-sm font-medium text-stone-700 dark:text-stone-300">
                 Hasta
               </label>
               <input

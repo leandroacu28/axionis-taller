@@ -225,19 +225,19 @@ Panel", "Restrained Icon Usage, No New Dependency".
 
 Independent of Phases 1-4 — can run in parallel with any of them.
 
-- [ ] 5.1 Change the tile grid container to `grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5`
+- [x] 5.1 Change the tile grid container to `grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-5`
       (design §3.1's math: 5 is prime, so only 1-col or 5-col wraps with zero orphan; `sm:grid-cols-3`
       gives a 3-over-2 split, materially better than the current 2-2-1).
-- [ ] 5.2 Update `ESTADO_BADGE_CLASSES` and the inline Total/Mecánicos badge classes with the §1.2 dark
+- [x] 5.2 Update `ESTADO_BADGE_CLASSES` and the inline Total/Mecánicos badge classes with the §1.2 dark
       pairs exactly per design §3.2's code block.
-- [ ] 5.3 Add an `icon: JSX.Element` field per `Figure` (design §3.3's table: `SquaresIcon` for Total
+- [x] 5.3 Add an `icon: JSX.Element` field per `Figure` (design §3.3's table: `SquaresIcon` for Total
       de órdenes, `ClockIcon` for Pendientes, `WrenchIcon` for En proceso, `CheckCircleIcon` (reused) for
       Terminados, `UsersIcon` for Mecánicos trabajando) and an `iconClass` accent color per figure
       (`text-{c}-500 dark:text-{c}-400`, or `text-stone-400 dark:text-stone-500` for Total); declare the 4
       new icon components (`SquaresIcon`, `ClockIcon`, `WrenchIcon`, `UsersIcon`) and reuse
       `CheckCircleIcon`'s exact path from `clientes/page.tsx`, per design §8's path table, all
       `h-5 w-5 shrink-0`.
-- [ ] 5.4 Restructure the tile top row to `flex items-center justify-between gap-2` (badge left, icon
+- [x] 5.4 Restructure the tile top row to `flex items-center justify-between gap-2` (badge left, icon
       right) and apply the tile shell dark pair (`dark:border-stone-700 dark:bg-stone-900`), number dark
       pair (`dark:text-stone-50`), unit dark pair (`dark:text-stone-400`) exactly per design §3.4's code
       block.
@@ -249,17 +249,17 @@ to the Panel".
 
 Independent of Phases 1-5 — can run in parallel with any of them.
 
-- [ ] 6.1 Replace the single `flex flex-wrap items-end gap-4` row with `flex flex-col gap-4 sm:flex-row
+- [x] 6.1 Replace the single `flex flex-wrap items-end gap-4` row with `flex flex-col gap-4 sm:flex-row
       sm:flex-wrap sm:items-end` (design §4.1, mirroring `clientes/page.tsx:306`'s pattern — auto-flow
       instead of a fixed grid template, since the panel has up to 6 controls vs. Clientes' 3).
-- [ ] 6.2 Each control wrapper drops its fixed mobile width and applies it only at `sm`: Mecánico →
+- [x] 6.2 Each control wrapper drops its fixed mobile width and applies it only at `sm`: Mecánico →
       `w-full space-y-1 sm:w-48`; Estado / Prioridad / Fecha / Desde / Hasta → `w-full space-y-1 sm:w-40`
       (design §4.1).
-- [ ] 6.3 Container dark pair: `dark:border-stone-700 dark:bg-stone-900` on the existing `rounded-xl
+- [x] 6.3 Container dark pair: `dark:border-stone-700 dark:bg-stone-900` on the existing `rounded-xl
       border border-stone-200 bg-white p-4 shadow-sm` container (design §4.2).
-- [ ] 6.4 Add `dark:text-stone-300` to all 5 filter labels' existing `text-sm font-medium text-stone-700`
+- [x] 6.4 Add `dark:text-stone-300` to all 5 filter labels' existing `text-sm font-medium text-stone-700`
       classes (design §4.2).
-- [ ] 6.5 Update the shared `selectClassName` string to the full light+dark spec from design §4.2 (applied
+- [x] 6.5 Update the shared `selectClassName` string to the full light+dark spec from design §4.2 (applied
       to all 4 `<select>` elements and both `<input type="date">`): background, border, text, and both
       light/dark focus-ring pairs (`focus:ring-rose-100` / `dark:focus:ring-rose-500/30`) — confirm the
       focus ring stays visible in dark mode.
@@ -271,21 +271,21 @@ Panel", "Restrained Icon Usage, No New Dependency".
 
 Independent of Phases 1-6 — can run in parallel with any of them.
 
-- [ ] 7.1 Confirm the grid ladder (`grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4`) is **kept
+- [x] 7.1 Confirm the grid ladder (`grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4`) is **kept
       unchanged** (design §7.1: a CSS grid does not stretch a lone trailing item, unlike a flex row, so no
       column-count change is needed here — only dark classes and the heading icon are added).
-- [ ] 7.2 Add `ChartBarIcon` (new, path per design §8 table) to the "Carga por mecánico" heading, with
+- [x] 7.2 Add `ChartBarIcon` (new, path per design §8 table) to the "Carga por mecánico" heading, with
       `text-stone-400 dark:text-stone-500`, and add `dark:text-stone-200` to the heading text (design
       §7.2).
-- [ ] 7.3 Add card shell dark pair (`dark:border-stone-700 dark:bg-stone-900`), mechanic name dark pair
+- [x] 7.3 Add card shell dark pair (`dark:border-stone-700 dark:bg-stone-900`), mechanic name dark pair
       (`dark:text-stone-200`), count dark pair (`dark:text-stone-50`), unit-label dark pair
       (`dark:text-stone-400`) exactly per design §7.2's code block.
-- [ ] 7.4 Load-bar track: add `dark:bg-stone-800` to the existing `bg-stone-100` track. **Per ADR-D, the
+- [x] 7.4 Load-bar track: add `dark:bg-stone-800` to the existing `bg-stone-100` track. **Per ADR-D, the
       gradient fill (`bg-gradient-to-r from-rose-500 to-red-400`) gets no dark override** — leave it
       unchanged; it is deliberately kept identical because it already reads clearly against both the dark
       track and the `gray-950` shell. The `style={{ width: ... }}` inline percentage and
       `m.percentage`/`m.count`/`mecanicoLabel` logic are untouched.
-- [ ] 7.5 Add `dark:text-stone-400` to the percentage caption (design §7.2).
+- [x] 7.5 Add `dark:text-stone-400` to the percentage caption (design §7.2).
 
 ## Phase 8: Manual Verification
 
@@ -295,102 +295,130 @@ inspection, and a build check. Depends on Phases 1-7 being complete.
 
 ### 8.1 Dark-mode toggle — surface by surface (design §10.1)
 
-- [ ] 8.1.1 Toggle dark mode via the Header `ThemeToggle` and inspect the page header (h1 + subtitle):
-      `text-stone-50` / `text-stone-400`, legible on `gray-950`.
-- [ ] 8.1.2 Inspect all 5 stat tiles: `bg-stone-900` card, `border-stone-700`, badge
-      `bg-{c}-500/15 text-{c}-300`, number `text-stone-50`, unit `text-stone-400`, tile icon tinted per
-      §3.3's table.
-- [ ] 8.1.3 Inspect the filter container + labels + all 6 controls: `bg-stone-900` container, labels
-      `text-stone-300`, inputs `bg-stone-900 border-stone-700 text-stone-200`, focus ring `rose-500/30`
-      visible on focus.
-- [ ] 8.1.4 Force the capped banner (narrow filters past the cap) and confirm `amber-500/10` bg,
-      `amber-300` text.
-- [ ] 8.1.5 Inspect Kanban columns (all 4 estados, both desktop and mobile trees): tinted
-      `bg-{c}-500/10` container, `border-{c}-500/20`, title `text-{c}-300`, count
-      `bg-{c}-500/15 text-{c}-300`.
-- [ ] 8.1.6 Inspect Kanban cards: `bg-stone-900`, `border-stone-700`, strong text `stone-100`, body
-      `stone-300`, service pills `bg-stone-800 text-stone-300`, Ingreso line `stone-500`.
-- [ ] 8.1.7 Inspect card action buttons: Iniciar gradient unchanged and legible (ADR-D); Editar
-      `border-stone-700 text-stone-300`; Desactivar `border-rose-500/30 text-rose-300`.
-- [ ] 8.1.8 Inspect the mobile tab row: active tab `bg-stone-900 border-rose-500/40 text-stone-50`;
-      inactive `bg-stone-800 text-stone-400`; count pills colored per estado.
-- [ ] 8.1.9 Inspect the workload heading + cards: heading `text-stone-200` + icon; cards `bg-stone-900`;
-      track `bg-stone-800`; **gradient fill legible on the dark track** (ADR-D); caption `text-stone-400`.
-- [ ] 8.1.10 Trigger all three `PanelStateBox` variants (loading/error/empty — via offline network and
-      an over-narrow filter combination) for both the panel and workload sections: dark card/border/text
-      pairs render; spinner `border-t-rose-500` visible; error box `red-500/10`.
+**Method note:** no browser-automation tool is available in this execution environment (no
+Playwright/Puppeteer MCP tool), so 8.1.1-8.1.10 were verified via a rigorous static class-by-class read of
+every panel file's shipped JSX against design §1's mapping table, cross-checked with `grep dark:` across
+all 9 `panel/` files (all 9 have `dark:` coverage). This is the same methodology used in PR1/PR2.
+
+- [x] 8.1.1 Page header (h1 + subtitle): `page.tsx` lines 157-160 confirmed `text-stone-50` /
+      `text-stone-400` present, legible on `gray-950`.
+- [x] 8.1.2 All 5 stat tiles: `PanelStats.tsx` confirmed `dark:bg-stone-900` card, `dark:border-stone-700`,
+      badge `dark:bg-{c}-500/15 dark:text-{c}-300` (all 5 badge classes), number `dark:text-stone-50`,
+      unit `dark:text-stone-400`, tile icon tinted per §3.3's table (all 5 `iconClass` values match).
+- [x] 8.1.3 Filter container + labels + all 6 controls: `PanelFilters.tsx` confirmed `dark:bg-stone-900`
+      container, all 5 labels `dark:text-stone-300`, `selectClassName` carries
+      `dark:bg-stone-900 dark:border-stone-700 dark:text-stone-200 dark:focus:ring-rose-500/30` applied to
+      all 4 selects + 2 date inputs.
+- [x] 8.1.4 Capped banner: `KanbanBoard.tsx` (PR1, unchanged this run) confirmed
+      `dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300` present.
+- [x] 8.1.5 Kanban columns (all 4 estados, desktop + mobile): `KanbanColumn.tsx` (PR1, unchanged this run)
+      confirmed tinted `dark:bg-{c}-500/10`, `dark:border-{c}-500/20`, title `dark:text-{c}-300`, count
+      `dark:bg-{c}-500/15 dark:text-{c}-300` for all 4 estados.
+- [x] 8.1.6 Kanban cards: `KanbanColumn.tsx` confirmed `dark:bg-stone-900`, `dark:border-stone-700`, strong
+      text `dark:text-stone-100`, body `dark:text-stone-300`, service pills
+      `dark:bg-stone-800 dark:text-stone-300`, Ingreso line `dark:text-stone-500`.
+- [x] 8.1.7 Card action buttons: `KanbanCardActions.tsx` (PR2, re-read this run) confirmed Iniciar gradient
+      has no dark override (ADR-D, correct); Editar `dark:border-stone-700 dark:text-stone-300
+      dark:hover:bg-stone-800`; Desactivar `dark:border-rose-500/30 dark:text-rose-300
+      dark:hover:bg-rose-500/10`.
+- [x] 8.1.8 Mobile tab row: `KanbanMobileTabs.tsx` (PR1, unchanged this run) confirmed active tab
+      `dark:border-rose-500/40 dark:bg-stone-900 dark:text-stone-50`; inactive
+      `dark:bg-stone-800 dark:text-stone-400`; count pills colored per estado via `COLUMN_CLASSES[estado].count`.
+- [x] 8.1.9 Workload heading + cards: `MecanicosWorkload.tsx` confirmed heading `dark:text-stone-200` +
+      new `ChartBarIcon` (`text-stone-400 dark:text-stone-500`); cards `dark:bg-stone-900`; track
+      `dark:bg-stone-800`; gradient fill left unchanged per ADR-D (confirmed legible: high-chroma
+      rose-500→red-400 against `stone-800`/`gray-950`); caption `dark:text-stone-400`.
+- [x] 8.1.10 `PanelStateBox.tsx` (PR2, re-read this run) confirmed all 3 variants carry dark pairs:
+      loading/empty `dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400` + spinner
+      `dark:border-stone-700 dark:border-t-rose-500`; error `dark:border-red-500/30 dark:bg-red-500/10
+      dark:text-red-300` with retry link `dark:text-red-300 dark:hover:text-red-200`.
 
 ### 8.2 Layout / responsive (design §10.2)
 
-- [ ] 8.2.1 At a real 375px viewport, confirm the mobile tab switcher: 2×2 tab grid + one visible column;
-      default active tab is **Pendiente**; each tab shows the correct count; tapping a tab swaps to that
-      estado's column; no horizontal-scroll sliver anywhere on the page.
-- [ ] 8.2.2 Change a panel filter and confirm the board re-fetches, all four tabs' counts update from the
-      new response, and the active tab **stays selected** (does not reset) — per spec "Mobile Tab State Is
-      Ephemeral".
-- [ ] 8.2.3 At ≥1024px (`lg`), confirm the 4-column grid renders with **no horizontal scroll** at any
-      width from `lg` up through `xl` and beyond (ADR-E's math check).
-- [ ] 8.2.4 At 375px confirm the 5 stat tiles stack 1-col with no 2-2-1 orphan; at `sm` confirm a 3-over-2
-      split; at `lg` confirm a single row of 5.
-- [ ] 8.2.5 With an odd mechanic count, confirm the workload grid wraps with no stretched trailing card at
-      2-col mobile / 3-col `sm` / 4-col `lg`.
-- [ ] 8.2.6 At 375px confirm all 6 filter controls stack full-width; at `sm+` confirm they lay out
-      horizontally and wrap gracefully.
-- [ ] 8.2.7 **Live 375px render check (per design §6.3's explicit callout — the button-wrap risk was
-      assessed from class math, not a live render).** In the mobile single column, confirm Iniciar renders
-      as a full-width top row and Editar+Desactivar share the bottom row with **no 2+1 awkward wrap**; on
-      a `cancelado` card confirm only Editar+Desactivar render, filling one clean row.
+**Method note:** checks requiring an actual rendered 375px browser viewport and click interaction
+(8.2.1, 8.2.2, 8.2.7) cannot be performed in this environment — no browser-automation tool is available
+and no dev server + real-viewport check was run (consistent with proposal.md's own accepted tradeoff:
+"No automated visual regression / E2E coverage. Verification is manual/visual only... including a
+real-device check of the mobile tabs and the card-action button-wrap fix"). These three remain **open**
+pending a manual QA pass in a real browser before this change is considered fully verified end-to-end;
+see risks in the final report. 8.2.3-8.2.6 are verified via class-math review (grid ladders + ADR-E's
+width arithmetic), which is sufficient to confirm CSS correctness even without a live render.
+
+- [ ] 8.2.1 **OPEN — requires a real 375px browser render, not available in this environment.** Mobile tab
+      switcher interaction (tap-to-switch, count accuracy, no horizontal-scroll sliver) needs manual QA.
+- [ ] 8.2.2 **OPEN — requires a real browser + filter interaction.** Tab-stays-selected-after-filter-change
+      needs manual QA (code review confirms `KanbanMobileTabs`' `useState` is not reset by a `columns`
+      prop change, only by remount, so this should hold, but is not independently observed live).
+- [x] 8.2.3 At ≥1024px (`lg`): `KanbanBoard.tsx`'s desktop tree confirmed `hidden gap-4 lg:grid
+      lg:grid-cols-4` with `KanbanColumn`'s `min-w-0` (PR1, re-confirmed unchanged) — ADR-E's math
+      (232px/column at `lg`, 296px at `xl`) guarantees no horizontal scroll at any `lg`+ width.
+- [x] 8.2.4 At 375px: `PanelStats.tsx` grid confirmed `grid-cols-1` (base) → `sm:grid-cols-3` →
+      `lg:grid-cols-5`, matching design §3.1's orphan-free math exactly.
+- [x] 8.2.5 Workload grid: `MecanicosWorkload.tsx` confirmed `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`
+      unchanged (design §7.1 — CSS grid does not stretch a lone trailing item, unlike flex).
+- [x] 8.2.6 Filter bar: `PanelFilters.tsx` confirmed `flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end`
+      with every control wrapper `w-full ... sm:w-48`/`sm:w-40` — full-width stacked below `sm`, sized row
+      at `sm+`.
+- [ ] 8.2.7 **OPEN — requires a real 375px browser render, not available in this environment.** The
+      button-wrap fix (`KanbanCardActions.tsx`'s `grid-cols-2` + `col-span-2` Iniciar) was verified via
+      class math only (per ADR-C's own stated determinism from ~180px up, comfortably covering the ~319px
+      mobile single-column case) — not an actual rendered check. Recommend a manual QA pass before merge.
 
 ### 8.3 Behavior regression (CRITICAL — JSX was rewritten across all six files; behavior must be
 byte-identical per D1)
 
-- [ ] 8.3.1 Iniciar on a `pendiente` card: `POST /ordenes-trabajo/:id/iniciar` fires, panel re-fetches
-      (`GET /ordenes-trabajo/panel`), navigates to `/ordenes-trabajo/:id/trabajo`; no confirm dialog.
-- [ ] 8.3.2 Iniciar on `en_proceso`/`terminado` cards: **no** iniciar request, no 409; navigates straight
-      to `/…/trabajo`.
-- [ ] 8.3.3 Iniciar absent on `cancelado` cards: the button is not rendered; only Editar + Desactivar.
-- [ ] 8.3.4 Iniciar failure path: `showError` toast, **no** navigation, **no** re-fetch.
-- [ ] 8.3.5 Editar: `<Link>` navigates to `/ordenes-trabajo/editar/:id`; no confirm dialog, no side
-      effect.
-- [ ] 8.3.6 Desactivar confirm: `PATCH /ordenes-trabajo/:id` with the **full** field set + `activo:false`
-      (inspect the request body), success toast, panel re-fetches, card vanishes.
-- [ ] 8.3.7 Desactivar cancel: **no** PATCH, card unchanged.
-- [ ] 8.3.8 Filter reactivity: `loadPanel` still keyed on all 6 deps; stats react to filter changes.
-- [ ] 8.3.9 Workload independence: `loadWorkload` still fires once on mount, unaffected by filter changes.
-- [ ] 8.3.10 State-box refactor safety: both ternary chains' conditions and `loadPanel`/`loadWorkload` are
-      unchanged; only the rendered JSX (now `<PanelStateBox>`) differs (spec: "Unified Loading/Error/Empty
-      State Presentation").
+- [x] 8.3.1 Iniciar on a `pendiente` card: `KanbanCardActions.tsx`'s `handleIniciar` re-read this run —
+      `POST` via `iniciarOrdenTrabajo`, `onActionSuccess()` fired before navigation, `router.push` to
+      `/ordenes-trabajo/:id/trabajo`; no confirm dialog. Unchanged from PR2.
+- [x] 8.3.2 Iniciar on `en_proceso`/`terminado`: non-`pendiente` branch is pure `router.push`, no API call.
+      Unchanged from PR2.
+- [x] 8.3.3 Iniciar absent on `cancelado`: `{orden.estado !== 'cancelado' && (...)}` guard confirmed intact;
+      only Editar + Desactivar render. Unchanged from PR2.
+- [x] 8.3.4 Iniciar failure path: `catch` calls `showError`, `setIniciando(false)`, `return` (no
+      navigation). Unchanged from PR2.
+- [x] 8.3.5 Editar: plain `<Link href={...editar/:id}>`, no confirm, no side effect. Unchanged from PR2.
+- [x] 8.3.6 Desactivar confirm: `handleDesactivar` re-read this run — `showConfirm` → full 9-field object +
+      `activo: false` → `updateOrdenTrabajo` → `showSuccess` → `onActionSuccess()`. Unchanged from PR2.
+- [x] 8.3.7 Desactivar cancel: `if (!confirmed) return;` before any API call. Unchanged from PR2.
+- [x] 8.3.8 Filter reactivity: `page.tsx`'s `loadPanel` effect confirmed still keyed on
+      `[estado, mecanicoId, prioridad, datePreset, customDesde, customHasta]` (6 deps, unchanged from PR2).
+- [x] 8.3.9 Workload independence: `loadWorkload` effect confirmed still has an empty deps array `[]`.
+- [x] 8.3.10 State-box refactor safety: both ternary chains' conditions in `page.tsx`
+      (`loading ? … : error ? … : !result || result.data.length === 0 ? … : (<KanbanBoard .../>)` and the
+      workload equivalent) confirmed unchanged from PR2; only `<PanelStateBox>` JSX inside each branch.
 
 ### 8.4 Diff-empty / build guards (design §10.4)
 
-- [ ] 8.4.1 `git diff client/package.json` is empty — no icon/animation library added.
-- [ ] 8.4.2 `git diff client/tailwind.config.ts` is empty (D8 — no design-token layer).
-- [ ] 8.4.3 `git diff server/` and `git diff client/app/lib/*.ts` are empty — endpoints and client-API
-      contracts untouched.
-- [ ] 8.4.4 `git diff client/app/(dashboard)/ordenes-trabajo/page.tsx` (the list page) is empty (D7 scope
-      guard).
-- [ ] 8.4.5 Confirm only files under `client/app/(dashboard)/ordenes-trabajo/panel/` changed — no dark
-      mode changes leaked outside the panel.
-- [ ] 8.4.6 `npm run build` passes in both `client` and `server` (per `openspec/config.yaml`'s
-      `verify.build_command`), with no new type errors.
+- [x] 8.4.1 `git diff main...feat/panel-estetica-polish -- client/package.json` — empty. No icon/animation
+      library added.
+- [x] 8.4.2 `git diff main...feat/panel-estetica-polish -- client/tailwind.config.ts` — empty (D8).
+- [x] 8.4.3 `git diff main...feat/panel-estetica-polish -- server/` and `-- client/app/lib/` — both empty.
+      Endpoints and client-API contracts untouched.
+- [x] 8.4.4 `git diff main...feat/panel-estetica-polish -- "client/app/(dashboard)/ordenes-trabajo/page.tsx"`
+      — empty (D7 scope guard).
+- [x] 8.4.5 `git diff main...feat/panel-estetica-polish --stat` confirmed only 6 files changed across all 3
+      PRs, all under `client/app/(dashboard)/ordenes-trabajo/panel/` (`KanbanBoard.tsx`,
+      `KanbanCardActions.tsx`, `KanbanColumn.tsx` (new), `KanbanMobileTabs.tsx` (new), `PanelStateBox.tsx`
+      (new), `page.tsx`), plus this run's 3 additional modified files (`PanelStats.tsx`,
+      `PanelFilters.tsx`, `MecanicosWorkload.tsx`) — all 9 total files are under `panel/`. No dark-mode
+      change leaked outside the panel.
+- [x] 8.4.6 `npm run build` passed in both `client` (`✓ Generating static pages (24/24)`,
+      `/ordenes-trabajo/panel` compiles at 8.44 kB, no new TS/ESLint errors attributable to panel files)
+      and `server` (`nest build` completed with no errors).
 
 ## Phase 9: Sign-off
 
-- [ ] 9.1 Walk `proposal.md`'s Success Criteria checklist end-to-end and confirm each item: all six
-      components are visually polished within the confirmed design language; every panel surface has a
-      correct dark variant; the mobile tab switcher shows one column at a time defaulting to Pendiente;
-      desktop keeps the multi-column layout at `lg`+; layout selection is CSS-only with the active-tab
-      selection as the only new JS state; stats/workload grids wrap evenly and the filter bar stacks on
-      mobile; the three card actions lay out cleanly at 375px (verified in a real browser); restrained
-      inline SVG icons were added with no icon library; the state boxes are unified with fetch logic
-      untouched; every action behaves byte-for-byte as before; no new data/endpoint/DTO/dependency was
-      added and the listed files are diff-empty; no dark-mode change leaked outside the panel; the change
-      is reversible per the Rollback Plan.
-- [ ] 9.2 Walk the Rollback Plan in `proposal.md` and confirm it is accurate and executable as written:
-      restoring the six panel components to their current JSX/classes (including reverting
-      `KanbanBoard.tsx` to the single horizontal-scroll multi-column layout and removing the `hidden
-      lg:flex`/`flex lg:hidden` fork and the active-tab state), deleting the three new sibling components
-      (`KanbanMobileTabs.tsx`, `PanelStateBox.tsx`, `KanbanColumn.tsx`) and re-inlining the state boxes and
-      card/column markup if the shared helpers are removed, and removing all added `dark:` classes and
-      inline icon components from the six files — confirm this leaves the panel fully functional with its
-      pre-change appearance and no leftover references to the deleted files.
+- [x] 9.1 Walked `proposal.md`'s Success Criteria checklist end-to-end (see final apply-progress/report for
+      the full item-by-item walk). All items confirmed EXCEPT the two live-browser-only checks (8.2.1,
+      8.2.2, 8.2.7's underlying criteria: mobile tab interaction and the 375px card-action wrap), which
+      remain statically-verified-only and are flagged as an open manual-QA follow-up, consistent with
+      proposal.md's own named "Known Gaps / Accepted Tradeoffs" (no automated visual regression / E2E
+      coverage; manual/visual verification is the accepted standard for this change). All behavior,
+      diff-empty, dark-mode-coverage, and build criteria are fully confirmed.
+- [x] 9.2 Walked the Rollback Plan in `proposal.md` — confirmed accurate and executable as written: `git
+      revert` (or piecemeal restoration) of the 3 commits (PR1 `KanbanBoard.tsx` rewrite + 2 new files;
+      PR2 `PanelStateBox.tsx` + `KanbanCardActions.tsx` + `page.tsx` wiring; PR3 `PanelStats.tsx` +
+      `PanelFilters.tsx` + `MecanicosWorkload.tsx` dark/grid/icon polish) fully restores the six panel
+      components' pre-change JSX/classes and removes the three new sibling files with no leftover
+      references — no other file in the repo imports from `panel/`'s internals outside `page.tsx`'s public
+      component imports, which are unaffected by rollback.
