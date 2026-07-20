@@ -43,6 +43,7 @@ model User {
   ordenesTrabajoAsignadas              OrdenTrabajo[]             @relation("OrdenTrabajoMecanico")
   ordenesTrabajoCreadas                OrdenTrabajo[]             @relation("OrdenTrabajoCreadoPor")
   ordenesTrabajoActualizadas           OrdenTrabajo[]             @relation("OrdenTrabajoActualizadoPor")
+  empresaActualizada                   Empresa[]                  @relation("EmpresaActualizadoPor")
   createdAt                            DateTime                   @default(now())
   updatedAt                            DateTime                   @updatedAt
 }
@@ -256,6 +257,18 @@ model OrdenTrabajoTipoServicio {
   updatedAt           DateTime     @updatedAt
 
   @@unique([ordenTrabajoId, tipoServicioId])
+}
+
+model Empresa {
+  id               Int      @id @default(autoincrement())
+  nombre           String?
+  direccion        String?
+  telefono         String?
+  logoUrl          String?
+  actualizadoPorId Int?
+  actualizadoPor   User?    @relation("EmpresaActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model OrdenTrabajoTipoServicioProducto {

@@ -25,3 +25,6 @@ Thumbs.db
 
 # Prisma
 server/generated/
+
+# Uploaded files
+server/uploads/

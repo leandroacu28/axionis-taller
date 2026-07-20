@@ -5,8 +5,8 @@ import type { Estado, PanelStats as PanelStatsData } from '../../../lib/ordenes-
 // module would require touching the list page's imports, which violates the
 // proposal's D7 "list page untouched" constraint).
 const ESTADO_BADGE_CLASSES: Record<Estado, string> = {
-  pendiente: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-  en_proceso: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+  pendiente: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
+  en_proceso: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300',
   terminado: 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300',
   cancelado: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',
 };
@@ -82,7 +82,7 @@ export default function PanelStats({ stats, total }: { stats: PanelStatsData; to
       badgeClass: ESTADO_BADGE_CLASSES.pendiente,
       unit: ordenesUnit,
       icon: <ClockIcon />,
-      iconClass: 'text-amber-500 dark:text-amber-400',
+      iconClass: 'text-blue-500 dark:text-blue-400',
     },
     {
       label: 'En proceso',
@@ -90,7 +90,7 @@ export default function PanelStats({ stats, total }: { stats: PanelStatsData; to
       badgeClass: ESTADO_BADGE_CLASSES.en_proceso,
       unit: ordenesUnit,
       icon: <WrenchIcon />,
-      iconClass: 'text-sky-500 dark:text-sky-400',
+      iconClass: 'text-yellow-500 dark:text-yellow-400',
     },
     {
       label: 'Terminados',

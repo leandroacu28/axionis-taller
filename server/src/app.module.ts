@@ -1,5 +1,7 @@
+import * as path from 'path';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -15,11 +17,16 @@ import { UnidadesMedidaModule } from './unidades-medida/unidades-medida.module';
 import { ProductosModule } from './productos/productos.module';
 import { EtiquetasModule } from './etiquetas/etiquetas.module';
 import { OrdenesTrabajoModule } from './ordenes-trabajo/ordenes-trabajo.module';
+import { EmpresaModule } from './empresa/empresa.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: path.join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
     }),
     PrismaModule,
     AuthModule,
@@ -34,6 +41,7 @@ import { OrdenesTrabajoModule } from './ordenes-trabajo/ordenes-trabajo.module';
     ProductosModule,
     EtiquetasModule,
     OrdenesTrabajoModule,
+    EmpresaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

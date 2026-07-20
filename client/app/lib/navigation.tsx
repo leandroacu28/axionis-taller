@@ -69,6 +69,14 @@ export const navigation: NavigationItem[] = [
         // configuraciones icon, same placeholder approach as Unidades de Medida.
         icon: <img src="/icons/configuraciones.svg" alt="" className="h-5 w-5" aria-hidden />,
       },
+      {
+        name: 'Empresa',
+        href: '/empresa',
+        id: 'empresa',
+        // No dedicated /icons/empresa.svg exists yet — reuses the generic
+        // configuraciones icon, same placeholder approach as Unidades de Medida.
+        icon: <img src="/icons/configuraciones.svg" alt="" className="h-5 w-5" aria-hidden />,
+      },
     ],
   },
   {

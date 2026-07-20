@@ -38,18 +38,18 @@ function mecanicoLabel(mecanico: OrdenTrabajoListItem['mecanico']): string {
 // still renders with a zero count.
 export const COLUMNS: Estado[] = ['pendiente', 'en_proceso', 'terminado', 'cancelado'];
 
-// Same palette as the list page's tarjetas-view ESTADO_BADGE_CLASSES, so a
+// Same palette as the list page's tabla-view ESTADO_BADGE_CLASSES_TABLA, so a
 // column's color reads consistently with the estado badges elsewhere in the app.
 export const COLUMN_CLASSES: Record<Estado, { container: string; title: string; count: string }> = {
   pendiente: {
-    container: 'border-amber-200 bg-amber-50 dark:border-amber-500/20 dark:bg-amber-500/10',
-    title: 'text-amber-800 dark:text-amber-300',
-    count: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    container: 'border-blue-200 bg-blue-50 dark:border-blue-500/20 dark:bg-blue-500/10',
+    title: 'text-blue-800 dark:text-blue-300',
+    count: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
   },
   en_proceso: {
-    container: 'border-sky-200 bg-sky-50 dark:border-sky-500/20 dark:bg-sky-500/10',
-    title: 'text-sky-800 dark:text-sky-300',
-    count: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+    container: 'border-yellow-200 bg-yellow-50 dark:border-yellow-500/20 dark:bg-yellow-500/10',
+    title: 'text-yellow-800 dark:text-yellow-300',
+    count: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300',
   },
   terminado: {
     container: 'border-green-200 bg-green-50 dark:border-green-500/20 dark:bg-green-500/10',
