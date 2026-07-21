@@ -44,6 +44,9 @@ model User {
   ordenesTrabajoCreadas                OrdenTrabajo[]             @relation("OrdenTrabajoCreadoPor")
   ordenesTrabajoActualizadas           OrdenTrabajo[]             @relation("OrdenTrabajoActualizadoPor")
   empresaActualizada                   Empresa[]                  @relation("EmpresaActualizadoPor")
+  presupuestosCreados                   Presupuesto[]              @relation("PresupuestoCreadoPor")
+  presupuestosActualizados              Presupuesto[]              @relation("PresupuestoActualizadoPor")
+  presupuestoProductosActualizados      PresupuestoProducto[]      @relation("PresupuestoProductoActualizadoPor")
   createdAt                            DateTime                   @default(now())
   updatedAt                            DateTime                   @updatedAt
 }
@@ -62,6 +65,7 @@ model Cliente {
   actualizadoPor     User?          @relation("ClienteActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   vehiculos          Vehiculo[]
   ordenesTrabajo     OrdenTrabajo[]
+  presupuestos       Presupuesto[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -138,6 +142,7 @@ model TipoServicio {
   actualizadoPorId Int?
   actualizadoPor   User?                      @relation("TipoServicioActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   detalles         OrdenTrabajoTipoServicio[]
+  presupuestos     Presupuesto[]
   createdAt        DateTime                   @default(now())
   updatedAt        DateTime                   @updatedAt
 }
@@ -182,6 +187,7 @@ model Producto {
   actualizadoPor     User?        @relation("ProductoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
   etiquetas          Etiqueta[]
   ordenTrabajoTipoServicioProductos OrdenTrabajoTipoServicioProducto[]
+  presupuestoProductos PresupuestoProducto[]
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 }
@@ -286,4 +292,40 @@ model OrdenTrabajoTipoServicioProducto {
   updatedAt                  DateTime                 @updatedAt
 
   @@unique([ordenTrabajoTipoServicioId, productoId])
+}
+
+model Presupuesto {
+  id               Int                   @id @default(autoincrement())
+  fecha            DateTime
+  clienteId        Int
+  cliente          Cliente               @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  tipoServicioId   Int
+  tipoServicio     TipoServicio          @relation(fields: [tipoServicioId], references: [id], onDelete: Restrict)
+  telefono         String?
+  descripcion      String?
+  activo           Boolean               @default(true)
+  creadoPorId      Int?
+  creadoPor        User?                 @relation("PresupuestoCreadoPor", fields: [creadoPorId], references: [id], onDelete: SetNull)
+  actualizadoPorId Int?
+  actualizadoPor   User?                 @relation("PresupuestoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  productos        PresupuestoProducto[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+}
+
+model PresupuestoProducto {
+  id               Int         @id @default(autoincrement())
+  presupuestoId    Int
+  presupuesto      Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  productoId       Int
+  producto         Producto    @relation(fields: [productoId], references: [id])
+  cantidad         Decimal     @db.Decimal(10, 2)
+  precioUnitario   Decimal     @db.Decimal(10, 2)
+  precioTotal      Decimal     @db.Decimal(10, 2)
+  actualizadoPorId Int?
+  actualizadoPor   User?       @relation("PresupuestoProductoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@unique([presupuestoId, productoId])
 }

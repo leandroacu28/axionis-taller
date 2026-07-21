@@ -2,6 +2,7 @@ import { listBrands, createBrand } from '../../lib/brands';
 import { listColors, createColor } from '../../lib/colors';
 import { listCustomers, createCustomer, ID_TYPES, ID_TYPE_LABELS, toIdType } from '../../lib/customers';
 import { searchUsers } from '../../lib/users';
+import { listServiceTypes } from '../../lib/service-types';
 import type { Option } from './SearchableSelect';
 import type { QuickCreateField } from './QuickCreateModal';
 
@@ -141,4 +142,19 @@ export const clienteSelectConfig: ReferenceSelectConfig = {
 // active users, mirroring the other configs' active-only search.
 export const mecanicoSelectConfig: ReferenceSelectConfig = {
   search: async (term) => searchUsers(term),
+};
+
+// Search-only — no `create`/`quickCreate` (presupuestos-crud design.md:
+// tipo de servicio picker has no inline creation). Backed by
+// `listServiceTypes`, restricted to active tipos de servicio.
+export const tipoServicioSelectConfig: ReferenceSelectConfig = {
+  search: async (term) => {
+    const result = await listServiceTypes({
+      search: term || undefined,
+      status: 'activo',
+      page: 1,
+      pageSize: 20,
+    });
+    return result.data.map((tipoServicio) => ({ id: tipoServicio.id, label: tipoServicio.descripcion }));
+  },
 };
