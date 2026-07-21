@@ -18,6 +18,7 @@ import { ProductosModule } from './productos/productos.module';
 import { EtiquetasModule } from './etiquetas/etiquetas.module';
 import { OrdenesTrabajoModule } from './ordenes-trabajo/ordenes-trabajo.module';
 import { EmpresaModule } from './empresa/empresa.module';
+import { PresupuestosModule } from './presupuestos/presupuestos.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { EmpresaModule } from './empresa/empresa.module';
     EtiquetasModule,
     OrdenesTrabajoModule,
     EmpresaModule,
+    PresupuestosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
