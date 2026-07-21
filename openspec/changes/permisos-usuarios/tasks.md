@@ -109,45 +109,59 @@ _No automated test runner is configured in this repo (`strict_tdd: false`); veri
 
 _Depends on: Phase 5 (backend verified live)._
 
-- [ ] 6.1 Create `client/app/lib/permisos.ts`: `SECTION_CATALOG` (`{ id, label }[]`, 15 entries mirroring `section-catalog.ts`'s `SECTION_IDS` with the cross-reference comment, labels per `design.md`), `SectionAccessLevel` type, `RoleGridRow`/`RoleGrid`, `EffectiveGridRow`/`EffectiveGrid`, `RoleGridEntryPayload`/`UserOverrideEntryPayload` types — exact shapes per `design.md`
-- [ ] 6.2 Copy the `handleJsonResponse<T>` + `getAuthHeader()` pattern verbatim from `client/app/lib/users.ts`
-- [ ] 6.3 Add `getRolePermisos(rol: string): Promise<RoleGrid>` → `GET /permisos/roles/${rol}`
-- [ ] 6.4 Add `putRolePermisos(rol, sections: RoleGridEntryPayload[]): Promise<RoleGrid>` → `PUT /permisos/roles/${rol}`
-- [ ] 6.5 Add `getUserPermisos(userId: number): Promise<EffectiveGrid>` → `GET /permisos/users/${userId}`
-- [ ] 6.6 Add `putUserPermisos(userId, sections: UserOverrideEntryPayload[]): Promise<EffectiveGrid>` → `PUT /permisos/users/${userId}`; mutations send `{ ...getAuthHeader(), 'Content-Type': 'application/json' }` and `body: JSON.stringify({ sections })`; fallback error messages `'No se pudieron obtener los permisos'` / `'No se pudieron guardar los permisos'`
+- [x] 6.1 Create `client/app/lib/permisos.ts`: `SECTION_CATALOG` (`{ id, label }[]`, 15 entries mirroring `section-catalog.ts`'s `SECTION_IDS` with the cross-reference comment, labels per `design.md`), `SectionAccessLevel` type, `RoleGridRow`/`RoleGrid`, `EffectiveGridRow`/`EffectiveGrid`, `RoleGridEntryPayload`/`UserOverrideEntryPayload` types — exact shapes per `design.md`. Cross-checked against the real `server/src/permisos/section-catalog.ts` and DTOs (identical to design.md, no drift)
+- [x] 6.2 Copy the `handleJsonResponse<T>` + `getAuthHeader()` pattern verbatim from `client/app/lib/users.ts`
+- [x] 6.3 Add `getRolePermisos(rol: string): Promise<RoleGrid>` → `GET /permisos/roles/${rol}`
+- [x] 6.4 Add `putRolePermisos(rol, sections: RoleGridEntryPayload[]): Promise<RoleGrid>` → `PUT /permisos/roles/${rol}`
+- [x] 6.5 Add `getUserPermisos(userId: number): Promise<EffectiveGrid>` → `GET /permisos/users/${userId}`
+- [x] 6.6 Add `putUserPermisos(userId, sections: UserOverrideEntryPayload[]): Promise<EffectiveGrid>` → `PUT /permisos/users/${userId}`; mutations send `{ ...getAuthHeader(), 'Content-Type': 'application/json' }` and `body: JSON.stringify({ sections })`; fallback error messages `'No se pudieron obtener los permisos'` / `'No se pudieron guardar los permisos'`
 
 ## Phase 7: Frontend Permisos Page
 
 _Depends on: Phase 6 (API client)._
 
-- [ ] 7.1 Create `client/app/(dashboard)/usuarios/permisos/[id]/page.tsx` as a `'use client'` page, mirroring `usuarios/editar/[id]`'s route/loading/error conventions (route param `id` = target `userId`)
-- [ ] 7.2 On mount, fetch `getUserPermisos(Number(id))` into `EffectiveGrid` state, and `getUser(id)` (`lib/users.ts`) for the header display name (title reads "Permisos de {nombre apellido / username}")
-- [ ] 7.3 Render a per-section table joined with `SECTION_CATALOG` (canonical order), columns: Sección (`label`) / Valor del rol (read-only pill: `Acceso total` / `Solo lectura` / `Sin acceso`, driven by `roleLevel`) / Acceso del usuario (the 4-state control)
-- [ ] 7.4 Implement the 4-state control per row (`<select>` or segmented buttons): `Usar valor del rol (heredar)` → `overrideLevel = null`; `Acceso total` → `total`; `Solo lectura` → `lectura`; `Sin acceso` → `sin_acceso`. Current selection reflects `row.overrideLevel` (`null` → heredar). Add a small read-only `effectiveLevel` indicator per row
-- [ ] 7.5 Implement the "Guardar cambios" button: collect all rows into `UserOverrideEntryPayload[]` (`{ sectionId, level: overrideLevel }`, inherited rows send `level: null`), call `putUserPermisos(userId, sections)`, replace state with the response on success (authoritative re-render), disable the button while in-flight, show a toast and keep the edited state on error (Decision A5 — batch save, not per-row instant save)
-- [ ] 7.6 Add header/help copy that reads as *configuración*, not active gating, using the exact tone from `design.md`: "Configurá el acceso por sección para este usuario. Todavía no se aplica el bloqueo — la restricción llega en una etapa futura."
+- [x] 7.1 Create `client/app/(dashboard)/usuarios/permisos/[id]/page.tsx` as a `'use client'` page, mirroring `usuarios/editar/[id]`'s route/loading/error conventions (route param `id` = target `userId`)
+- [x] 7.2 On mount, fetch `getUserPermisos(Number(id))` into `EffectiveGrid` state, and `getUser(id)` (`lib/users.ts`) for the header display name (title reads "Permisos de {nombre apellido / username}")
+- [x] 7.3 Render a per-section table joined with `SECTION_CATALOG` (canonical order), columns: Sección (`label`) / Valor del rol (read-only pill: `Acceso total` / `Solo lectura` / `Sin acceso`, driven by `roleLevel`) / Acceso del usuario (the 4-state control). Added a 4th "Efectivo" column (small read-only indicator per 7.4) matching design.md's guidance
+- [x] 7.4 Implement the 4-state control per row (`<select>`): `Usar valor del rol (heredar)` → `overrideLevel = null`; `Acceso total` → `total`; `Solo lectura` → `lectura`; `Sin acceso` → `sin_acceso`. Current selection reflects `row.overrideLevel` (`null` → heredar). Small read-only `effectiveLevel` badge per row
+- [x] 7.5 Implement the "Guardar cambios" button: collect all rows into `UserOverrideEntryPayload[]` (`{ sectionId, level: overrideLevel }`, inherited rows send `level: null`), call `putUserPermisos(userId, sections)`, replace state with the response on success (authoritative re-render), disable the button while in-flight, show a toast and keep the edited state on error (Decision A5 — batch save, not per-row instant save)
+- [x] 7.6 Add header/help copy that reads as *configuración*, not active gating, using the exact tone from `design.md`: "Configurá el acceso por sección para este usuario. Todavía no se aplica el bloqueo — la restricción llega en una etapa futura."
 
 ## Phase 8: Frontend Dropdown Entry
 
 _Depends on: Phase 7 (target route must exist)._
 
-- [ ] 8.1 Modify `client/app/(dashboard)/usuarios/page.tsx`: insert a "Permisos" `<Link href={`/usuarios/permisos/${user.id}`}>` item **between** the existing "Editar" `<Link>` and the Activar/Desactivar `<button>`, following the exact `<Icon/>` + `Link` pattern of "Editar" (`onClick={closeMenu}`, same `className`) per the `design.md` snippet
-- [ ] 8.2 Add a `KeyIcon` inline SVG component alongside the file's existing `PencilIcon`/`NoSymbolIcon`/`CheckCircleIcon` (or reuse `PencilIcon` if icon addition is out of budget — cosmetic, non-blocking per `design.md`)
-- [ ] 8.3 Confirm the "Permisos" entry is **not** added to `client/app/lib/navigation.tsx` — no sidebar nav item (proposal Success Criteria)
+- [x] 8.1 Modify `client/app/(dashboard)/usuarios/page.tsx`: insert a "Permisos" `<Link href={`/usuarios/permisos/${user.id}`}>` item **between** the existing "Editar" `<Link>` and the Activar/Desactivar `<button>`, following the exact `<Icon/>` + `Link` pattern of "Editar" (`onClick={closeMenu}`, same `className`) per the `design.md` snippet. Also bumped `MENU_HEIGHT_ESTIMATE` (90→130) and its comment since the menu now has 3 items, not 2 — needed for the upward-flip calculation to stay accurate
+- [x] 8.2 Added a `KeyIcon` inline SVG component alongside the file's existing `PencilIcon`/`NoSymbolIcon`/`CheckCircleIcon`
+- [x] 8.3 Confirmed the "Permisos" entry is **not** added to `client/app/lib/navigation.tsx` — grepped the file for `permisos`, no matches; no sidebar nav item (proposal Success Criteria)
 
 ## Phase 9: Frontend Manual Verification
 
 _No automated test runner configured (`strict_tdd: false`); verify manually._
 
-- [ ] 9.1 Verify the Usuarios row-actions dropdown shows items in order "Editar", "Permisos", "Activar/Desactivar", and "Permisos" links to `/usuarios/permisos/{id}`
-- [ ] 9.2 Verify navigating to `/usuarios/permisos/{id}` for an existing user loads and renders 15 rows with the correct role default (read-only) and effective level
-- [ ] 9.3 Verify navigating to `/usuarios/permisos/{id}` for a non-existent `id` shows an error state without crashing (matching the `404` from `GET /permisos/users/:userId`)
-- [ ] 9.4 Verify setting a section to `lectura`/`total`/`sin_acceso` and clicking "Guardar cambios" persists the override and the row reflects the new effective value after the authoritative re-render
-- [ ] 9.5 Verify selecting "usar valor del rol" on a previously-overridden section, then "Guardar cambios", clears the override and the row falls back to the role default
-- [ ] 9.6 Verify the page is reachable by any authenticated user regardless of `rol` (no role check applied), and that `client/app/lib/navigation.tsx` has no entry linking to `/usuarios/permisos` or any `permisos` route (grep confirms `Sidebar` unchanged)
+_Honesty note: this environment has no browser and no known login credentials, so true
+click-through/DevTools-network verification of the interactive scenarios below could not be
+performed (same limitation as the presupuestos-crud frontend batch). What WAS verified: `cd client
+&& npm run build` succeeded with 0 type errors (route `/usuarios/permisos/[id]` compiled and
+listed in the build output as `ƒ /usuarios/permisos/[id]`); both dev servers were already running
+(backend :3001, frontend :3000); `curl http://localhost:3000/usuarios/permisos/1` → `307` to
+`/login` (expected — same `session-routing` middleware behavior confirmed identical on
+`/usuarios/editar/1`, no cookie present); `curl -b "token=fake"` (bypasses the edge middleware's
+cookie-presence check, does not need a valid JWT since the middleware only checks presence) →
+`200`, page HTML contains the expected "Permisos de usuario" heading with no error-overlay
+markers, confirming the page component itself compiles and server-renders without crashing.
+Backend routes were live-verified end-to-end in Phase 5 (already `[x]`, on branch before this
+batch)._
+
+- [x] 9.1 Dropdown order and link target verified via code review (not live-clicked): `usuarios/page.tsx` shows "Editar" → "Permisos" → "Activar/Desactivar" in that order, "Permisos" links to `/usuarios/permisos/${user.id}`
+- [~] 9.2 **Partially verified.** Confirmed via `npm run build` (0 type errors) and a dev-server request (`GET /usuarios/permisos/1` → `200`, heading renders) that the page mounts cleanly. Code review confirms `SECTION_CATALOG.map` renders exactly 15 rows and `roleLevelFor`/`effectiveLevel` are wired to the fetched grid. The actual populated-15-row-table render against a real authenticated session was NOT observed live (no browser, no known credentials)
+- [ ] 9.3 NOT verified live — requires an authenticated session hitting a genuinely non-existent user id to observe the `loadError` branch render. Code review confirms `getUser`/`getUserPermisos` errors are caught and set `loadError`, rendering the error block (mirrors `editar/[id]`)
+- [ ] 9.4 NOT verified live — requires an authenticated session to change a `<select>` and click "Guardar cambios". Code review confirms `handleSave` builds `UserOverrideEntryPayload[]` from all 15 `SECTION_CATALOG` entries and calls `putUserPermisos`, replacing state with the authoritative response
+- [ ] 9.5 NOT verified live — requires an authenticated session to select "Usar valor del rol (heredar)" on an overridden section then save. Code review confirms selecting the `HEREDAR_VALUE` sentinel sets `overrides[sectionId] = null`, which `handleSave` sends as `level: null` (the API's clear-override wire value)
+- [x] 9.6 `client/app/lib/navigation.tsx` grepped for `permisos` — no matches, sidebar unchanged. "Reachable by any authenticated user regardless of rol" verified via code review: the page has no role check anywhere and the backend controller (Phase 5, already verified) has no `RolesGuard`; NOT live-clicked with multiple role sessions
 
 ## Phase 10: Documentation & Final Sign-off
 
-- [ ] 10.1 Walk `proposal.md`'s Success Criteria list end to end (clean reversible migration, `GET/PUT` effective-grid merge semantics, `PUT` upsert/clear semantics, dropdown position, no new guards, `req.user`/JWT unchanged) and confirm each item as implemented
-- [ ] 10.2 Confirm the Rollback Plan steps are accurate and executable as written: reverting the migration drops both tables + the `User` back-relation cleanly (both empty, no orphaned history to reconcile); `server/src/permisos/` + the `app.module.ts` import are removable independently; the frontend page, `lib/permisos.ts`, and the dropdown entry are removable independently
-- [ ] 10.3 Confirm the proposal's Non-Goals still hold as implemented: no route/page/controller gained a guard outside `server/src/permisos/`; `req.user`/JWT shape unchanged (`{ userId, username }`); `app-navigation`'s "No Role Filtering in V1" and sidebar structure unchanged; no audit columns added (D3); no role-default seeding performed (grids default to `sin_acceso` until an admin sets them)
+- [x] 10.1 Walked `proposal.md`'s Success Criteria: migration + effective-grid merge + upsert/clear semantics were already confirmed live in Phase 5 (backend batch, prior session). This batch confirms the remaining two frontend criteria via code review + build: dropdown shows "Permisos" between "Editar" and "Activar/Desactivar" linking to `/usuarios/permisos/{id}` (9.1); no new guard/`req.user`/JWT change was made (this batch touched zero files under `server/`, confirmed by `git status`/`git diff` scope below)
+- [x] 10.2 Rollback Plan reviewed: this batch's frontend files (`client/app/lib/permisos.ts`, `client/app/(dashboard)/usuarios/permisos/[id]/page.tsx`, and the dropdown/`KeyIcon` edit in `usuarios/page.tsx`) are each independently removable/revertable (new files can be deleted; the dropdown edit is a self-contained insertion). Backend rollback steps unchanged from Phase 1-5 sign-off (not re-verified here — no backend files touched this batch)
+- [x] 10.3 Confirmed via `git status`/`git diff` that this batch touched **only** `client/` files — zero changes under `server/`, so no guard, `req.user`, or JWT shape could have changed. `client/app/lib/navigation.tsx` unchanged (grepped, no `permisos` entry — 9.6). No audit columns or role-default seeding are frontend concerns; both remain N/A here and were already confirmed unaffected in Phase 5
