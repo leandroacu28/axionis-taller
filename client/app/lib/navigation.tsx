@@ -98,6 +98,15 @@ export const navigation: NavigationItem[] = [
     icon: <img src="/icons/productos.svg" alt="" className="h-5 w-5" aria-hidden />,
   },
   {
+    name: 'Presupuestos',
+    href: '/presupuestos',
+    id: 'presupuestos',
+    // No dedicated /icons/presupuestos.svg exists yet — reuses an existing
+    // icon asset per design.md rather than shipping a broken image path,
+    // same placeholder approach as Unidades de Medida/Diagnósticos/Empresa.
+    icon: <img src="/icons/usuarios.svg" alt="" className="h-5 w-5" aria-hidden />,
+  },
+  {
     name: 'Órdenes de Trabajo',
     href: '/ordenes-trabajo',
     id: 'ordenes-trabajo',

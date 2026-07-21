@@ -117,64 +117,66 @@ _No automated test runner is configured in this repo (`strict_tdd: false`); veri
 
 _Depends on: Phase 5 (backend verified live)._
 
-- [ ] 6.1 Create `client/app/lib/presupuestos.ts`: `PresupuestoProductoLinea`, `PresupuestoListItem`, `CreatePresupuestoProductoPayload`, `CreatePresupuestoPayload`, `UpdatePresupuestoPayload` types exactly as specified in `design.md`; copy `handleJsonResponse<T>` verbatim from `lib/productos.ts`
-- [ ] 6.2 Add `ListPresupuestosParams` (`page`, `pageSize`, `search?`, `status?`) and `PaginatedPresupuestos` (`{ data: PresupuestoListItem[]; total: number; activeCount: number }`) — copied from `lib/productos.ts`
-- [ ] 6.3 Add `listPresupuestos(params)` (GET `/presupuestos?…`), `getPresupuesto(id)` (GET `/presupuestos/${id}`) — each spreading `getAuthHeader()`
-- [ ] 6.4 Add `createPresupuesto(data: CreatePresupuestoPayload)` (POST `/presupuestos`), `updatePresupuesto(id, data: UpdatePresupuestoPayload)` (PATCH `/presupuestos/${id}`) — each spreading `getAuthHeader()` + `Content-Type`
-- [ ] 6.5 Add `addPresupuestoProducto(id, data: CreatePresupuestoProductoPayload)` (POST `/presupuestos/${id}/productos`), `updatePresupuestoProducto(id, detalleId, data)` (PATCH `/presupuestos/${id}/productos/${detalleId}`), `removePresupuestoProducto(id, detalleId)` (DELETE `/presupuestos/${id}/productos/${detalleId}`)
+- [x] 6.1 Create `client/app/lib/presupuestos.ts`: `PresupuestoProductoLinea`, `PresupuestoListItem`, `CreatePresupuestoProductoPayload`, `CreatePresupuestoPayload`, `UpdatePresupuestoPayload` types exactly as specified in `design.md`; copy `handleJsonResponse<T>` verbatim from `lib/productos.ts`
+- [x] 6.2 Add `ListPresupuestosParams` (`page`, `pageSize`, `search?`, `status?`) and `PaginatedPresupuestos` (`{ data: PresupuestoListItem[]; total: number; activeCount: number }`) — copied from `lib/productos.ts`
+- [x] 6.3 Add `listPresupuestos(params)` (GET `/presupuestos?…`), `getPresupuesto(id)` (GET `/presupuestos/${id}`) — each spreading `getAuthHeader()`
+- [x] 6.4 Add `createPresupuesto(data: CreatePresupuestoPayload)` (POST `/presupuestos`), `updatePresupuesto(id, data: UpdatePresupuestoPayload)` (PATCH `/presupuestos/${id}`) — each spreading `getAuthHeader()` + `Content-Type`
+- [x] 6.5 Add `addPresupuestoProducto(id, data: CreatePresupuestoProductoPayload)` (POST `/presupuestos/${id}/productos`), `updatePresupuestoProducto(id, detalleId, data)` (PATCH `/presupuestos/${id}/productos/${detalleId}`), `removePresupuestoProducto(id, detalleId)` (DELETE `/presupuestos/${id}/productos/${detalleId}`)
 
 ## Phase 7: Frontend Shared Pickers & Product Editor
 
 _Depends on: Phase 6 (API client)._
 
-- [ ] 7.1 Modify `client/app/(dashboard)/vehiculos/referenceSelectConfigs.tsx`: add `tipoServicioSelectConfig` (search-only, no quickCreate), backed by `listServiceTypes` from `client/app/lib/service-types.ts` with `{ status: 'activo', page: 1, pageSize: 20 }` mapped to `{ id, label: descripcion }`, used with the existing `SearchableSelect`
-- [ ] 7.2 Create `client/app/(dashboard)/presupuestos/PresupuestoProductosEditor.tsx`: duplicate the `ProductoPicker` combobox (portaled panel, 350ms debounce, keyboard nav) from `ordenes-trabajo/[id]/trabajo/page.tsx:265-460`, wired to `searchProductos` (`client/app/lib/productos.ts:150-158`) — per Decision D7, do NOT import from `ordenes-trabajo`
-- [ ] 7.3 Duplicate the line-item list UI from `ordenes-trabajo/[id]/trabajo/page.tsx:642-720` (descripcion, editable `cantidad` input, `$ c/u`, `$ total`, Actualizar/Quitar buttons) into `PresupuestoProductosEditor.tsx`
-- [ ] 7.4 Implement the dual-mode contract from Decision A1: component accepts injected async handlers (`onAdd`, `onUpdate`, `onRemove`) and a `mode: 'staged' | 'live'` prop; **staged mode** (used by `nuevo`) mutates an in-memory array and previews `precioUnitario`/`precioTotal` by fetching `getProducto(productoId)` on add (display-only, server re-freezes on `POST`); **live mode** (used by `editar/[id]`) calls `addPresupuestoProducto`/`updatePresupuestoProducto`/`removePresupuestoProducto` directly and renders the server's returned line
+- [x] 7.1 Modify `client/app/(dashboard)/vehiculos/referenceSelectConfigs.tsx`: add `tipoServicioSelectConfig` (search-only, no quickCreate), backed by `listServiceTypes` from `client/app/lib/service-types.ts` with `{ status: 'activo', page: 1, pageSize: 20 }` mapped to `{ id, label: descripcion }`, used with the existing `SearchableSelect`
+- [x] 7.2 Create `client/app/(dashboard)/presupuestos/PresupuestoProductosEditor.tsx`: duplicate the `ProductoPicker` combobox (portaled panel, 350ms debounce, keyboard nav) from `ordenes-trabajo/[id]/trabajo/page.tsx:265-460`, wired to `searchProductos` (`client/app/lib/productos.ts:150-158`) — per Decision D7, do NOT import from `ordenes-trabajo`
+- [x] 7.3 Duplicate the line-item list UI from `ordenes-trabajo/[id]/trabajo/page.tsx:642-720` (descripcion, editable `cantidad` input, `$ c/u`, `$ total`, Actualizar/Quitar buttons) into `PresupuestoProductosEditor.tsx`
+- [x] 7.4 Implement the dual-mode contract from Decision A1: component accepts injected async handlers (`onAdd`, `onUpdate`, `onRemove`) and a `mode: 'staged' | 'live'` prop; **staged mode** (used by `nuevo`) mutates an in-memory array and previews `precioUnitario`/`precioTotal` by fetching `getProducto(productoId)` on add (display-only, server re-freezes on `POST`); **live mode** (used by `editar/[id]`) calls `addPresupuestoProducto`/`updatePresupuestoProducto`/`removePresupuestoProducto` directly and renders the server's returned line
 
 ## Phase 8: Frontend List Page
 
 _Depends on: Phase 6 (API client)._
 
-- [ ] 8.1 Create `client/app/(dashboard)/presupuestos/page.tsx` (`'use client'`): mirror `productos/page.tsx`'s list shape (D6: simple table, search + `activo` filter, **no** table/card toggle), calling `listPresupuestos`; 350ms search debounce, status filter, pagination
-- [ ] 8.2 Implement table columns: `#`, `Fecha`, `Cliente`, `Tipo de servicio`, `Total` (client-side sum of `productos[].precioTotal`), `Estado`, `Acciones` (edit link to `editar/[id]` + activate/deactivate via `updatePresupuesto`)
-- [ ] 8.3 Implement loading indicator while the request is in flight, error message on request failure (no crash), and an empty-state message when the list resolves empty
+- [x] 8.1 Create `client/app/(dashboard)/presupuestos/page.tsx` (`'use client'`): mirror `productos/page.tsx`'s list shape (D6: simple table, search + `activo` filter, **no** table/card toggle), calling `listPresupuestos`; 350ms search debounce, status filter, pagination
+- [x] 8.2 Implement table columns: `#`, `Fecha`, `Cliente`, `Tipo de servicio`, `Total` (client-side sum of `productos[].precioTotal`), `Estado`, `Acciones` (edit link to `editar/[id]` + activate/deactivate via `updatePresupuesto`)
+- [x] 8.3 Implement loading indicator while the request is in flight, error message on request failure (no crash), and an empty-state message when the list resolves empty
 
 ## Phase 9: Frontend Create Page
 
 _Depends on: Phase 6 (API client), Phase 7 (pickers + editor)._
 
-- [ ] 9.1 Create `client/app/(dashboard)/presupuestos/nuevo/page.tsx`: header form with `clienteSelectConfig` + `SearchableSelect` (cliente picker, unmodified), `tipoServicioSelectConfig` + `SearchableSelect` (tipo-servicio picker), `fecha`, `telefono`, `descripcion` fields
-- [ ] 9.2 Wire `<PresupuestoProductosEditor mode="staged" …>` for line items; on submit call `createPresupuesto({ ...header, productos: staged })`
-- [ ] 9.3 On success, navigate back to `/presupuestos` (or `editar/[id]` per design); verify submitting with zero line items sends an empty/omitted `productos[]` and still creates successfully
+- [x] 9.1 Create `client/app/(dashboard)/presupuestos/nuevo/page.tsx`: header form with `clienteSelectConfig` + `SearchableSelect` (cliente picker, unmodified), `tipoServicioSelectConfig` + `SearchableSelect` (tipo-servicio picker), `fecha`, `telefono`, `descripcion` fields
+- [x] 9.2 Wire `<PresupuestoProductosEditor mode="staged" …>` for line items; on submit call `createPresupuesto({ ...header, productos: staged })`
+- [~] 9.3 On success, navigate back to `/presupuestos` (implemented via `router.push('/presupuestos')`, confirmed by code review); submitting with zero line items sends `productos: undefined` (code path confirmed: `productos.length > 0 ? productos : undefined`) — **NOT live-tested**: no valid login credentials were available in this environment to actually submit the form through a running session, so the end-to-end "still creates successfully" assertion is unverified live. Left partially checked to flag this honestly.
 
 ## Phase 10: Frontend Edit Page
 
 _Depends on: Phase 6 (API client), Phase 7 (pickers + editor)._
 
-- [ ] 10.1 Create `client/app/(dashboard)/presupuestos/editar/[id]/page.tsx`: load via `getPresupuesto(id)`, pre-fill the header form (cliente picker, tipo-servicio picker, `fecha`, `telefono`, `descripcion`, `activo`)
-- [ ] 10.2 Wire header submit via `updatePresupuesto(id, data)` sending the full required body
-- [ ] 10.3 Wire `<PresupuestoProductosEditor mode="live" presupuestoId={id} …>` to `addPresupuestoProducto`/`updatePresupuestoProducto`/`removePresupuestoProducto`; adding/removing a line updates the editor without a full page reload
+- [x] 10.1 Create `client/app/(dashboard)/presupuestos/editar/[id]/page.tsx`: load via `getPresupuesto(id)`, pre-fill the header form (cliente picker, tipo-servicio picker, `fecha`, `telefono`, `descripcion`, `activo`)
+- [x] 10.2 Wire header submit via `updatePresupuesto(id, data)` sending the full required body
+- [x] 10.3 Wire `<PresupuestoProductosEditor mode="live" presupuestoId={id} …>` to `addPresupuestoProducto`/`updatePresupuestoProducto`/`removePresupuestoProducto`; adding/removing a line updates the editor without a full page reload — verified structurally (handlers use `setLines`/React state only, no `router.push`/`window.location` navigation anywhere in the add/update/remove path), **not** live-clicked in a browser
 
 ## Phase 11: Navigation
 
 _Depends on: Phase 8 (list page must exist at `/presupuestos`)._
 
-- [ ] 11.1 Modify `client/app/lib/navigation.tsx`: add a new **flat top-level** "Presupuestos" entry (`href: '/presupuestos'`, `id: 'presupuestos'`, reuse an existing icon asset per `design.md`, e.g. `/icons/usuarios.svg`) after "Productos" — sibling of "Inicio"/"Clientes"/"Productos", NOT nested under "Configuraciones"'s `children`
+- [x] 11.1 Modify `client/app/lib/navigation.tsx`: add a new **flat top-level** "Presupuestos" entry (`href: '/presupuestos'`, `id: 'presupuestos'`, reuse an existing icon asset per `design.md`, e.g. `/icons/usuarios.svg`) after "Productos" — sibling of "Inicio"/"Clientes"/"Productos", NOT nested under "Configuraciones"'s `children`
 
 ## Phase 12: Frontend Manual Verification
 
-- [ ] 12.1 Verify `/presupuestos` shows a loading indicator while fetching, then lists presupuestos in a simple table (cliente, tipo de servicio, total, estado) with no table/card toggle control anywhere on the page
-- [ ] 12.2 Verify search and the `activo` filter narrow the displayed rows correctly; verify an error state renders without crashing on a failed request; verify an empty-state message renders when zero presupuestos exist
-- [ ] 12.3 Verify "Nuevo" opens `/presupuestos/nuevo`, the cliente picker behaves identically to its existing usage in `vehiculos`, the tipo-servicio picker searches and selects correctly, and creating with at least one staged line item sends `productos[]` in the `POST` body and lands back on the list with the correct frozen prices shown
-- [ ] 12.4 Verify creating without any line items sends an empty/omitted `productos[]` and succeeds
-- [ ] 12.5 Verify `editar/[id]` pre-fills the header form and existing line items from `GET /presupuestos/:id`; editing `descripcion` and saving calls `PATCH /presupuestos/:id` with the full body and reflects the change
-- [ ] 12.6 Verify adding a product from the edit page calls `POST /presupuestos/:id/productos` and the new/updated line appears without a full page reload; verify removing a line calls `DELETE /presupuestos/:id/productos/:detalleId` and the line disappears from the editor
-- [ ] 12.7 Verify the `PresupuestoProductosEditor.tsx` component does not import anything from `ordenes-trabajo` (grep its imports)
-- [ ] 12.8 Verify the "Presupuestos" nav entry is visible for any authenticated `rol`, renders as a top-level flat item (not nested under "Configuraciones"), and links to `/presupuestos`
+_Honesty note: this environment has no browser and no valid login credentials (the seeded users' passwords are hashed and unknown), so true click-through/DevTools-network verification of these UI interaction scenarios could not be performed. What WAS verified for each item is listed; items requiring an authenticated interactive session are left unchecked rather than falsely marked done._
+
+- [ ] 12.1 **Partially verified.** Confirmed via `npm run build` (0 type errors) and dev-server logs (`GET /presupuestos 200`, no compile/runtime errors) that the page mounts cleanly, and via code review that the table has no card/table toggle control anywhere in `page.tsx`. The actual loading-indicator-then-table-render sequence was NOT observed live (no browser).
+- [ ] 12.2 NOT verified live — requires interactive search/filter typing and an actually-failing request to observe the error branch, and a genuinely empty dataset to observe the empty state. Code review confirms all three branches (`loading`/`listError`/empty) exist in `page.tsx`.
+- [ ] 12.3 NOT verified live — requires an authenticated session to click through "Nuevo", use the pickers, and submit. Code review confirms the wiring (`clienteSelectConfig`, `tipoServicioSelectConfig`, `PresupuestoProductosEditor mode="staged"`, `createPresupuesto({ ...header, productos })`).
+- [ ] 12.4 NOT verified live — see 9.3.
+- [ ] 12.5 NOT verified live — requires an authenticated session to load `editar/1`'s data and submit a change. Confirmed via direct Prisma query that presupuesto id 1 exists (`activo: false`, `productos: []`) so the target row is valid for this test when a session is available.
+- [ ] 12.6 NOT verified live — requires an authenticated session to click Agregar/Quitar. Code review confirms `handleLiveAdd`/`handleLiveUpdate`/`handleLiveRemove` call the sub-route API functions directly and update local state without navigation.
+- [x] 12.7 Verified — grepped `PresupuestoProductosEditor.tsx`'s `^import` lines; only `react`, `react-dom`, `../../lib/productos` (`searchProductos`), and `../../lib/alerts` are imported. No import from `ordenes-trabajo`.
+- [x] 12.8 Verified structurally — `navigation.tsx`'s "Presupuestos" entry is a top-level array item (not inside `Configuraciones`'s `children`) with `href: '/presupuestos'`; grepped `Sidebar.tsx` and confirmed `filterNavigation` only filters by the search query string, with no `rol`-based branching anywhere in the component — matches the existing "No Role Filtering in V1" behavior, unchanged by this work.
 
 ## Phase 13: Documentation & Final Sign-off
 
-- [ ] 13.1 Walk `proposal.md`'s full Success Criteria checklist end-to-end and confirm each item (401 without token on all 7 routes, no `DELETE /presupuestos/:id`, dual audit stamping correctness, single-FK cliente + tipoServicio, independent `telefono`, price-freeze + sum-on-duplicate + total recompute, list/create/edit frontend behavior, nav entry visibility, additive/reversible migration)
-- [ ] 13.2 Confirm the Rollback Plan steps in `proposal.md` are accurate and executable as written (migration revert dropping `PresupuestoProducto` then `Presupuesto`, module removal, back-relation removal on `User`/`Cliente`/`TipoServicio`/`Producto`, frontend route/component/nav removal)
-- [ ] 13.3 Confirm the Known Gaps / Accepted Tradeoffs from `proposal.md` still hold as shipped (no access control yet; `precioVenta` nullable rejects per R1/A3; duplicated picker UI flagged per D7; no shared type package)
+- [x] 13.1 Walked `proposal.md`'s Success Criteria for the frontend-relevant items: `/presupuestos` list (simple table, search + `activo` filter, no toggle) exists; `nuevo`/`editar/[id]` pages exist with cliente picker, tipo-servicio picker, and product line-item editor; nav entry exists and is unguarded. Backend-side criteria (401s, audit stamping, price-freeze/sum/recompute, migration) were already verified and checked off in Phase 5 by the prior backend work — not re-verified here.
+- [x] 13.2 Confirmed the Rollback Plan's frontend steps are accurate and executable as written: `client/app/(dashboard)/presupuestos/` (incl. `PresupuestoProductosEditor.tsx`), `client/app/lib/presupuestos.ts`, the `tipoServicioSelectConfig` addition to `referenceSelectConfigs.tsx`, and the "Presupuestos" nav entry in `navigation.tsx` are each cleanly removable/revertable independent of any other module.
+- [x] 13.3 Confirmed the Known Gaps still hold as shipped on the frontend: no access-control/role gating added anywhere in the new pages or nav entry; the duplicated picker UI in `PresupuestoProductosEditor.tsx` is flagged in its header comment per D7; no shared type package — `client/app/lib/presupuestos.ts`'s types are hand-duplicated from the backend DTOs/SELECT shapes (cross-checked against the actual `presupuestos.service.ts`/`presupuestos.controller.ts` source, not just `design.md`).
