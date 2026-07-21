@@ -59,35 +59,35 @@ This slice is much smaller than `presupuestos-crud` (no list page, no create/edi
 
 _Depends on: Phase 1 (Prisma Client must expose the new delegates)._
 
-- [ ] 2.1 Create `server/src/permisos/section-catalog.ts`: `SECTION_IDS` (the 15 canonical slugs `as const`), `SectionId` type, `SECTION_ACCESS_LEVELS` (`['total', 'lectura', 'sin_acceso'] as const`), `SectionAccessLevelValue` type — exact content per `design.md` (with the cross-reference comment pointing at `client/app/lib/permisos.ts`)
-- [ ] 2.2 Create `server/src/permisos/dto/put-role-grid.dto.ts`: `RoleSectionEntryDto` (`sectionId: string` `@IsString @IsIn(SECTION_IDS)`; `level: string` `@IsIn(SECTION_ACCESS_LEVELS)`) + `PutRoleGridDto` (`sections: RoleSectionEntryDto[]` `@IsArray @ArrayNotEmpty @ValidateNested({each:true}) @Type(() => RoleSectionEntryDto)`) — exact content per `design.md`
-- [ ] 2.3 Create `server/src/permisos/dto/put-user-overrides.dto.ts`: `UserOverrideEntryDto` (`sectionId: string` `@IsString @IsIn(SECTION_IDS)`; `level: string | null` with `@ValidateIf((o) => o.level !== null) @IsIn(SECTION_ACCESS_LEVELS)`) + `PutUserOverridesDto` (`sections: UserOverrideEntryDto[]`) — exact content per `design.md`
+- [x] 2.1 Create `server/src/permisos/section-catalog.ts`: `SECTION_IDS` (the 15 canonical slugs `as const`), `SectionId` type, `SECTION_ACCESS_LEVELS` (`['total', 'lectura', 'sin_acceso'] as const`), `SectionAccessLevelValue` type — exact content per `design.md` (with the cross-reference comment pointing at `client/app/lib/permisos.ts`)
+- [x] 2.2 Create `server/src/permisos/dto/put-role-grid.dto.ts`: `RoleSectionEntryDto` (`sectionId: string` `@IsString @IsIn(SECTION_IDS)`; `level: string` `@IsIn(SECTION_ACCESS_LEVELS)`) + `PutRoleGridDto` (`sections: RoleSectionEntryDto[]` `@IsArray @ArrayNotEmpty @ValidateNested({each:true}) @Type(() => RoleSectionEntryDto)`) — exact content per `design.md`
+- [x] 2.3 Create `server/src/permisos/dto/put-user-overrides.dto.ts`: `UserOverrideEntryDto` (`sectionId: string` `@IsString @IsIn(SECTION_IDS)`; `level: string | null` with `@ValidateIf((o) => o.level !== null) @IsIn(SECTION_ACCESS_LEVELS)`) + `PutUserOverridesDto` (`sections: UserOverrideEntryDto[]`) — exact content per `design.md`
 
 ## Phase 3: Backend Module — Service
 
 _Depends on: Phase 2 (DTOs), Phase 1 (Prisma Client)._
 
-- [ ] 3.1 Create `server/src/permisos/permisos.service.ts`: `@Injectable()`, `constructor(private readonly prisma: PrismaService) {}`, import `Prisma`/`SectionAccessLevel` from `@prisma/client` and `SECTION_IDS` from `./section-catalog`
-- [ ] 3.2 Add private `assertUserExists(userId)`: `prisma.user.findUnique({ where: { id: userId }, select: { id: true, rol: true } })`; `null` → `NotFoundException('Usuario no encontrado.')`; returns `{ id, rol }`
-- [ ] 3.3 Add private `buildRoleGrid(rol)`: `prisma.roleSectionAccess.findMany({ where: { rol } })` → `Map<sectionId, level>`; map over `SECTION_IDS` → `{ sectionId, level: map.get(sectionId) ?? 'sin_acceso' }`
-- [ ] 3.4 Add private `buildEffectiveGrid(user)`: fetch role rows (`user.rol`) into one `Map` and override rows (`user.id`) into another; map over `SECTION_IDS` → `{ sectionId, roleLevel, overrideLevel, effectiveLevel }` per the merge algorithm in `design.md` (`roleLevel = roleMap.get(sectionId) ?? 'sin_acceso'`, `overrideLevel = overrideMap.get(sectionId) ?? null`, `effectiveLevel = overrideLevel ?? roleLevel`)
-- [ ] 3.5 Add `getRoleGrid(rol)`: return `{ rol, sections: buildRoleGrid(rol) }` — no `rol` validation (free-form per Decision A3)
-- [ ] 3.6 Add `putRoleGrid(rol, dto)`: `$transaction(dto.sections.map(s => prisma.roleSectionAccess.upsert({ where: { rol_sectionId: { rol, sectionId: s.sectionId } }, create: { rol, sectionId: s.sectionId, level: s.level }, update: { level: s.level } })))`; return `{ rol, sections: buildRoleGrid(rol) }` (a section omitted from the body is left unchanged — partial-grid upsert)
-- [ ] 3.7 Add `getUserGrid(userId)`: `const user = await assertUserExists(userId)`; return `{ userId, rol: user.rol, sections: buildEffectiveGrid(user) }`
-- [ ] 3.8 Add `putUserGrid(userId, dto)`: `const user = await assertUserExists(userId)`; in a `$transaction`, for each entry — `level === null` → `deleteMany({ where: { userId, sectionId } })` (Decision A4, idempotent no-op if absent); else `upsert({ where: { userId_sectionId: { userId, sectionId } }, create: { userId, sectionId, level }, update: { level } })`; then return `{ userId, rol: user.rol, sections: buildEffectiveGrid(user) }` (re-run the merge for authoritative post-write state)
+- [x] 3.1 Create `server/src/permisos/permisos.service.ts`: `@Injectable()`, `constructor(private readonly prisma: PrismaService) {}`, import `Prisma`/`SectionAccessLevel` from `@prisma/client` and `SECTION_IDS` from `./section-catalog`
+- [x] 3.2 Add private `assertUserExists(userId)`: `prisma.user.findUnique({ where: { id: userId }, select: { id: true, rol: true } })`; `null` → `NotFoundException('Usuario no encontrado.')`; returns `{ id, rol }`
+- [x] 3.3 Add private `buildRoleGrid(rol)`: `prisma.roleSectionAccess.findMany({ where: { rol } })` → `Map<sectionId, level>`; map over `SECTION_IDS` → `{ sectionId, level: map.get(sectionId) ?? 'sin_acceso' }`
+- [x] 3.4 Add private `buildEffectiveGrid(user)`: fetch role rows (`user.rol`) into one `Map` and override rows (`user.id`) into another; map over `SECTION_IDS` → `{ sectionId, roleLevel, overrideLevel, effectiveLevel }` per the merge algorithm in `design.md` (`roleLevel = roleMap.get(sectionId) ?? 'sin_acceso'`, `overrideLevel = overrideMap.get(sectionId) ?? null`, `effectiveLevel = overrideLevel ?? roleLevel`)
+- [x] 3.5 Add `getRoleGrid(rol)`: return `{ rol, sections: buildRoleGrid(rol) }` — no `rol` validation (free-form per Decision A3)
+- [x] 3.6 Add `putRoleGrid(rol, dto)`: `$transaction(dto.sections.map(s => prisma.roleSectionAccess.upsert({ where: { rol_sectionId: { rol, sectionId: s.sectionId } }, create: { rol, sectionId: s.sectionId, level: s.level }, update: { level: s.level } })))`; return `{ rol, sections: buildRoleGrid(rol) }` (a section omitted from the body is left unchanged — partial-grid upsert)
+- [x] 3.7 Add `getUserGrid(userId)`: `const user = await assertUserExists(userId)`; return `{ userId, rol: user.rol, sections: buildEffectiveGrid(user) }`
+- [x] 3.8 Add `putUserGrid(userId, dto)`: `const user = await assertUserExists(userId)`; in a `$transaction`, for each entry — `level === null` → `deleteMany({ where: { userId, sectionId } })` (Decision A4, idempotent no-op if absent); else `upsert({ where: { userId_sectionId: { userId, sectionId } }, create: { userId, sectionId, level }, update: { level } })`; then return `{ userId, rol: user.rol, sections: buildEffectiveGrid(user) }` (re-run the merge for authoritative post-write state)
 
 ## Phase 4: Backend Module — Controller & Module Registration
 
 _Depends on: Phase 3 (service)._
 
-- [ ] 4.1 Create `server/src/permisos/permisos.controller.ts`: `@Controller('permisos')`, class-level `@UseGuards(JwtAuthGuard)` (no role guard)
-- [ ] 4.2 Add `@Get('roles/:rol')` → `getRoleGrid(@Param('rol') rol: string)` calling `permisosService.getRoleGrid(rol)`
-- [ ] 4.3 Add `@Put('roles/:rol')` → `putRoleGrid(@Param('rol') rol: string, @Body() dto: PutRoleGridDto)` calling `permisosService.putRoleGrid(rol, dto)`
-- [ ] 4.4 Add `@Get('users/:userId')` → `getUserGrid(@Param('userId', ParseIntPipe) userId: number)` calling `permisosService.getUserGrid(userId)`
-- [ ] 4.5 Add `@Put('users/:userId')` → `putUserGrid(@Param('userId', ParseIntPipe) userId: number, @Body() dto: PutUserOverridesDto)` calling `permisosService.putUserGrid(userId, dto)`
-- [ ] 4.6 Confirm route declaration order places the literal `roles`/`users` segments before their params (no `:id`-capture hazard) — matches `design.md`'s controller snippet; no `@Request()`/`req.user` param anywhere (D3 — no audit columns to stamp)
-- [ ] 4.7 Create `server/src/permisos/permisos.module.ts`: `controllers: [PermisosController]`, `providers: [PermisosService]` → `export class PermisosModule {}`
-- [ ] 4.8 Modify `server/src/app.module.ts`: import `PermisosModule` from `./permisos/permisos.module` and register it in `imports` (after `PresupuestosModule`)
+- [x] 4.1 Create `server/src/permisos/permisos.controller.ts`: `@Controller('permisos')`, class-level `@UseGuards(JwtAuthGuard)` (no role guard)
+- [x] 4.2 Add `@Get('roles/:rol')` → `getRoleGrid(@Param('rol') rol: string)` calling `permisosService.getRoleGrid(rol)`
+- [x] 4.3 Add `@Put('roles/:rol')` → `putRoleGrid(@Param('rol') rol: string, @Body() dto: PutRoleGridDto)` calling `permisosService.putRoleGrid(rol, dto)`
+- [x] 4.4 Add `@Get('users/:userId')` → `getUserGrid(@Param('userId', ParseIntPipe) userId: number)` calling `permisosService.getUserGrid(userId)`
+- [x] 4.5 Add `@Put('users/:userId')` → `putUserGrid(@Param('userId', ParseIntPipe) userId: number, @Body() dto: PutUserOverridesDto)` calling `permisosService.putUserGrid(userId, dto)`
+- [x] 4.6 Confirm route declaration order places the literal `roles`/`users` segments before their params (no `:id`-capture hazard) — matches `design.md`'s controller snippet; no `@Request()`/`req.user` param anywhere (D3 — no audit columns to stamp)
+- [x] 4.7 Create `server/src/permisos/permisos.module.ts`: `controllers: [PermisosController]`, `providers: [PermisosService]` → `export class PermisosModule {}`
+- [x] 4.8 Modify `server/src/app.module.ts`: import `PermisosModule` from `./permisos/permisos.module` and register it in `imports`. **Deviation from design.md**: no `PresupuestosModule` exists on this branch (its DB tables are unrelated pre-existing drift, not part of this repo's tracked schema/modules — see 1.9 note); registered `PermisosModule` after `EmpresaModule` (the last existing entry) instead.
 
 ## Phase 5: Backend Manual Verification
 
