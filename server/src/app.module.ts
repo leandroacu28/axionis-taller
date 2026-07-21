@@ -18,6 +18,7 @@ import { ProductosModule } from './productos/productos.module';
 import { EtiquetasModule } from './etiquetas/etiquetas.module';
 import { OrdenesTrabajoModule } from './ordenes-trabajo/ordenes-trabajo.module';
 import { EmpresaModule } from './empresa/empresa.module';
+import { PresupuestosModule } from './presupuestos/presupuestos.module';
 import { PermisosModule } from './permisos/permisos.module';
 
 @Module({
@@ -43,6 +44,7 @@ import { PermisosModule } from './permisos/permisos.module';
     EtiquetasModule,
     OrdenesTrabajoModule,
     EmpresaModule,
+    PresupuestosModule,
     PermisosModule,
   ],
   controllers: [AppController],
