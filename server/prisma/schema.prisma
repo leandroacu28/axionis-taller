@@ -44,6 +44,7 @@ model User {
   ordenesTrabajoCreadas                OrdenTrabajo[]             @relation("OrdenTrabajoCreadoPor")
   ordenesTrabajoActualizadas           OrdenTrabajo[]             @relation("OrdenTrabajoActualizadoPor")
   empresaActualizada                   Empresa[]                  @relation("EmpresaActualizadoPor")
+  sectionOverrides                     UserSectionOverride[]
   createdAt                            DateTime                   @default(now())
   updatedAt                            DateTime                   @updatedAt
 }
@@ -286,4 +287,33 @@ model OrdenTrabajoTipoServicioProducto {
   updatedAt                  DateTime                 @updatedAt
 
   @@unique([ordenTrabajoTipoServicioId, productoId])
+}
+
+enum SectionAccessLevel {
+  total
+  lectura
+  sin_acceso
+}
+
+model RoleSectionAccess {
+  id        Int                @id @default(autoincrement())
+  rol       String
+  sectionId String
+  level     SectionAccessLevel
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@unique([rol, sectionId])
+}
+
+model UserSectionOverride {
+  id        Int                @id @default(autoincrement())
+  userId    Int
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sectionId String
+  level     SectionAccessLevel
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@unique([userId, sectionId])
 }
