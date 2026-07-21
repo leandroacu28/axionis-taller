@@ -93,15 +93,17 @@ _Depends on: Phase 3 (service)._
 
 _No automated test runner is configured in this repo (`strict_tdd: false`); verify manually against a running server + reachable DB._
 
-- [ ] 5.1 Verify `GET/PUT /permisos/roles/:rol` and `GET/PUT /permisos/users/:userId` all return 401 without a Bearer token
-- [ ] 5.2 Verify `GET`/`PUT /permisos/roles/:rol` with an unknown/typo'd `rol` returns `200` with 15 all-`sin_acceso` rows (no `400` — free-form per Decision A3)
-- [ ] 5.3 Verify `PUT /permisos/roles/:rol` and `PUT /permisos/users/:userId` return `400` on an unknown `sectionId` or an invalid `level` value
-- [ ] 5.4 Verify `GET /permisos/users/:userId` returns `404 'Usuario no encontrado.'` for a non-existent user, and exactly 15 rows with correct `override ?? role ?? sin_acceso` merge for an existing user
-- [ ] 5.5 Verify `PUT /permisos/users/:userId` upserts a `UserSectionOverride` row when a level is set, and **deletes it via `deleteMany`** (idempotent, no `404`) when `level` is `null` — including clearing an already-inherited (never-overridden) section as a safe no-op
-- [ ] 5.6 Verify `PUT /permisos/roles/:rol` upserts `RoleSectionAccess` rows keyed on `(rol, sectionId)`, leaving sections omitted from the body unchanged (partial-grid upsert, not full replace)
-- [ ] 5.7 Verify deleting a `User` cascades away its `UserSectionOverride` rows (`onDelete: Cascade`)
-- [ ] 5.8 Verify any authenticated `rol` (e.g. `'empleado'`) succeeds identically to `'administrador'` on all 4 routes (no role guard)
-- [ ] 5.9 Regression: grep for new `@UseGuards`/`RolesGuard` outside `server/src/permisos/` — confirm none added; diff `server/src/auth/strategies/jwt.strategy.ts` — confirm `req.user` stays exactly `{ userId, username }`
+- [x] 5.1 Verify `GET/PUT /permisos/roles/:rol` and `GET/PUT /permisos/users/:userId` all return 401 without a Bearer token — confirmed via curl against the running dev server: all 4 routes returned `401`
+- [x] 5.2 Verify `GET`/`PUT /permisos/roles/:rol` with an unknown/typo'd `rol` returns `200` with 15 all-`sin_acceso` rows (no `400` — free-form per Decision A3) — confirmed: `GET /permisos/roles/rol-que-no-existe` → 15 rows, all `sin_acceso`
+- [x] 5.3 Verify `PUT /permisos/roles/:rol` and `PUT /permisos/users/:userId` return `400` on an unknown `sectionId` or an invalid `level` value — confirmed all 4 combinations (roles/users × sectionId/level) returned `400`
+- [x] 5.4 Verify `GET /permisos/users/:userId` returns `404 'Usuario no encontrado.'` for a non-existent user, and exactly 15 rows with correct `override ?? role ?? sin_acceso` merge for an existing user — confirmed `GET /permisos/users/999999` → `404 {"message":"Usuario no encontrado."}`; merge verified in 5.5/5.6 below
+- [x] 5.5 Verify `PUT /permisos/users/:userId` upserts a `UserSectionOverride` row when a level is set, and **deletes it via `deleteMany`** (idempotent, no `404`) when `level` is `null` — including clearing an already-inherited (never-overridden) section as a safe no-op — confirmed: set `productos` override `lectura` (role was `total`) → effective `lectura`; cleared via `level:null` → effective fell back to role `total`; clearing never-overridden `home` returned `200` (no 404)
+- [x] 5.6 Verify `PUT /permisos/roles/:rol` upserts `RoleSectionAccess` rows keyed on `(rol, sectionId)`, leaving sections omitted from the body unchanged (partial-grid upsert, not full replace) — confirmed: set `productos=total`, `clientes=lectura` for `empleado`, all other 13 sections stayed `sin_acceso`
+- [x] 5.7 Verify deleting a `User` cascades away its `UserSectionOverride` rows (`onDelete: Cascade`) — confirmed via a disposable test user: 1 override row existed, `prisma.user.delete()` → 0 override rows remained
+- [x] 5.8 Verify any authenticated `rol` (e.g. `'empleado'`) succeeds identically to `'administrador'` on all 4 routes (no role guard) — all verification above was performed with an `empleado`-rol token and succeeded on every route; controller has no `RolesGuard`/role check to differentiate roles
+- [x] 5.9 Regression: grep for new `@UseGuards`/`RolesGuard` outside `server/src/permisos/` — confirm none added; diff `server/src/auth/strategies/jwt.strategy.ts` — confirm `req.user` stays exactly `{ userId, username }` — confirmed: repo-wide `@UseGuards` grep shows only pre-existing `JwtAuthGuard` usages plus the new `permisos.controller.ts` one; `git diff` on `jwt.strategy.ts` is empty (unchanged); `validate()` still returns exactly `{ userId, username }`
+
+**Verification cleanup**: the disposable test user (`permisos_test_user`, id 37) and the test `RoleSectionAccess` rows created for the real `empleado` rol during 5.6 were deleted after verification — both tables are back to 0 rows post-verification.
 
 ## Phase 6: Frontend API Client
 
