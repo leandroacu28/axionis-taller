@@ -123,7 +123,7 @@ export default function KanbanCardActions({
           type="button"
           onClick={handleIniciar}
           disabled={iniciando}
-          className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-2 py-1.5 text-center text-xs font-semibold text-white shadow-sm transition-all hover:from-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-2 py-1.5 text-center text-sm font-semibold text-white shadow-sm transition-all hover:from-green-600 hover:to-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <PlayIcon />
           {iniciando ? 'Iniciando...' : 'Iniciar trabajo'}
@@ -132,7 +132,7 @@ export default function KanbanCardActions({
 
       <Link
         href={`/ordenes-trabajo/editar/${orden.id}`}
-        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-stone-200 px-2 py-1.5 text-center text-xs font-semibold text-stone-600 transition-all hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-stone-200 px-2 py-1.5 text-center text-sm font-semibold text-stone-600 transition-all hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
       >
         <PencilIcon />
         Editar
@@ -142,7 +142,7 @@ export default function KanbanCardActions({
         type="button"
         onClick={handleDesactivar}
         disabled={desactivando}
-        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-200 px-2 py-1.5 text-center text-xs font-semibold text-rose-600 transition-all hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
+        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-200 px-2 py-1.5 text-center text-sm font-semibold text-rose-600 transition-all hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
       >
         <NoSymbolIcon />
         {desactivando ? 'Desactivando...' : 'Desactivar'}

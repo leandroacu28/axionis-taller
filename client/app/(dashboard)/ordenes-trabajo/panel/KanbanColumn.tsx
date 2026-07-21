@@ -76,15 +76,15 @@ export function KanbanCard({
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-stone-200 bg-white p-3 shadow-sm dark:border-stone-700 dark:bg-stone-900">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-bold text-stone-800 dark:text-stone-100">{orden.numero ?? '—'}</span>
+        <span className="text-base font-bold text-stone-800 dark:text-stone-100">{orden.numero ?? '—'}</span>
         <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${PRIORIDAD_BADGE_CLASSES[orden.prioridad]}`}
+          className={`rounded-full px-2 py-0.5 text-sm font-medium ${PRIORIDAD_BADGE_CLASSES[orden.prioridad]}`}
         >
           {PRIORIDAD_LABELS[orden.prioridad]}
         </span>
       </div>
 
-      <div className="space-y-0.5 text-xs text-stone-600 dark:text-stone-300">
+      <div className="space-y-0.5 text-sm text-stone-600 dark:text-stone-300">
         <p>
           <span className="font-medium text-stone-800 dark:text-stone-100">Cliente:</span>{' '}
           {orden.cliente.razonSocial}
@@ -104,7 +104,7 @@ export function KanbanCard({
           {orden.tiposServicio.map((tipo) => (
             <span
               key={tipo.id}
-              className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300"
+              className="rounded-full bg-stone-100 px-2 py-0.5 text-sm font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300"
             >
               {tipo.descripcion}
             </span>
@@ -112,7 +112,7 @@ export function KanbanCard({
         </div>
       )}
 
-      <p className="text-xs text-stone-400 dark:text-stone-500">Ingreso: {formatFecha(orden.fechaIngreso)}</p>
+      <p className="text-sm text-stone-400 dark:text-stone-500">Ingreso: {formatFecha(orden.fechaIngreso)}</p>
 
       <KanbanCardActions orden={orden} onActionSuccess={onActionSuccess} />
     </div>

@@ -768,26 +768,26 @@ export default function OrdenesTrabajoPage() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+                    <p className="text-sm font-semibold uppercase tracking-wider text-stone-400">
                       Orden de trabajo
                     </p>
-                    <p className="text-sm font-bold text-stone-800">{orden.numero ?? '—'}</p>
+                    <p className="text-base font-bold text-stone-800">{orden.numero ?? '—'}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${ESTADO_BADGE_CLASSES[orden.estado]}`}
+                      className={`rounded-full px-2 py-0.5 text-sm font-medium ${ESTADO_BADGE_CLASSES[orden.estado]}`}
                     >
                       {ESTADO_LABELS[orden.estado]}
                     </span>
                     {!orden.activo && (
-                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700">
+                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-sm font-medium text-rose-700">
                         Inactiva
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="space-y-1 text-sm text-stone-600">
+                <div className="space-y-1 text-base text-stone-600">
                   <p>
                     <span className="font-medium text-stone-800">Cliente:</span> {orden.cliente.razonSocial}
                   </p>
@@ -802,7 +802,7 @@ export default function OrdenesTrabajoPage() {
                   <p className="flex items-center gap-1.5">
                     <span className="font-medium text-stone-800">Prioridad:</span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${PRIORIDAD_BADGE_CLASSES[orden.prioridad]}`}
+                      className={`rounded-full px-2 py-0.5 text-sm font-medium ${PRIORIDAD_BADGE_CLASSES[orden.prioridad]}`}
                     >
                       {PRIORIDAD_LABELS[orden.prioridad]}
                     </span>
@@ -813,14 +813,14 @@ export default function OrdenesTrabajoPage() {
                   {orden.tiposServicio.map((tipo) => (
                     <span
                       key={tipo.id}
-                      className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600"
+                      className="rounded-full bg-stone-100 px-2 py-0.5 text-sm font-medium text-stone-600"
                     >
                       {tipo.descripcion}
                     </span>
                   ))}
                 </div>
 
-                <p className="text-xs text-stone-400">
+                <p className="text-sm text-stone-400">
                   Ingreso: {formatFecha(orden.fechaIngreso)} · {formatHora(orden.createdAt)}
                 </p>
 
