@@ -62,6 +62,9 @@ async function handleJsonResponse<T>(res: Response, fallbackMessage: string): Pr
   return res.json();
 }
 
+export type PresupuestoSortBy = 'id' | 'fecha';
+export type SortDirection = 'asc' | 'desc';
+
 export interface ListPresupuestosParams {
   page: number;
   pageSize: number;
@@ -69,6 +72,8 @@ export interface ListPresupuestosParams {
   status?: 'all' | 'activo' | 'inactivo';
   clienteId?: number;
   tipoServicioId?: number;
+  sortBy?: PresupuestoSortBy;
+  sortDir?: SortDirection;
 }
 
 export interface PaginatedPresupuestos {
@@ -86,6 +91,8 @@ export async function listPresupuestos(params: ListPresupuestosParams): Promise<
   if (params.status) query.set('status', params.status);
   if (params.clienteId) query.set('clienteId', String(params.clienteId));
   if (params.tipoServicioId) query.set('tipoServicioId', String(params.tipoServicioId));
+  if (params.sortBy) query.set('sortBy', params.sortBy);
+  if (params.sortDir) query.set('sortDir', params.sortDir);
 
   const res = await fetch(`${API_BASE_URL}/presupuestos?${query.toString()}`, {
     headers: { ...getAuthHeader() },

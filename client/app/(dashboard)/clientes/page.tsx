@@ -10,6 +10,7 @@ import {
   exportCustomers,
   ID_TYPE_LABELS,
   type CustomerListItem,
+  type SortDirection,
 } from '../../lib/customers';
 import { showConfirm, showError, showSuccess } from '../../lib/alerts';
 
@@ -51,6 +52,33 @@ function SearchIcon() {
   );
 }
 
+// Chevron pair for the sortable "#" header — active direction highlighted,
+// the inactive one dimmed. Mirrors presupuestos/page.tsx's SortIcon.
+function SortIcon({ direction }: { direction: SortDirection }) {
+  return (
+    <span className="inline-flex flex-col leading-none" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        className={`h-2.5 w-2.5 ${direction === 'asc' ? 'text-stone-700' : 'text-stone-300'}`}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+      </svg>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        className={`-mt-1 h-2.5 w-2.5 ${direction === 'desc' ? 'text-stone-700' : 'text-stone-300'}`}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+      </svg>
+    </span>
+  );
+}
+
 // Document with a folded corner plus a table grid inside — reads as "Excel
 // spreadsheet file" without depending on a brand logo asset.
 function ExcelFileIcon() {
@@ -85,6 +113,12 @@ export default function ClientesPage() {
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
   const [total, setTotal] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
+  const [sortDir, setSortDir] = useState<SortDirection>('desc');
+
+  const handleSortById = () => {
+    setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setPage(1);
+  };
   const triggerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -147,6 +181,7 @@ export default function ClientesPage() {
         pageSize,
         search: search || undefined,
         status: statusFilter,
+        sortDir,
       });
       setCustomers(result.data);
       setTotal(result.total);
@@ -163,7 +198,7 @@ export default function ClientesPage() {
   useEffect(() => {
     loadCustomers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, search, statusFilter]);
+  }, [page, pageSize, search, statusFilter, sortDir]);
 
   const handleToggleActivo = async (customer: CustomerListItem) => {
     closeMenu();
@@ -417,7 +452,14 @@ export default function ClientesPage() {
             <thead className="bg-gray-200">
               <tr>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  #
+                  <button
+                    type="button"
+                    onClick={handleSortById}
+                    className="inline-flex items-center gap-1 hover:text-stone-700"
+                  >
+                    #
+                    <SortIcon direction={sortDir} />
+                  </button>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Cliente / Razón Social
@@ -443,7 +485,9 @@ export default function ClientesPage() {
               {customers.map((customer, index) => (
                 <tr key={customer.id} className="hover:bg-stone-50/60">
                   <td className="px-4 py-3 text-center text-sm text-stone-500">
-                    {(page - 1) * pageSize + index + 1}
+                    {sortDir === 'asc'
+                      ? (page - 1) * pageSize + index + 1
+                      : total - ((page - 1) * pageSize + index)}
                   </td>
                   <td className="px-4 py-3 text-center text-sm font-medium text-stone-800">
                     {customer.razonSocial}

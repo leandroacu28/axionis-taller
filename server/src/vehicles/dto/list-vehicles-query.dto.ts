@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export type VehicleStatusFilter = 'all' | 'activo' | 'inactivo';
+export type SortDirection = 'asc' | 'desc';
 
 export class ListVehiclesQueryDto {
   @IsOptional()
@@ -29,4 +30,8 @@ export class ListVehiclesQueryDto {
   @Type(() => Number)
   @IsInt()
   clienteId?: number;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortDir?: SortDirection = 'desc';
 }

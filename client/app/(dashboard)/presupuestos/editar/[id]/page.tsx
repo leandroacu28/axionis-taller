@@ -12,6 +12,7 @@ import {
   type PresupuestoListItem,
   type UpdatePresupuestoPayload,
 } from '../../../../lib/presupuestos';
+import { generatePresupuestoPdf } from '../../../../lib/presupuestoPdf';
 import { showError, showSuccess } from '../../../../lib/alerts';
 import SearchableSelect from '../../../vehiculos/SearchableSelect';
 import { clienteSelectConfig, tipoServicioSelectConfig } from '../../../vehiculos/referenceSelectConfigs';
@@ -38,6 +39,25 @@ const EMPTY_FORM: FormState = {
 function isFormDirty(current: FormState, baseline: FormState | null): boolean {
   if (!baseline) return false;
   return (Object.keys(current) as Array<keyof FormState>).some((key) => current[key] !== baseline[key]);
+}
+
+function PrinterIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      className="h-4 w-4 shrink-0"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"
+      />
+    </svg>
+  );
 }
 
 function CopyIcon() {
@@ -67,6 +87,7 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const [presupuesto, setPresupuesto] = useState<PresupuestoListItem | null>(null);
   const [lines, setLines] = useState<PresupuestoLineaEditable[]>([]);
   const initialFormRef = useRef<FormState | null>(null);
@@ -168,6 +189,27 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
     }
   };
 
+  // Re-fetches the persisted presupuesto instead of reusing local state:
+  // `lines` is already in sync with the server (live mode hits its sub-route
+  // on every add/update/remove), but unsaved `form` edits (cliente, tipo de
+  // servicio, fecha, descripción) only exist client-side until "Guardar" is
+  // clicked — printing should reflect what's actually stored, not a dirty draft.
+  const handlePrint = async () => {
+    if (printing) return;
+    setPrinting(true);
+    try {
+      const latest = await getPresupuesto(presupuestoId);
+      await generatePresupuestoPdf(latest);
+    } catch (err) {
+      showError(
+        'No se pudo generar el PDF',
+        err instanceof Error ? err.message : 'No se pudo conectar con el servidor.',
+      );
+    } finally {
+      setPrinting(false);
+    }
+  };
+
   // Live handlers (Decision A1): each hits its sub-route immediately and
   // upserts/removes the returned line into local state — no full page
   // reload, mirrors ordenes-trabajo's ProductosConsumidos.
@@ -232,6 +274,15 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
             <CopyIcon />
             Copiar
           </Link>
+          <button
+            type="button"
+            onClick={handlePrint}
+            disabled={loading || !!loadError || printing}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-600 transition-all hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <PrinterIcon />
+            {printing ? 'Generando...' : 'Imprimir'}
+          </button>
           <button
             type="submit"
             form="editar-presupuesto-form"

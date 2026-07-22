@@ -292,6 +292,7 @@ export class OrdenesTrabajoService {
   async findAll(query: ListOrdenesTrabajoQueryDto) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+    const sortDir = query.sortDir ?? 'asc';
     const { searchWhere, where } = buildOrdenTrabajoWhere(query);
 
     // Per-estado counts always exclude inactive (soft-deactivated) orders,
@@ -304,7 +305,7 @@ export class OrdenesTrabajoService {
         this.prisma.ordenTrabajo.findMany({
           where,
           select: ORDEN_TRABAJO_SELECT,
-          orderBy: { id: 'asc' },
+          orderBy: { numero: sortDir },
           skip: (page - 1) * pageSize,
           take: pageSize,
         }),

@@ -9,6 +9,7 @@ import {
   type CreatePresupuestoProductoPayload,
 } from '../../../lib/presupuestos';
 import { getProducto } from '../../../lib/productos';
+import { generatePresupuestoPdf } from '../../../lib/presupuestoPdf';
 import { showConfirm, showError, showSuccess } from '../../../lib/alerts';
 import SearchableSelect from '../../vehiculos/SearchableSelect';
 import { clienteSelectConfig, tipoServicioSelectConfig } from '../../vehiculos/referenceSelectConfigs';
@@ -34,7 +35,7 @@ const EMPTY_FORM: FormState = {
   descripcion: '',
 };
 
-function CheckIcon() {
+function PresupuestoIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -44,7 +45,11 @@ function CheckIcon() {
       className="h-4 w-4 shrink-0"
       aria-hidden="true"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 12h6m-6 3h6m-7.5 6h9a2.25 2.25 0 002.25-2.25V6.31a2.25 2.25 0 00-.659-1.591l-2.81-2.81A2.25 2.25 0 0013.69 1.25H7.5A2.25 2.25 0 005.25 3.5v15.75A2.25 2.25 0 007.5 21z"
+      />
     </svg>
   );
 }
@@ -230,7 +235,7 @@ export default function NuevoPresupuestoPage() {
               precioUnitario: Number(l.precioUnitario),
             },
       );
-      await createPresupuesto({
+      const presupuesto = await createPresupuesto({
         fecha: form.fecha,
         clienteId: Number(form.clienteId),
         tipoServicioId: Number(form.tipoServicioId),
@@ -239,6 +244,14 @@ export default function NuevoPresupuestoPage() {
         productos: productos.length > 0 ? productos : undefined,
       });
       showSuccess('Presupuesto creado', 'El presupuesto ha sido creado correctamente.');
+      try {
+        await generatePresupuestoPdf(presupuesto);
+      } catch (pdfErr) {
+        showError(
+          'No se pudo generar el PDF',
+          pdfErr instanceof Error ? pdfErr.message : 'No se pudo conectar con el servidor.',
+        );
+      }
       router.push('/presupuestos');
     } catch (err) {
       showError(
@@ -278,7 +291,7 @@ export default function NuevoPresupuestoPage() {
             disabled={submitting}
             className="flex shrink-0 items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <CheckIcon />
+            <PresupuestoIcon />
             {submitting ? 'Generando...' : 'Generar'}
           </button>
         </div>
@@ -300,6 +313,7 @@ export default function NuevoPresupuestoPage() {
               search={clienteSelectConfig.search}
               create={clienteSelectConfig.create}
               quickCreate={clienteSelectConfig.quickCreate}
+              autoFocus
             />
 
             <SearchableSelect

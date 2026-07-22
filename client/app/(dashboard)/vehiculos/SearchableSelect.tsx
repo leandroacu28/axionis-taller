@@ -47,10 +47,10 @@ export interface SearchableSelectProps {
   autoFocus?: boolean;
 }
 
-// Rough height of the results panel (search input + a handful of rows +
+// Rough height of the results panel (search input + up to 5 visible rows +
 // footer action) — used only to decide whether it should flip upward, not to
 // size it. Mirrors MENU_HEIGHT_ESTIMATE in vehiculos/page.tsx.
-const PANEL_HEIGHT_ESTIMATE = 320;
+const PANEL_HEIGHT_ESTIMATE = 260;
 const SEARCH_DEBOUNCE_MS = 350;
 
 interface PanelPosition {
@@ -331,7 +331,7 @@ export default function SearchableSelect({
                 className="block w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-900 focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100"
               />
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="max-h-[180px] overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center gap-2 p-4 text-sm text-stone-500">
                   <span

@@ -11,6 +11,7 @@ import {
   type Estado,
   type OrdenTrabajoListItem,
   type Prioridad,
+  type SortDirection,
 } from '../../lib/ordenes-trabajo';
 import { listUsers, type UserListItem } from '../../lib/users';
 import { showConfirm, showError, showSuccess } from '../../lib/alerts';
@@ -20,6 +21,33 @@ function SearchIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4 shrink-0" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
     </svg>
+  );
+}
+
+// Chevron pair for the sortable "Número" header — active direction
+// highlighted, the inactive one dimmed. Mirrors clientes/page.tsx's SortIcon.
+function SortIcon({ direction }: { direction: SortDirection }) {
+  return (
+    <span className="inline-flex flex-col leading-none" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        className={`h-2.5 w-2.5 ${direction === 'asc' ? 'text-stone-700' : 'text-stone-300'}`}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+      </svg>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.5}
+        className={`-mt-1 h-2.5 w-2.5 ${direction === 'desc' ? 'text-stone-700' : 'text-stone-300'}`}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+      </svg>
+    </span>
   );
 }
 
@@ -442,6 +470,12 @@ export default function OrdenesTrabajoPage() {
   const [total, setTotal] = useState(0);
   const [counts, setCounts] = useState({ pendiente: 0, en_proceso: 0, terminado: 0, cancelado: 0 });
   const [viewMode, setViewMode] = useState<ViewMode>('tabla');
+  const [sortDir, setSortDir] = useState<SortDirection>('desc');
+
+  const handleSortByNumero = () => {
+    setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    setPage(1);
+  };
 
   const hasActiveFilters =
     searchInput.trim() !== '' ||
@@ -473,10 +507,9 @@ export default function OrdenesTrabajoPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  // Summary pills above the filters mirror whichever estado palette the
-  // currently active view uses, so they never clash with the badges shown
-  // below (tabla and tarjetas each keep their own distinct palette).
-  const estadoBadgeClasses = viewMode === 'tabla' ? ESTADO_BADGE_CLASSES_TABLA : ESTADO_BADGE_CLASSES;
+  // Summary pills above the filters always use the tabla palette, regardless
+  // of which view is active — same colors whether you're in tabla or tarjetas.
+  const estadoBadgeClasses = ESTADO_BADGE_CLASSES_TABLA;
 
   // Debounce: the input updates `searchInput` instantly for responsive
   // typing, but the value actually sent to the backend (`search`) only
@@ -507,6 +540,7 @@ export default function OrdenesTrabajoPage() {
         status: activoFilter,
         mecanicoId: mecanicoFilter === 'all' ? undefined : mecanicoFilter,
         prioridad: prioridadFilter,
+        sortDir,
       });
       setOrdenes(result.data);
       setTotal(result.total);
@@ -521,7 +555,7 @@ export default function OrdenesTrabajoPage() {
   useEffect(() => {
     loadOrdenes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, search, estadoFilter, activoFilter, mecanicoFilter, prioridadFilter]);
+  }, [page, pageSize, search, estadoFilter, activoFilter, mecanicoFilter, prioridadFilter, sortDir]);
 
   return (
     <div>
@@ -841,7 +875,14 @@ export default function OrdenesTrabajoPage() {
             <thead className="bg-gray-200">
               <tr>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Número
+                  <button
+                    type="button"
+                    onClick={handleSortByNumero}
+                    className="inline-flex items-center gap-1 hover:text-stone-700"
+                  >
+                    Número
+                    <SortIcon direction={sortDir} />
+                  </button>
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Cliente

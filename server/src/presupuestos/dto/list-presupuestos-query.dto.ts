@@ -2,6 +2,8 @@ import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export type PresupuestoStatusFilter = 'all' | 'activo' | 'inactivo';
+export type PresupuestoSortBy = 'id' | 'fecha';
+export type SortDirection = 'asc' | 'desc';
 
 export class ListPresupuestosQueryDto {
   @IsOptional()
@@ -34,4 +36,12 @@ export class ListPresupuestosQueryDto {
   @Type(() => Number)
   @IsInt()
   tipoServicioId?: number;
+
+  @IsOptional()
+  @IsIn(['id', 'fecha'])
+  sortBy?: PresupuestoSortBy = 'id';
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortDir?: SortDirection = 'desc';
 }

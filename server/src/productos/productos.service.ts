@@ -131,13 +131,14 @@ export class ProductosService {
   async findAll(query: ListProductosQueryDto) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+    const sortDir = query.sortDir ?? 'asc';
     const { searchWhere, where } = buildProductoWhere(query);
 
     const [data, total, activeCount] = await this.prisma.$transaction([
       this.prisma.producto.findMany({
         where,
         select: PRODUCTO_SELECT,
-        orderBy: { id: 'asc' },
+        orderBy: { id: sortDir },
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),

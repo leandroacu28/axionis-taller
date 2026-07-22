@@ -169,13 +169,15 @@ export class PresupuestosService {
   async findAll(query: ListPresupuestosQueryDto) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+    const sortBy = query.sortBy ?? 'id';
+    const sortDir = query.sortDir ?? 'asc';
     const { searchWhere, where } = buildPresupuestoWhere(query);
 
     const [data, total, activeCount] = await this.prisma.$transaction([
       this.prisma.presupuesto.findMany({
         where,
         select: PRESUPUESTO_SELECT,
-        orderBy: { id: 'asc' },
+        orderBy: { [sortBy]: sortDir },
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),

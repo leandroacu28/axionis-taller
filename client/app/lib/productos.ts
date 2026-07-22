@@ -55,11 +55,14 @@ async function handleJsonResponse<T>(res: Response, fallbackMessage: string): Pr
   return res.json();
 }
 
+export type SortDirection = 'asc' | 'desc';
+
 export interface ListProductosParams {
   page: number;
   pageSize: number;
   search?: string;
   status?: 'all' | 'activo' | 'inactivo';
+  sortDir?: SortDirection;
 }
 
 export interface PaginatedProductos {
@@ -75,6 +78,7 @@ export async function listProductos(params: ListProductosParams): Promise<Pagina
   });
   if (params.search) query.set('search', params.search);
   if (params.status) query.set('status', params.status);
+  if (params.sortDir) query.set('sortDir', params.sortDir);
 
   const res = await fetch(`${API_BASE_URL}/productos?${query.toString()}`, {
     headers: { ...getAuthHeader() },

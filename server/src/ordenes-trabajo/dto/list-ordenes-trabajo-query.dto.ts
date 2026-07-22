@@ -9,6 +9,7 @@ export type EstadoFilter = 'all' | 'pendiente' | 'en_proceso' | 'terminado' | 'c
 export type OrdenTrabajoStatusFilter = 'all' | 'activo' | 'inactivo';
 
 export type PrioridadFilter = 'all' | 'normal' | 'alta' | 'urgente';
+export type SortDirection = 'asc' | 'desc';
 
 export class ListOrdenesTrabajoQueryDto {
   @IsOptional()
@@ -52,4 +53,11 @@ export class ListOrdenesTrabajoQueryDto {
   @IsOptional()
   @IsIn(['all', ...Object.values(Prioridad)])
   prioridad?: PrioridadFilter = 'all';
+
+  // Sorts by `numero` (the OT number shown in the "Número" column) — not the
+  // internal `id`, which the rest of this service still uses for line-item
+  // and secondary orderings.
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortDir?: SortDirection = 'desc';
 }

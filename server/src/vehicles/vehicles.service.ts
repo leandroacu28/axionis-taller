@@ -147,13 +147,14 @@ export class VehiclesService {
   async findAll(query: ListVehiclesQueryDto) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
+    const sortDir = query.sortDir ?? 'asc';
     const { searchWhere, where } = buildVehicleWhere(query);
 
     const [data, total, activeCount] = await this.prisma.$transaction([
       this.prisma.vehiculo.findMany({
         where,
         select: VEHICLE_SELECT,
-        orderBy: { id: 'asc' },
+        orderBy: { id: sortDir },
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),

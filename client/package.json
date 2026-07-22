@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "next": "^14.2.18",
+    "pdfmake": "^0.3.11",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sweetalert2": "^11.26.25",
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.17.9",
+    "@types/pdfmake": "^0.3.3",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.5.2",

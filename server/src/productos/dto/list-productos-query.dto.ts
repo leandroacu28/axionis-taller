@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export type ProductoStatusFilter = 'all' | 'activo' | 'inactivo';
+export type SortDirection = 'asc' | 'desc';
 
 export class ListProductosQueryDto {
   @IsOptional()
@@ -24,4 +25,8 @@ export class ListProductosQueryDto {
   @IsOptional()
   @IsIn(['all', 'activo', 'inactivo'])
   status?: ProductoStatusFilter = 'all';
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortDir?: SortDirection = 'desc';
 }
