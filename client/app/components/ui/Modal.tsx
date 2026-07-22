@@ -15,6 +15,9 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
+  titleClassName?: string;
+  headerClassName?: string;
+  closeButtonClassName?: string;
   description?: string;
   children: React.ReactNode;
   maxWidth?: string;
@@ -24,6 +27,9 @@ export default function Modal({
   open,
   onClose,
   title,
+  titleClassName = 'text-stone-900',
+  headerClassName = '',
+  closeButtonClassName = 'text-stone-400 hover:bg-stone-100 hover:text-stone-600',
   description,
   children,
   maxWidth = 'max-w-md',
@@ -74,9 +80,9 @@ export default function Modal({
         aria-labelledby="modal-title"
         className={`relative flex max-h-[90vh] w-full ${maxWidth} flex-col overflow-y-auto rounded-xl border border-stone-200 bg-white p-6 shadow-lg`}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 id="modal-title" className="text-lg font-bold text-stone-900">
+        <div className={`flex items-start justify-between gap-4 ${headerClassName}`}>
+          <div className="min-w-0 flex-1">
+            <h2 id="modal-title" className={`text-lg font-bold ${titleClassName}`}>
               {title}
             </h2>
             {description && (
@@ -87,7 +93,7 @@ export default function Modal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="shrink-0 rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+            className={`shrink-0 rounded-lg p-1 ${closeButtonClassName}`}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-5 w-5" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

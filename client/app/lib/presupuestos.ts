@@ -6,7 +6,8 @@ export interface PresupuestoProductoLinea {
   cantidad: string; // Decimal serialized as string by Prisma/JSON
   precioUnitario: string;
   precioTotal: string;
-  producto: { id: number; descripcion: string };
+  producto: { id: number; descripcion: string } | null;
+  descripcionPersonalizada: string | null;
   updatedAt: string;
 }
 
@@ -26,8 +27,10 @@ export interface PresupuestoListItem {
 }
 
 export interface CreatePresupuestoProductoPayload {
-  productoId: number;
+  productoId?: number;
   cantidad: number;
+  precioUnitario?: number;
+  descripcionPersonalizada?: string;
 }
 
 export interface CreatePresupuestoPayload {
@@ -64,6 +67,8 @@ export interface ListPresupuestosParams {
   pageSize: number;
   search?: string;
   status?: 'all' | 'activo' | 'inactivo';
+  clienteId?: number;
+  tipoServicioId?: number;
 }
 
 export interface PaginatedPresupuestos {
@@ -79,6 +84,8 @@ export async function listPresupuestos(params: ListPresupuestosParams): Promise<
   });
   if (params.search) query.set('search', params.search);
   if (params.status) query.set('status', params.status);
+  if (params.clienteId) query.set('clienteId', String(params.clienteId));
+  if (params.tipoServicioId) query.set('tipoServicioId', String(params.tipoServicioId));
 
   const res = await fetch(`${API_BASE_URL}/presupuestos?${query.toString()}`, {
     headers: { ...getAuthHeader() },

@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { listPresupuestos, updatePresupuesto, type PresupuestoListItem } from '../../lib/presupuestos';
 import { showConfirm, showError, showSuccess } from '../../lib/alerts';
+import SearchableSelect from '../vehiculos/SearchableSelect';
+import { clienteSelectConfig, tipoServicioSelectConfig } from '../vehiculos/referenceSelectConfigs';
 
 function SearchIcon() {
   return (
@@ -13,9 +15,6 @@ function SearchIcon() {
   );
 }
 
-type StatusFilter = 'all' | 'activo' | 'inactivo';
-
-const DEFAULT_STATUS_FILTER: StatusFilter = 'activo';
 const PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
 
 function formatFecha(iso: string): string {
@@ -34,17 +33,18 @@ export default function PresupuestosPage() {
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>(DEFAULT_STATUS_FILTER);
+  const [clienteFilter, setClienteFilter] = useState<number | ''>('');
+  const [tipoServicioFilter, setTipoServicioFilter] = useState<number | ''>('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
   const [total, setTotal] = useState(0);
-  const [activeCount, setActiveCount] = useState(0);
 
-  const hasActiveFilters = searchInput.trim() !== '' || statusFilter !== DEFAULT_STATUS_FILTER;
+  const hasActiveFilters = searchInput.trim() !== '' || clienteFilter !== '' || tipoServicioFilter !== '';
   const clearFilters = () => {
     setSearchInput('');
     setSearch('');
-    setStatusFilter(DEFAULT_STATUS_FILTER);
+    setClienteFilter('');
+    setTipoServicioFilter('');
     setPage(1);
   };
 
@@ -70,11 +70,11 @@ export default function PresupuestosPage() {
         page,
         pageSize,
         search: search || undefined,
-        status: statusFilter,
+        clienteId: clienteFilter || undefined,
+        tipoServicioId: tipoServicioFilter || undefined,
       });
       setPresupuestos(result.data);
       setTotal(result.total);
-      setActiveCount(result.activeCount);
     } catch (err) {
       setListError(err instanceof Error ? err.message : 'No se pudo conectar con el servidor.');
     } finally {
@@ -85,7 +85,7 @@ export default function PresupuestosPage() {
   useEffect(() => {
     loadPresupuestos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, search, statusFilter]);
+  }, [page, pageSize, search, clienteFilter, tipoServicioFilter]);
 
   const handleToggleActivo = async (presupuesto: PresupuestoListItem) => {
     const activating = !presupuesto.activo;
@@ -145,14 +145,8 @@ export default function PresupuestosPage() {
       </div>
 
       <div className="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center gap-2">
-          <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
-            {activeCount} presupuesto{activeCount === 1 ? '' : 's'} activo
-            {activeCount === 1 ? '' : 's'} visible{activeCount === 1 ? '' : 's'}
-          </span>
-        </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_auto]">
+          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_auto]">
             <div className="space-y-1">
               <label htmlFor="search" className="text-sm font-medium text-stone-700">
                 Buscar
@@ -172,24 +166,27 @@ export default function PresupuestosPage() {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="statusFilter" className="text-sm font-medium text-stone-700">
-                Estado
-              </label>
-              <select
-                id="statusFilter"
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value as StatusFilter);
-                  setPage(1);
-                }}
-                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
-              >
-                <option value="all">Todos</option>
-                <option value="activo">Activos</option>
-                <option value="inactivo">Inactivos</option>
-              </select>
-            </div>
+            <SearchableSelect
+              label="Cliente"
+              placeholder="Todos los clientes"
+              value={clienteFilter}
+              onChange={(id) => {
+                setClienteFilter(id);
+                setPage(1);
+              }}
+              search={clienteSelectConfig.search}
+            />
+
+            <SearchableSelect
+              label="Tipo de servicio"
+              placeholder="Todos los tipos"
+              value={tipoServicioFilter}
+              onChange={(id) => {
+                setTipoServicioFilter(id);
+                setPage(1);
+              }}
+              search={tipoServicioSelectConfig.search}
+            />
 
             <div className="space-y-1">
               <label htmlFor="pageSize" className="text-sm font-medium text-stone-700">
@@ -280,7 +277,7 @@ export default function PresupuestosPage() {
                   Total
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
-                  Estado
+                  Descripción
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Acciones
@@ -306,15 +303,7 @@ export default function PresupuestosPage() {
                     {`$${totalDePresupuesto(presupuesto).toFixed(2)}`}
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-stone-600">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        presupuesto.activo
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-rose-100 text-rose-700'
-                      }`}
-                    >
-                      {presupuesto.activo ? 'Activo' : 'Inactivo'}
-                    </span>
+                    {presupuesto.descripcion || '—'}
                   </td>
                   <td className="px-4 py-3 text-center text-sm">
                     <div className="flex flex-wrap items-center justify-center gap-2">
@@ -324,22 +313,16 @@ export default function PresupuestosPage() {
                       >
                         Editar
                       </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleActivo(presupuesto)}
-                        disabled={togglingId === presupuesto.id}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50 ${
-                          presupuesto.activo
-                            ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
-                            : 'border-green-200 text-green-600 hover:bg-green-50'
-                        }`}
-                      >
-                        {togglingId === presupuesto.id
-                          ? '...'
-                          : presupuesto.activo
-                            ? 'Desactivar'
-                            : 'Activar'}
-                      </button>
+                      {!presupuesto.activo && (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleActivo(presupuesto)}
+                          disabled={togglingId === presupuesto.id}
+                          className="rounded-lg border border-green-200 px-3 py-1.5 text-xs font-medium text-green-600 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {togglingId === presupuesto.id ? '...' : 'Activar'}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -15,6 +15,7 @@ const PRESUPUESTO_PRODUCTO_SELECT = {
   precioUnitario: true,
   precioTotal: true,
   producto: { select: { id: true, descripcion: true } },
+  descripcionPersonalizada: true,
   updatedAt: true,
 };
 
@@ -39,6 +40,8 @@ const PRESUPUESTO_SELECT = {
 export type PresupuestoFilter = {
   search?: string;
   status?: ListPresupuestosQueryDto['status'];
+  clienteId?: number;
+  tipoServicioId?: number;
 };
 
 // Mirrors buildProductoWhere (productos.service.ts:53-72). Returns both
@@ -69,6 +72,8 @@ function buildPresupuestoWhere(filter: PresupuestoFilter): {
   const where: Prisma.PresupuestoWhereInput = {
     ...searchWhere,
     ...(status === 'activo' ? { activo: true } : status === 'inactivo' ? { activo: false } : {}),
+    ...(filter.clienteId != null ? { clienteId: filter.clienteId } : {}),
+    ...(filter.tipoServicioId != null ? { tipoServicioId: filter.tipoServicioId } : {}),
   };
 
   return { searchWhere, where };
@@ -265,9 +270,35 @@ export class PresupuestosService {
     dto: CreatePresupuestoProductoDto,
     actualizadoPorId: number
   ) {
+    const cantidad = new Prisma.Decimal(dto.cantidad);
+
+    // Custom (non-catalog) item: no productoId to dedupe/merge by, so every
+    // add is a brand-new line — skip the existing-lookup branch entirely.
+    if (dto.productoId == null) {
+      const descripcion = dto.descripcionPersonalizada?.trim();
+      if (!descripcion) {
+        throw new BadRequestException('La descripción del ítem personalizado es obligatoria.');
+      }
+      if (dto.precioUnitario == null) {
+        throw new BadRequestException('El precio unitario es obligatorio para un ítem personalizado.');
+      }
+      const precioUnitario = new Prisma.Decimal(dto.precioUnitario);
+      return tx.presupuestoProducto.create({
+        data: {
+          presupuestoId,
+          productoId: null,
+          descripcionPersonalizada: descripcion,
+          cantidad,
+          precioUnitario,
+          precioTotal: precioUnitario.times(cantidad),
+          actualizadoPorId,
+        },
+        select: PRESUPUESTO_PRODUCTO_SELECT,
+      });
+    }
+
     const { precioVenta } = await this.assertProductoActivo(tx, dto.productoId);
 
-    const cantidad = new Prisma.Decimal(dto.cantidad);
     const existing = await tx.presupuestoProducto.findUnique({
       where: {
         presupuestoId_productoId: {
@@ -293,14 +324,18 @@ export class PresupuestosService {
       });
     }
 
-    // New line: freeze precioUnitario from the current catalog precioVenta.
+    // New line: freeze precioUnitario from the caller's override when given,
+    // else the current catalog precioVenta. Either way this is a value
+    // written only onto PresupuestoProducto — never back onto Producto.
+    const precioUnitario =
+      dto.precioUnitario != null ? new Prisma.Decimal(dto.precioUnitario) : precioVenta;
     return tx.presupuestoProducto.create({
       data: {
         presupuestoId,
         productoId: dto.productoId,
         cantidad,
-        precioUnitario: precioVenta,
-        precioTotal: precioVenta.times(cantidad),
+        precioUnitario,
+        precioTotal: precioUnitario.times(cantidad),
         actualizadoPorId,
       },
       select: PRESUPUESTO_PRODUCTO_SELECT,
@@ -329,12 +364,17 @@ export class PresupuestosService {
       const linea = await this.loadLinea(tx, presupuestoId, detalleId);
 
       const cantidad = new Prisma.Decimal(dto.cantidad);
+      // Recompute from the FROZEN precioUnitario when the caller doesn't
+      // supply an override — catalog never re-read either way. Writes only
+      // to PresupuestoProducto, never back onto Producto.precioVenta.
+      const precioUnitario =
+        dto.precioUnitario != null ? new Prisma.Decimal(dto.precioUnitario) : linea.precioUnitario;
       return tx.presupuestoProducto.update({
         where: { id: detalleId },
         data: {
           cantidad,
-          // Recompute from the FROZEN precioUnitario — catalog never re-read.
-          precioTotal: linea.precioUnitario.times(cantidad),
+          precioUnitario,
+          precioTotal: precioUnitario.times(cantidad),
           actualizadoPorId,
         },
         select: PRESUPUESTO_PRODUCTO_SELECT,

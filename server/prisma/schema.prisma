@@ -315,19 +315,26 @@ model Presupuesto {
 }
 
 model PresupuestoProducto {
-  id               Int         @id @default(autoincrement())
-  presupuestoId    Int
-  presupuesto      Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
-  productoId       Int
-  producto         Producto    @relation(fields: [productoId], references: [id])
-  cantidad         Decimal     @db.Decimal(10, 2)
-  precioUnitario   Decimal     @db.Decimal(10, 2)
-  precioTotal      Decimal     @db.Decimal(10, 2)
-  actualizadoPorId Int?
-  actualizadoPor   User?       @relation("PresupuestoProductoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  id                       Int         @id @default(autoincrement())
+  presupuestoId            Int
+  presupuesto              Presupuesto @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  // Nullable: a line is either a catalog producto OR a custom (free-text)
+  // item — never both, never neither (enforced in the service layer).
+  productoId               Int?
+  producto                 Producto?   @relation(fields: [productoId], references: [id])
+  // Free-text description for a custom item; null for catalog-backed lines.
+  descripcionPersonalizada String?     @db.VarChar(255)
+  cantidad                 Decimal     @db.Decimal(10, 2)
+  precioUnitario           Decimal     @db.Decimal(10, 2)
+  precioTotal              Decimal     @db.Decimal(10, 2)
+  actualizadoPorId         Int?
+  actualizadoPor           User?       @relation("PresupuestoProductoActualizadoPor", fields: [actualizadoPorId], references: [id], onDelete: SetNull)
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt
 
+  // MySQL treats each NULL as distinct in a unique index, so multiple
+  // custom items (productoId = NULL) per presupuesto are allowed; this
+  // still correctly prevents the same catalog product appearing twice.
   @@unique([presupuestoId, productoId])
 }
 

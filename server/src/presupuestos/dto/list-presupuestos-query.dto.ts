@@ -24,4 +24,14 @@ export class ListPresupuestosQueryDto {
   @IsOptional()
   @IsIn(['all', 'activo', 'inactivo'])
   status?: PresupuestoStatusFilter = 'all';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  clienteId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  tipoServicioId?: number;
 }

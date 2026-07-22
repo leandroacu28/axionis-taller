@@ -12,7 +12,7 @@ import {
   type PresupuestoListItem,
   type UpdatePresupuestoPayload,
 } from '../../../../lib/presupuestos';
-import { showConfirm, showError, showSuccess } from '../../../../lib/alerts';
+import { showError, showSuccess } from '../../../../lib/alerts';
 import SearchableSelect from '../../../vehiculos/SearchableSelect';
 import { clienteSelectConfig, tipoServicioSelectConfig } from '../../../vehiculos/referenceSelectConfigs';
 import PresupuestoProductosEditor, { type PresupuestoLineaEditable } from '../../PresupuestoProductosEditor';
@@ -38,6 +38,25 @@ const EMPTY_FORM: FormState = {
 function isFormDirty(current: FormState, baseline: FormState | null): boolean {
   if (!baseline) return false;
   return (Object.keys(current) as Array<keyof FormState>).some((key) => current[key] !== baseline[key]);
+}
+
+function CopyIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      className="h-4 w-4 shrink-0"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"
+      />
+    </svg>
+  );
 }
 
 export default function EditarPresupuestoPage({ params }: { params: { id: string } }) {
@@ -82,6 +101,7 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
             precioUnitario: p.precioUnitario,
             precioTotal: p.precioTotal,
             producto: p.producto,
+            descripcionPersonalizada: p.descripcionPersonalizada,
           })),
         );
       } catch (err) {
@@ -112,19 +132,6 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
 
   const updateField = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleCancel = async () => {
-    if (isDirty) {
-      const confirmed = await showConfirm({
-        title: 'Descartar cambios',
-        text: 'Tenés cambios sin guardar. ¿Seguro que querés salir sin guardar?',
-        confirmButtonText: 'Sí, descartar',
-        confirmButtonColor: '#e11d48',
-      });
-      if (!confirmed) return;
-    }
-    router.push('/presupuestos');
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -164,19 +171,35 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
   // Live handlers (Decision A1): each hits its sub-route immediately and
   // upserts/removes the returned line into local state — no full page
   // reload, mirrors ordenes-trabajo's ProductosConsumidos.
-  const handleLiveAdd = async (productoId: number, cantidad: number) => {
-    const linea = await addPresupuestoProducto(presupuestoId, { productoId, cantidad });
+  const handleLiveAdd = async (productoId: number, cantidad: number, precioUnitario?: number) => {
+    const linea = await addPresupuestoProducto(presupuestoId, { productoId, cantidad, precioUnitario });
     setLines((prev) => {
       const exists = prev.some((l) => l.id === linea.id);
       return exists ? prev.map((l) => (l.id === linea.id ? linea : l)) : [...prev, linea];
     });
   };
 
-  const handleLiveUpdate = async (lineId: number, cantidad: number) => {
-    const current = lines.find((l) => l.id === lineId);
-    const linea = await updatePresupuestoProducto(presupuestoId, lineId, {
-      productoId: current?.producto.id ?? 0,
+  const handleLiveAddCustom = async (descripcion: string, cantidad: number, precioUnitario: number) => {
+    const linea = await addPresupuestoProducto(presupuestoId, {
+      descripcionPersonalizada: descripcion,
       cantidad,
+      precioUnitario,
+    });
+    setLines((prev) => {
+      const exists = prev.some((l) => l.id === linea.id);
+      return exists ? prev.map((l) => (l.id === linea.id ? linea : l)) : [...prev, linea];
+    });
+  };
+
+  const handleLiveUpdate = async (lineId: number, cantidad: number, precioUnitario?: number) => {
+    const current = lines.find((l) => l.id === lineId);
+    // productoId is optional here: the update endpoint never reads dto.productoId
+    // (see updateProducto in presupuestos.service.ts), and current?.producto
+    // can now be null for a custom item.
+    const linea = await updatePresupuestoProducto(presupuestoId, lineId, {
+      productoId: current?.producto?.id,
+      cantidad,
+      precioUnitario,
     });
     setLines((prev) => prev.map((l) => (l.id === linea.id ? linea : l)));
   };
@@ -188,11 +211,36 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">Editar presupuesto</h1>
-        <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
-          {loading ? 'Cargando datos del presupuesto...' : 'Modificá los datos del presupuesto.'}
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/presupuestos"
+            className="rounded-lg border border-stone-200 px-4 py-2.5 text-sm font-semibold text-stone-600 transition-all hover:bg-stone-50"
+          >
+            Volver
+          </Link>
+          <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">Editar presupuesto</h1>
+          <span className="rounded-lg bg-stone-100 px-3 py-1.5 text-base font-semibold text-stone-600">
+            #{presupuestoId}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/presupuestos/nuevo?copyFrom=${presupuestoId}`}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-600 transition-all hover:bg-stone-50"
+          >
+            <CopyIcon />
+            Copiar
+          </Link>
+          <button
+            type="submit"
+            form="editar-presupuesto-form"
+            disabled={loading || !!loadError || submitting}
+            className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting ? 'Guardando...' : 'Guardar'}
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -217,7 +265,7 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
         </div>
       ) : (
         <div className="mt-6 rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-          <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-4">
+          <form id="editar-presupuesto-form" onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-4">
             <h2 className="text-sm font-bold uppercase tracking-wider text-stone-700 border-b border-stone-200 pb-2 mb-3">
               Datos del presupuesto
             </h2>
@@ -290,7 +338,7 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2">
               <input
                 id="activo"
                 type="checkbox"
@@ -311,26 +359,11 @@ export default function EditarPresupuestoPage({ params }: { params: { id: string
               mode="live"
               lines={lines}
               onAdd={handleLiveAdd}
+              onAddCustom={handleLiveAddCustom}
               onUpdate={handleLiveUpdate}
               onRemove={handleLiveRemove}
             />
 
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition-all hover:from-rose-600 hover:to-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {submitting ? 'Guardando...' : 'Guardar cambios'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="rounded-lg border border-stone-200 px-4 py-2.5 text-sm font-semibold text-stone-600 transition-all hover:bg-stone-50"
-              >
-                Cancelar
-              </button>
-            </div>
           </form>
         </div>
       )}
