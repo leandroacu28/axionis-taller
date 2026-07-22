@@ -575,16 +575,16 @@ export default function OrdenesTrabajoPage() {
           {/* Same palette as the currently active view (tabla vs tarjetas), so
               the summary pills never clash with the estado badges below them. */}
           <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estadoBadgeClasses.pendiente}`}>
-            {counts.pendiente} pendiente{counts.pendiente === 1 ? '' : 's'}
+            {counts.pendiente} Pendiente{counts.pendiente === 1 ? '' : 's'}
           </span>
           <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estadoBadgeClasses.en_proceso}`}>
-            {counts.en_proceso} en proceso
+            {counts.en_proceso} En proceso
           </span>
           <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estadoBadgeClasses.terminado}`}>
-            {counts.terminado} terminada{counts.terminado === 1 ? '' : 's'}
+            {counts.terminado} Terminada{counts.terminado === 1 ? '' : 's'}
           </span>
           <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${estadoBadgeClasses.cancelado}`}>
-            {counts.cancelado} cancelada{counts.cancelado === 1 ? '' : 's'}
+            {counts.cancelado} Cancelada{counts.cancelado === 1 ? '' : 's'}
           </span>
         </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
@@ -838,7 +838,7 @@ export default function OrdenesTrabajoPage() {
           </div>
         ) : (
           <table className="min-w-full divide-y divide-stone-200">
-            <thead className="bg-stone-50">
+            <thead className="bg-gray-200">
               <tr>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   Número

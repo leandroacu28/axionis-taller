@@ -773,7 +773,7 @@ export default function PresupuestoProductosEditor({
         <div className="space-y-2">
           <div className="overflow-hidden rounded-lg border border-stone-200">
             <table className="min-w-full divide-y divide-stone-200">
-              <thead className="bg-stone-50">
+              <thead className="bg-gray-200">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">
                     Descripción

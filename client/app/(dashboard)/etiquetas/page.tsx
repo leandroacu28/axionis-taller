@@ -352,7 +352,7 @@ export default function EtiquetasPage() {
           </div>
         ) : (
           <table className="min-w-full divide-y divide-stone-200">
-            <thead className="bg-stone-50">
+            <thead className="bg-gray-200">
               <tr>
                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-stone-500">
                   #
